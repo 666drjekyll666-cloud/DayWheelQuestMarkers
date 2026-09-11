@@ -1,0 +1,64 @@
+name: Build Day Wheel Quest Markers
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev/1.0.21
+    paths:
+      - 'src/**'
+      - 'DayWheelQuestMarkers.csproj'
+      - 'nuget.config'
+      - '.github/workflows/build.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: day-wheel-quest-markers-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore DayWheelQuestMarkers.csproj --configfile nuget.config
+
+      - name: Build Release DLL
+        run: dotnet build DayWheelQuestMarkers.csproj -c Release --no-restore
+
+      - name: Read version and stage artifact
+        id: artifact
+        shell: pwsh
+        run: |
+          $source = Get-Content 'src/CalendarQuestsPinsPlugin.cs' -Raw
+          if ($source -notmatch 'PluginVersion\s*=\s*"([^"]+)"') {
+            throw 'Could not read PluginVersion from src/CalendarQuestsPinsPlugin.cs'
+          }
+          $version = $Matches[1]
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $asset = "Day Wheel Quest Markers $version.dll"
+          Copy-Item 'bin/Release/DayWheelQuestMarkers.dll' "dist/$asset"
+          $hash = (Get-FileHash "dist/$asset" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "asset=$asset" >> $env:GITHUB_OUTPUT
+          "sha256=$hash" >> $env:GITHUB_OUTPUT
+          Write-Host "Day Wheel Quest Markers $version SHA-256: $hash"
+
+      - name: Upload versioned DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: DayWheelQuestMarkers-${{ steps.artifact.outputs.version }}
+          path: dist/${{ steps.artifact.outputs.asset }}
+          if-no-files-found: error
+          retention-days: 7
