@@ -32,7 +32,7 @@ Missing items, crafting steps, insufficient quality or relationship requirements
 
 ## Installation
 
-1. Download `Day Wheel Quest Markers 1.0.21.dll` from GitHub Releases.
+1. Download the DLL from GitHub Releases.
 2. Copy it into `Graveyard Keeper/BepInEx/plugins/`.
 3. Restart the game.
 
