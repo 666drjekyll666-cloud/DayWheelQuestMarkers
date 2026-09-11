@@ -1,0 +1,80 @@
+name: Publish accepted release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'release/manifest.json'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout release metadata
+        uses: actions/checkout@v4
+
+      - name: Read manifest
+        id: manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "version=$(jq -r '.version' release/manifest.json)" >> "$GITHUB_OUTPUT"
+          echo "tag=$(jq -r '.tag' release/manifest.json)" >> "$GITHUB_OUTPUT"
+          echo "title=$(jq -r '.title' release/manifest.json)" >> "$GITHUB_OUTPUT"
+          echo "source_sha=$(jq -r '.source_sha' release/manifest.json)" >> "$GITHUB_OUTPUT"
+          echo "artifact_id=$(jq -r '.artifact_id' release/manifest.json)" >> "$GITHUB_OUTPUT"
+          echo "asset_name=$(jq -r '.asset_name' release/manifest.json)" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(jq -r '.sha256' release/manifest.json)" >> "$GITHUB_OUTPUT"
+          echo "notes_file=$(jq -r '.notes_file' release/manifest.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Download accepted Actions artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_ID: ${{ steps.manifest.outputs.artifact_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "/repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" > accepted-artifact.zip
+          mkdir accepted-artifact
+          unzip -q accepted-artifact.zip -d accepted-artifact
+
+      - name: Verify exact accepted DLL
+        env:
+          ASSET_NAME: ${{ steps.manifest.outputs.asset_name }}
+          EXPECTED_SHA256: ${{ steps.manifest.outputs.sha256 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ASSET_PATH="accepted-artifact/${ASSET_NAME}"
+          test -f "$ASSET_PATH"
+          ACTUAL_SHA256=$(sha256sum "$ASSET_PATH" | awk '{print $1}')
+          echo "Expected SHA-256: $EXPECTED_SHA256"
+          echo "Actual SHA-256:   $ACTUAL_SHA256"
+          test "$ACTUAL_SHA256" = "$EXPECTED_SHA256"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.manifest.outputs.tag }}
+          TITLE: ${{ steps.manifest.outputs.title }}
+          SOURCE_SHA: ${{ steps.manifest.outputs.source_sha }}
+          ASSET_NAME: ${{ steps.manifest.outputs.asset_name }}
+          NOTES_FILE: ${{ steps.manifest.outputs.notes_file }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; refusing to replace an existing stable release."
+            exit 1
+          fi
+          gh release create "$TAG" "accepted-artifact/${ASSET_NAME}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$SOURCE_SHA" \
+            --title "$TITLE" \
+            --notes-file "$NOTES_FILE"

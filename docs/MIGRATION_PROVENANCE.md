@@ -1,6 +1,6 @@
 # Public Migration Provenance
 
-The clean public repository starts a new Git history from the accepted production line rather than importing the legacy development history.
+The public repository starts a new Git history from the accepted production line rather than importing the legacy development history.
 
 ## Accepted legacy baseline
 
@@ -16,8 +16,18 @@ The clean public repository starts a new Git history from the accepted productio
 
 1.0.21 starts from the accepted 1.0.17 runtime logic. Quest eligibility, bridge rules, cache architecture, weekday semantics, marker layout, and update cadence are preserved.
 
-One production implementation detail is intentionally replaced before public release: 1.0.17 carried exact exported quest-marker PNG payloads. The public line does not import those pixel payloads. Instead it resolves the same native marker Sprite objects from the installed game's loaded runtime resources, normally during the existing loading-screen prewarm window, and caches references to them.
+The public line does not import the copied marker-pixel payloads used by the private baseline. It resolves the game's marker Sprite objects from loaded runtime resources with bounded lookup/caching instead.
 
-The runtime lookup itself is not new research: the earlier production line used the same exact sprite-name resolution before the embedded-pixel optimization. 1.0.21 bounds that lookup so it does not become steady-state work.
+Private 1.0.18–1.0.20 development experiments are not accepted release baselines and are not imported into the public stable line. Their version numbers remain consumed.
 
-Private 1.0.18–1.0.20 development experiments are not accepted release baselines and are not imported into the public candidate. Their version numbers remain consumed; the clean public candidate therefore advances to 1.0.21.
+## Accepted public baseline
+
+- Stable public version: 1.0.21
+- Exact executable/build source: `7638343438dad6cdf522e37595f3fb21b442193a`
+- Candidate ref: `candidate/1.0.21`
+- Accepted ref: `baseline/1.0.21-accepted`
+- CI run: `34639351706`
+- Artifact: `DayWheelQuestMarkers-1.0.21` (`10278859840`)
+- Raw DLL SHA-256: `b609da9c35cd40ce09259a4c580e371dad15c3889f4e5cf9bdb0190a00e23c9a`
+- Player acceptance: 2026-09-11
+- Stable distribution: GitHub Release `v1.0.21`, using the exact accepted DLL without rebuilding.
