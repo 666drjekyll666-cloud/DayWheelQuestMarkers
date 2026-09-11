@@ -26,4 +26,8 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Requested regression test: marker rendering/category correctness, menu/HUD lifecycle, multiple markers/categories if convenient, and no noticeable post-load hitch.
 - Player result: **accepted**. User reported that everything works correctly.
 - Supplied runtime log confirms `Day Wheel Quest Markers 1.0.21` loaded, a developed-save cache prewarm completed in 517.73 ms with `supported=75` and `cross-owner tasks=8`, and the mod reached its normal `Ready` state. One final-runtime revalidation fell back to the safe post-load rebuild path; the player reported no visible problem or noticeable regression.
-- Stable distribution: publish the exact tested DLL above to GitHub Release `v1.0.21`; do not rebuild under the same version.
+- GitHub Release publication: workflow run `34640713142`, success.
+- Release: `v1.0.21`, target commit `7638343438dad6cdf522e37595f3fb21b442193a`.
+- Published asset: `Day.Wheel.Quest.Markers.1.0.21.dll`, 47,616 bytes.
+- Published asset digest: `sha256:b609da9c35cd40ce09259a4c580e371dad15c3889f4e5cf9bdb0190a00e23c9a`, exactly matching the accepted DLL.
+- Status: **stable / released**.
