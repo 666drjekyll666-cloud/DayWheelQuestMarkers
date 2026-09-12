@@ -24,7 +24,6 @@ namespace CalendarQuestsPins
         private const string Magic = "DWQM_RULE_MANIFEST";
         private const int SchemaVersion = 1;
 
-        // Canonical counts from accepted 1.0.24 runtime evidence. A bootstrap result that differs is not persisted.
         private const int ExpectedOwnerSupported = 75;
         private const int ExpectedOwnerUnsupported = 6;
         private const int ExpectedCrossTasks = 8;
@@ -50,6 +49,7 @@ namespace CalendarQuestsPins
 
         private readonly FieldInfo _targetsField;
         private readonly FieldInfo _saveField;
+        private readonly FieldInfo _playerField;
         private readonly FieldInfo _knownNpcCountField;
         private readonly FieldInfo _worldObjectGetterField;
         private readonly FieldInfo _smartResFactoryField;
@@ -74,6 +74,7 @@ namespace CalendarQuestsPins
             const BindingFlags instance = BindingFlags.Instance | BindingFlags.NonPublic;
             _targetsField = _cacheType.GetField("_targets", instance);
             _saveField = _cacheType.GetField("_save", instance);
+            _playerField = _cacheType.GetField("_player", instance);
             _knownNpcCountField = _cacheType.GetField("_knownNpcCount", instance);
             _worldObjectGetterField = _cacheType.GetField("_worldObjectGetter", instance);
             _smartResFactoryField = _cacheType.GetField("_smartResFactory", instance);
@@ -85,7 +86,6 @@ namespace CalendarQuestsPins
             _createSmartRes = _cacheType.GetMethod("CreateSmartRes", instance);
 
             _worldObjectGetter = FindWorldObjectGetter();
-
             _path = Path.Combine(Paths.CachePath, "DayWheelQuestMarkers", "rules-1.407.bin");
         }
 
@@ -97,12 +97,20 @@ namespace CalendarQuestsPins
 
         internal bool KnownNpcCountChanged(object save)
         {
-            return CountKnownNpcs(save) != _boundKnownNpcCount;
+            return CountKnownNpcsNoAlloc(save) != _boundKnownNpcCount;
         }
 
         internal bool IsRuntimeValid(object mainGame)
         {
-            if (mainGame == null || !InvokeTryBindPlayer(mainGame)) return false;
+            if (mainGame == null || _playerField == null) return false;
+
+            object livePlayer;
+            if (!ReflectionUtil.TryRead(mainGame, "player", out livePlayer) || !ReflectionUtil.IsUnityAlive(livePlayer))
+                return false;
+
+            var cachedPlayer = _playerField.GetValue(_cache);
+            if (!ReferenceEquals(livePlayer, cachedPlayer)) return false;
+
             var targets = GetTargets();
             if (targets == null || targets.Count != NpcIds.Length) return false;
             for (var i = 0; i < targets.Count; i++)
@@ -261,9 +269,9 @@ namespace CalendarQuestsPins
                     }
                 }
 
-                string ignoredSignature;
+                ulong ignoredFingerprint;
                 bool ignoredPeriodic;
-                if (!Bind(save, mainGame, out ignoredSignature, out ignoredPeriodic))
+                if (!Bind(save, mainGame, out ignoredFingerprint, out ignoredPeriodic))
                 {
                     failure = "manifest loaded but live binding failed";
                     return false;
@@ -367,9 +375,9 @@ namespace CalendarQuestsPins
                     return false;
                 }
 
-                string ignoredSignature;
+                ulong ignoredFingerprint;
                 bool ignoredPeriodic;
-                if (!Bind(save, mainGame, out ignoredSignature, out ignoredPeriodic))
+                if (!Bind(save, mainGame, out ignoredFingerprint, out ignoredPeriodic))
                 {
                     failure = "bootstrap completed but live binding failed";
                     _cache.Clear();
@@ -402,9 +410,9 @@ namespace CalendarQuestsPins
             }
         }
 
-        internal bool Bind(object save, object mainGame, out string signature, out bool hasPeriodicNpc)
+        internal bool Bind(object save, object mainGame, out ulong fingerprint, out bool hasPeriodicNpc)
         {
-            signature = null;
+            fingerprint = 0UL;
             hasPeriodicNpc = false;
             if (save == null || mainGame == null || !InvokeTryBindPlayer(mainGame)) return false;
 
@@ -436,8 +444,40 @@ namespace CalendarQuestsPins
             _saveField.SetValue(_cache, save);
             _knownNpcCountField.SetValue(_cache, knownCount);
             _boundKnownNpcCount = knownCount;
-            signature = WeekdayInteractionRuleCache.BuildKnownNpcSignature(save, out hasPeriodicNpc);
+            fingerprint = BuildKnownNpcFingerprint(save, out hasPeriodicNpc);
             return true;
+        }
+
+        internal static ulong BuildKnownNpcFingerprint(object save, out bool hasPeriodicNpc)
+        {
+            hasPeriodicNpc = false;
+            const ulong offset = 14695981039346656037UL;
+            const ulong prime = 1099511628211UL;
+            var hash = offset;
+
+            object known;
+            if (save == null || !ReflectionUtil.TryRead(save, "known_npcs", out known) || known == null) return hash;
+            var npcs = ReflectionUtil.EnumerateMember(known, "npcs");
+            if (npcs == null) return hash;
+
+            foreach (var npc in npcs)
+            {
+                if (npc == null) continue;
+                var id = ReflectionUtil.ReadString(npc, "npc_id");
+                if (string.IsNullOrEmpty(id)) continue;
+
+                for (var i = 0; i < id.Length; i++)
+                {
+                    hash ^= id[i];
+                    hash *= prime;
+                }
+                hash ^= 0x1FUL;
+                hash *= prime;
+
+                if (IsPeriodicNpc(id)) hasPeriodicNpc = true;
+            }
+
+            return hash;
         }
 
         private bool TryPersist(out string failure)
@@ -511,7 +551,7 @@ namespace CalendarQuestsPins
         private bool PrepareRuntime(object save, object mainGame)
         {
             if (save == null || mainGame == null ||
-                _targetsField == null || _saveField == null || _knownNpcCountField == null ||
+                _targetsField == null || _saveField == null || _playerField == null || _knownNpcCountField == null ||
                 _worldObjectGetterField == null || _smartResFactoryField == null ||
                 _findWorldObjectGetter == null || _findSmartResFactory == null ||
                 _tryBindPlayer == null || _parseGraph == null || _createSmartRes == null ||
@@ -787,11 +827,28 @@ namespace CalendarQuestsPins
             return result;
         }
 
-        private static int CountKnownNpcs(object save)
+        private static int CountKnownNpcsNoAlloc(object save)
         {
-            int count;
-            ReadKnownNpcs(save, out count);
+            if (save == null) return 0;
+            object known;
+            if (!ReflectionUtil.TryRead(save, "known_npcs", out known) || known == null) return 0;
+            var npcs = ReflectionUtil.EnumerateMember(known, "npcs");
+            if (npcs == null) return 0;
+
+            var collection = npcs as ICollection;
+            if (collection != null) return collection.Count;
+
+            var count = 0;
+            foreach (var npc in npcs)
+                if (npc != null) count++;
             return count;
+        }
+
+        private static bool IsPeriodicNpc(string npcId)
+        {
+            for (var i = 0; i < NpcIds.Length; i++)
+                if (string.Equals(npcId, NpcIds[i], StringComparison.Ordinal)) return true;
+            return false;
         }
 
         private static string ReadGameVersion(object save)
