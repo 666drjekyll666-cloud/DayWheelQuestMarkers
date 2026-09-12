@@ -201,23 +201,32 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Requested test: at the early Charmel state with 0/5 Faith and relation below 10, neither nested `actress_2b` child may produce a Lust-day marker. If convenient, after relation reaches 10 while the parent remains unconsumed, the two child one-shots may both legitimately produce reminders; after consuming either child, the parent is blacklisted and the sibling must no longer remain as a reachable reminder. Independent Charmel interactions may still contribute their own markers.
 - Status: **superseded architecturally by 1.0.30 before player acceptance**. The tactical Charmel-only gate remains useful evidence, but the general nested-dialogue audit proved the same missing parent-reachability condition exists in task-linked Merchant routes. Stable remains 1.0.24.
 
-## 1.0.30 — generic nested-dialogue reachability candidate
+## 1.0.30 — accepted generic nested-dialogue reachability stable
 
 - Date built: 2026-09-12.
+- Date accepted: 2026-09-13.
 - Development branch: `dev/1.0.30`.
 - Exact executable/build source: `a67355b2cca84954d8b0da06e91516212466969b`.
 - Candidate ref: `candidate/1.0.30` at the exact build source above.
+- Accepted baseline ref: `baseline/1.0.30-accepted` at the same exact build source.
 - Goal: replace the 1.0.29 Charmel-specific guard with a general, loading-derived root-to-answer reachability contract shared by owner-local tasks, cross-owner tasks, and one-shot dialogue reminders.
 - Evidence: `docs/NESTED_DIALOGUE_REACHABILITY_AUDIT.md` proves the model defect for Charmel `actress_2b -> @actress_2b_1a/@actress_2b_1b` and task-linked Merchant families `@merchant_business -> @merchant_marketing_done/@merchant_sales_done` plus `@merchant_2e -> @merchant_2e_1f`; Bishop `about_cathedral` is the verified unconditional-parent control.
 - Runtime architecture: new `NavigationReachabilityCache` derives root-to-final-answer navigation paths only during loading/bootstrap. Each cached path stores only required ancestor phrase predicates and supported ancestor `AnswerData` price/lock gates; conditions within one path are AND, alternative authored paths are OR. Unconditional plain ancestors compile away. Unknown/unsupported ancestry fails closed. Normal gameplay evaluates only compact cached phrase/SmartRes predicates; there is no FlowCanvas/navigation graph traversal in gameplay.
 - `VerifiedNestedDialogueGate` is removed from production. `WeekdayInteractionRuleCache` remains the established source of final reminder-bearing owner/cross/topic rules; 1.0.30 adds navigation reachability on top rather than replacing the accepted final-answer classifiers.
-- Persistent manifest schema is raised from 1 to 2 and now persists the navigation contract. An existing schema-1 `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin` is expected to fail the schema check during the verified loading window and be regenerated automatically; no manual deletion or migration step is requested.
-- Bootstrap includes fail-closed verified-contract validation for the known Charmel and Merchant parent chains and control cases before the schema-2 manifest is accepted.
-- Existing canonical final-rule integrity counts remain required: owner 75/6; cross-owner 8/6/0; one-shot 55/54/1. Navigation answer/path/predicate counts are logged separately for the first runtime validation and will be recorded after player evidence.
+- Persistent manifest schema is 2 and persists the navigation contract under `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin`. The existing format-version check simply rejects incompatible cache bytes and uses the normal loading-screen bootstrap; there is no field-by-field migration layer.
+- Bootstrap includes fail-closed verified-contract validation for the known Charmel and Merchant parent chains and control cases before the manifest is accepted.
+- Existing canonical final-rule integrity counts remain required: owner 75/6; cross-owner 8/6/0; one-shot 55/54/1.
 - CI: run `34717995096`, job `103618570571`, success on `windows-latest`; Release build succeeded with **0 warnings / 0 errors**.
 - Artifact: `DayWheelQuestMarkers-1.0.30` (`10305172405`), archive digest `sha256:cf7ecd4b5b6841ac85acb2de0daa34f81ce638845555cee8bf8560adb7ab616d`.
 - Raw DLL: 76,288 bytes.
 - Raw DLL SHA-256: `c08d84a601f923ac2b7a3b5a83ee07d4f56c4a2ef7ba54dffc6d1632fb59cef9`.
-- Build workflow was restored to manual-only on `dev/1.0.30` after candidate production; later workflow/docs bookkeeping does not alter the frozen candidate runtime source or bytes.
-- Requested first runtime test: install the exact 1.0.30 DLL without deleting the existing cache; load a save and send the resulting log. On the first 1.0.30 load, schema 1 should be rejected and schema 2 bootstrapped behind the loading screen, with no gameplay graph parse. The log must reach `Loading manifest ready`/`Ready`, preserve final-rule counts 75/6, 8/6/0, 55/54/1, and report reachability counts with no Day Wheel warning/error. Then confirm the original early Charmel state with relation below 10 has no two false Lust-day markers. If convenient, a second full restart should load schema 2 directly and log `FlowCanvas graph parse skipped`.
-- Status: **candidate / awaiting player runtime test**. Do not merge to `main`, create an accepted baseline, or publish `v1.0.30` before acceptance.
+- First player launch: schema-2 bootstrap completed behind loading in **557.88 ms**. The mod reached `Loading manifest ready`/`Ready` with final-rule counts 75/6, 8/6/0, 55/54/1 and navigation counts **210 answers / 270 paths / 151 predicates / 0 unsupported paths**; no Day Wheel warning/error was present.
+- Second full restart: the manifest loaded behind loading in **10.29 ms** and logged `FlowCanvas graph parse skipped`; the same canonical rule/navigation counts were restored and no runtime structural rebuild occurred.
+- Functional result: **accepted**. In the originally reported Charmel state with relation below 10, the two false Lust-day markers are gone, confirming the generic parent-chain reachability behavior on the real game state.
+- Performance result: the old roughly 30-second rhythmic Day Wheel hitch remains gone. The user observed about three sparse ~0.5 s hitches over roughly 15 minutes; the runtime log separately contains Unity `UnloadUnusedAssets` operations around 0.7 s with roughly 934k loaded objects, so these remaining stalls are not attributed to Day Wheel.
+- Acceptance: user explicitly approved promotion to `main` on 2026-09-13.
+- GitHub Release publication: workflow run `34720669798`, job `103625802463`, success.
+- Release: `v1.0.30`, release ID `387712272`, target commit `a67355b2cca84954d8b0da06e91516212466969b`.
+- Published asset: `Day.Wheel.Quest.Markers.1.0.30.dll`, asset ID `560005580`, 76,288 bytes.
+- Published asset digest: `sha256:c08d84a601f923ac2b7a3b5a83ee07d4f56c4a2ef7ba54dffc6d1632fb59cef9`, exactly matching the accepted DLL.
+- Status: **stable / released**.
