@@ -17,28 +17,40 @@ Read the global engineering contract in `666drjekyll666-cloud/DevRules` before s
 
 ## Product rule
 
-The core rule is:
+The core rule is now:
 
-`active objective -> required NPC interaction -> NPC weekday -> marker`
+`currently actionable weekday-NPC interaction -> NPC weekday -> marker`
 
-Do not mark a weekday merely because an NPC has an unfinished quest. If the current step still requires crafting, finding, collecting, exploring, raising quality/relation, or another non-NPC prerequisite, no marker should appear yet.
+A weekday-NPC interaction qualifies by either of these evidence-backed routes:
 
-False negatives are preferable to false positives. Unknown or unsupported quest structures fail closed.
+1. **Task-linked interaction:** a visible objective has an authored route through that weekday NPC, and every currently required phrase/resource gate is satisfied.
+2. **One-shot dialogue interaction:** an authored persisted `@` dialogue topic is currently open/pickable and its own authored branch persistently consumes that exact topic by adding it to the game's phrase blacklist. It does not need to be a direct task-completion anchor; a unique conversation itself is worth reminding the player about.
+
+Do not mark a weekday merely because an NPC has an unfinished quest. If the relevant task-linked step still requires crafting, finding, collecting, exploring, raising quality/relation, or another non-NPC prerequisite, that task route does not create a marker yet.
+
+Do not treat arbitrary visible menu options as reminders. Repeatable utility/menu/container choices such as Trade, Leave, Back, or a non-consuming "about ..." submenu header are excluded structurally because they do not consume their own persisted topic. Do not implement this by translated/display-text matching.
+
+Unknown or unsupported structures fail closed. False positives remain undesirable, but the old rule that required every reminder to prove downstream quest progression is retired: it incorrectly hid real one-time conversations such as the portal-item dialogue opened by Snake at the Inquisitor.
 
 ## Accepted runtime architecture
 
-Preserve the accepted 1.0.21 architecture unless a tested change explicitly replaces it:
+Preserve the accepted 1.0.21 architecture and the narrow later additions unless a tested change explicitly replaces them:
 
 - owner-local actionability comes from verified task completion routes in the owning weekday NPC graph;
 - cross-owner actionability comes only from an explicit authored weekday-NPC completion route for the foreign-owned task;
+- authored one-shot dialogue structure is cached during loading; gameplay never traverses graphs to discover it;
+- a generic one-shot candidate must self-blacklist its exact authored `@` phrase, be unlocked, not already blacklisted, and pass every supported authored price/lock gate through the game's own `Player.IsEnough` path;
+- direct task-completion answers are kept out of the generic one-shot layer to prevent duplicate markers with owner/cross-owner rules;
 - phrase state and blacklist state are honored;
 - supported price/lock gates are reconstructed as game SmartRes and evaluated through `Player.IsEnough`;
-- the two audited rare objective-bridge families are handled by the narrow `VerifiedBridgeReminderRules` mapping, not a broad dialogue heuristic;
-- heavy owner/cross-owner graph parsing is prewarmed under the loading screen when all required runtime objects are verified present;
+- the two audited rare objective-bridge families and the 1.0.22 intermediate manifest remain narrow controls during the 1.0.23 one-shot rollout; their exact IDs are excluded from the generic layer so they cannot double-count;
+- heavy graph parsing is prewarmed under the loading screen when all required runtime objects are verified present;
 - gameplay refresh uses cached structure and a one-second cadence; broad graph/hierarchy scans do not belong in the steady-state path;
 - HUD work is deferred until a real marker exists;
-- multiple same-day objectives remain separate native-style markers distributed symmetrically within the weekday sector;
+- multiple same-day actionable interactions remain separate native-style markers distributed symmetrically within the weekday sector;
 - current semantic `HUDSinIcon._sin_type`, not a fixed physical slot index, determines the weekday target.
+
+The rejected universal provenance parser is still rejected. The generic one-shot classifier is intentionally narrower: it parses only the six weekday-NPC graphs during the existing loading prewarm and recognizes exact self-consumption plus native answer gates. It does not traverse external quest provenance during gameplay.
 
 ## Marker sprite contract
 
@@ -67,7 +79,7 @@ Steady-state runtime should be effectively negligible relative to the game:
 - reuse marker GameObjects and cached references;
 - use the existing slow structural-staleness cadence rather than broad recurring validation.
 
-The rejected universal provenance parser that pushed prewarm toward ~1.8 s must not return.
+The rejected universal provenance parser that pushed prewarm toward ~1.8 s must not return. Any added loading-time classifier must remain bounded and its actual prewarm cost must be checked in the handed candidate log.
 
 ## Repository workflow
 
@@ -89,6 +101,8 @@ Use these as long-lived sources of truth:
 - current production source and project file
 
 Before adding a new quest/NPC/gate rule, establish it from repository evidence, targeted runtime evidence, or assembly inspection. Do not infer internal IDs from display text.
+
+For generic one-shot dialogue classification, the accepted structural evidence is the authored exact-phrase self-blacklist operation plus the authored phrase/resource gates. Do not broaden it to arbitrary dialogue visibility or translated-text heuristics.
 
 ## Handoff / acceptance
 
