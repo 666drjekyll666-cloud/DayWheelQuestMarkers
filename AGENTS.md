@@ -10,10 +10,10 @@ Read the global engineering contract in `666drjekyll666-cloud/DevRules` before s
 - Game: Graveyard Keeper 1.407
 - Stable BepInEx GUID: `nikich.gyk.calendarquestspins`
 - Legacy source namespace `CalendarQuestsPins` is intentionally retained; do not change the GUID or namespace merely for cosmetic normalization.
-- Current accepted stable public baseline: **1.0.24**.
-- Exact accepted runtime source: `99d961abef528e14378c3dc8fd074a550b1138e9`.
-- Accepted baseline ref: `baseline/1.0.24-accepted`.
-- Accepted DLL SHA-256: `05aecb65054ba4890a7ffb043ead2fb4996512d911d63bb24a338e99c039971c`.
+- Current accepted stable public baseline: **1.0.30**.
+- Exact accepted runtime source: `a67355b2cca84954d8b0da06e91516212466969b`.
+- Accepted baseline ref: `baseline/1.0.30-accepted`.
+- Accepted DLL SHA-256: `c08d84a601f923ac2b7a3b5a83ee07d4f56c4a2ef7ba54dffc6d1632fb59cef9`.
 
 ## Product rule
 
@@ -23,8 +23,8 @@ The core rule is:
 
 A weekday-NPC interaction qualifies by either of these evidence-backed routes:
 
-1. **Task-linked interaction:** a visible objective has an authored route through that weekday NPC, and every currently required phrase/resource gate is satisfied.
-2. **One-shot dialogue interaction:** an authored persisted `@` dialogue topic is currently open/pickable and its own authored branch persistently consumes that exact topic by adding it to the game's phrase blacklist. It does not need to be a direct task-completion anchor; a unique conversation itself is worth reminding the player about.
+1. **Task-linked interaction:** a visible objective has an authored route through that weekday NPC, and every currently required phrase/resource/navigation gate is satisfied.
+2. **One-shot dialogue interaction:** an authored persisted `@` dialogue topic is currently reachable/pickable and its own authored branch persistently consumes that exact topic by adding it to the game's phrase blacklist. It does not need to be a direct task-completion anchor; a unique conversation itself is worth reminding the player about.
 
 Do not mark a weekday merely because an NPC has an unfinished quest. If the relevant task-linked step still requires crafting, finding, collecting, exploring, raising quality/relation, or another non-NPC prerequisite, that task route does not create a marker yet.
 
@@ -32,22 +32,34 @@ Do not treat arbitrary visible menu options as reminders. Repeatable utility/men
 
 Unknown or unsupported structures fail closed. False positives remain undesirable, but the old rule that required every reminder to prove downstream quest progression is retired: it incorrectly hid real one-time conversations such as the portal-item dialogue opened by Snake at the Inquisitor.
 
-## Accepted 1.0.24 runtime architecture
+## Accepted 1.0.30 runtime architecture
 
-The accepted production architecture is one unified loading-time structural cache:
+Production uses a persistent structural manifest plus cheap live bindings:
 
-- `WeekdayInteractionRuleCache` owns the structural index for all six weekday NPC graphs;
-- each NPC serialized graph is converted to node/connection/incoming-flow/incoming-value indexes **once per cache build**;
-- the same parsed index emits owner-local task rules, cross-owner task rules, and one-shot dialogue rules;
-- direct task-completion answers are excluded from the generic one-shot set so one interaction cannot be double-counted;
+- `WeekdayInteractionRuleCache` remains the source of final reminder-bearing owner-local task, cross-owner task, and one-shot dialogue rules;
+- `NavigationReachabilityCache` adds the verified root-to-final-answer reachability contract required for nested dialogue;
+- each authored path stores only required ancestor phrase-state predicates and supported ancestor `AnswerData` gates; predicates within one path are AND, alternative authored paths are OR;
+- unconditional plain ancestors compile away; unknown or unsupported ancestry fails closed;
+- the exact six weekday-NPC graphs are parsed only during loading/bootstrap when the persistent manifest is missing or incompatible;
+- the persistent manifest lives at `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin` and stores structural reminder plus navigation data;
+- normal later loads deserialize the compact manifest and recreate only live SmartRes/WGO/player/KnownNpc bindings; no FlowCanvas graph parse is allowed during gameplay;
 - owner-local rules retain the verified authoritative `WorldZone.GetTotalQuality()` fallback for unambiguous authored quality mirrors;
 - cross-owner and generic one-shot gates preserve the accepted SmartRes/`Player.IsEnough` behavior rather than silently broadening zone-mirror semantics;
-- previously verified bridge/intermediate topics are handled by the same exact self-consuming authored one-shot structure instead of parallel hard-coded manifests;
-- the unified cache directly rebinds player/save/KnownNPC references;
-- graph parsing remains loading-time only. Normal gameplay evaluates cached rules on the one-second cadence;
-- structural staleness remains low-frequency and compares the known-NPC signature so same-count NPC-set changes cannot be missed.
+- native marker sprites remain game-owned and are cached through bounded lookup;
+- known-NPC changes use cheap rebinding; the steady one-second and 30-second validation paths must remain allocation-light and must not rebuild dictionaries/signatures without a real state change.
 
-Superseded production classes removed by 1.0.24:
+Verified 1.0.30 runtime evidence:
+
+- first schema-2 bootstrap completed behind the loading screen in **557.88 ms**;
+- a subsequent full restart loaded the persistent manifest in **10.29 ms** and logged `FlowCanvas graph parse skipped`;
+- canonical final-rule counts remained owner 75/6, cross-owner 8/6/0, one-shot 55/54/1;
+- navigation counts were 210 answers, 270 paths, 151 predicates, 0 unsupported paths;
+- the reported Charmel false-positive state (`actress_2b` blocked by relation) produced no two false Lust-day markers;
+- the earlier roughly 30-second rhythmic Day Wheel hitch was removed by the accepted allocation-free steady-state path; remaining sparse hitches occur at the control game/modpack baseline and are not attributed to Day Wheel without new evidence.
+
+The rejected universal provenance parser remains rejected. Production derives only verified local reminder structure/navigation from the six weekday-NPC graphs; it does not walk arbitrary external dependency/provenance chains.
+
+Superseded production classes/approaches include:
 
 - `QuestRuleCache`
 - `CrossOwnerRuleCache`
@@ -55,16 +67,7 @@ Superseded production classes removed by 1.0.24:
 - `SessionCacheRebinder`
 - `VerifiedBridgeReminderRules`
 - `VerifiedIntermediateReminderRules`
-
-The rejected universal provenance parser remains rejected. The unified cache only combines accepted local structural classifiers; it does not walk arbitrary external dependency/provenance chains.
-
-Accepted runtime evidence on the developed regression save:
-
-- the same three portal-item reminders appeared as in accepted 1.0.23;
-- selecting Inquisitor `@inquisitor_magic_item` removed only that reminder as expected;
-- unified cache prewarm completed in **308.07 ms**, versus **782.89 ms** for accepted 1.0.23 on the corresponding developed-save test;
-- the mod reached `Ready` with owner supported=75, owner unsupported=6, cross-owner tasks=8, cross-owner supported=6, cross-owner unsupported=0, one-shot topics=55, one-shot supported=54, one-shot unsupported=1;
-- no Day Wheel Quest Markers error/warning was present in the supplied runtime log.
+- the 1.0.29 Charmel-only `VerifiedNestedDialogueGate`
 
 ## Marker sprite contract
 
@@ -89,11 +92,12 @@ Steady-state runtime should be effectively negligible relative to the game:
 - no continuous broad resource/hierarchy scans;
 - no background worker;
 - no save mutation;
-- no repeated FlowCanvas parsing;
+- no FlowCanvas/navigation graph traversal during gameplay;
 - reuse marker GameObjects and cached references;
+- known-NPC count/fingerprint checks remain allocation-light;
 - use the existing slow structural-staleness cadence rather than broad recurring validation.
 
-The rejected universal provenance parser that pushed prewarm toward ~1.8 s must not return. Accepted 1.0.24 unified-cache prewarm on the developed regression save was 308.07 ms, substantially below accepted 1.0.23's 782.89 ms because the six NPC graphs are no longer reparsed by multiple independent caches.
+Do not optimize speculative problems. The accepted performance line is evidence-driven: 1.0.25 exposed a 302.22 ms first-NPC runtime rebuild; 1.0.26 moved graph work behind loading and persisted it; 1.0.27 moved the cache to BepInEx; 1.0.28 removed recurring allocation pressure that correlated with the old ~30-second rhythmic hitch; 1.0.30 preserves that steady-state architecture while adding persisted navigation reachability.
 
 ## Repository workflow
 
@@ -116,7 +120,7 @@ Use these as long-lived sources of truth:
 
 Before adding a new quest/NPC/gate rule, establish it from repository evidence, targeted runtime evidence, or assembly inspection. Do not infer internal IDs from display text.
 
-For generic one-shot dialogue classification, the accepted structural evidence is the authored exact-phrase self-blacklist operation plus the authored phrase/resource gates. Do not broaden it to arbitrary dialogue visibility or translated-text heuristics.
+For generic one-shot dialogue classification, the accepted structural evidence is the authored exact-phrase self-blacklist operation plus authored phrase/resource/navigation gates. Do not broaden it to arbitrary dialogue visibility or translated-text heuristics.
 
 ## Handoff / acceptance
 
