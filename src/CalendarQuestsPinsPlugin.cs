@@ -11,7 +11,7 @@ namespace CalendarQuestsPins
         // Stable legacy GUID retained across the public product rename so upgrades stay on the same plugin identity.
         public const string PluginGuid = "nikich.gyk.calendarquestspins";
         public const string PluginName = "Day Wheel Quest Markers";
-        public const string PluginVersion = "1.0.28";
+        public const string PluginVersion = "1.0.29";
 
         private const float TickSeconds = 1f;
         private const float StructureCheckSeconds = 30f;
@@ -32,6 +32,7 @@ namespace CalendarQuestsPins
         private readonly List<MarkerStyle>[] _currentSinMarkers = new List<MarkerStyle>[7];
         private WeekdayInteractionRuleCache _rules;
         private PersistentRuleManifest _manifest;
+        private VerifiedNestedDialogueGate _nestedDialogueGate;
         private CalendarMarkers _markers;
         private LoadingCachePrewarmGate _prewarmGate;
 
@@ -40,6 +41,7 @@ namespace CalendarQuestsPins
             _mainGameType = ReflectionUtil.FindType("MainGame");
             _rules = new WeekdayInteractionRuleCache();
             _manifest = new PersistentRuleManifest(_rules);
+            _nestedDialogueGate = new VerifiedNestedDialogueGate();
             _markers = new CalendarMarkers();
             _prewarmGate = new LoadingCachePrewarmGate();
 
@@ -264,6 +266,8 @@ namespace CalendarQuestsPins
                     {
                         var topic = target.Topics[i];
                         if (!_rules.IsTopicActionable(topic, unlocked, blacklisted)) continue;
+                        if (_nestedDialogueGate == null ||
+                            !_nestedDialogueGate.IsSatisfied(target, topic, _mainGame, blacklisted)) continue;
                         AddMarker(sinTypeValue, MarkerStyle.Base);
                     }
                 }
