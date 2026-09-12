@@ -51,3 +51,22 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Diagnosis: static universe evidence had already identified `@inquisitor_magic_item` as an authored supported self-consuming one-shot topic, but the previous progression-only policy rejected it because its Snake source path was taskless/relation-gated. That policy was too restrictive for the actual reminder product goal.
 - Superseded direction: 1.0.23 broadens reminders to currently actionable authored one-shot weekday dialogue while preserving the existing task-linked rules and gate checks.
 - Status: **tested / superseded / not accepted**. Do not merge to `main`, create `baseline/1.0.22-accepted`, or publish `v1.0.22`.
+
+## 1.0.23 — candidate, awaiting player test
+
+- Date built: 2026-09-12.
+- Development branch: `dev/1.0.23`.
+- Exact executable/build source: `3da21541a38753387cf9c4d343559e5fb1181f34`.
+- Candidate ref: `candidate/1.0.23` at the exact executable source above.
+- Goal: broaden the reminder model from only task/progression-proven interactions to currently actionable authored one-shot weekday-NPC conversations, while still excluding repeatable utilities and submenu/container topics structurally.
+- Runtime changes: new loading-time `OneShotDialogueRuleCache` over the six weekday-NPC graphs. A generic candidate must be an authored persisted `@` topic whose own route blacklists that exact topic, must currently be unlocked/not blacklisted, and must pass supported authored `Flow_Answer` price/lock gates through `Player.IsEnough`. Direct task-completion answers and the retained 1.0.22 bridge/intermediate answer IDs are excluded from the generic layer to avoid duplicate markers. No recurring graph traversal or universal provenance parser was added.
+- Canonical product contract and verified blacklist semantics were updated in `AGENTS.md` and `docs/VERIFIED_RUNTIME_DATA.md`.
+- CI: run `34680719489`, job `103518743292`, success; Release build and artifact upload both succeeded.
+- Artifact: `DayWheelQuestMarkers-1.0.23` (`10293188076`), archive digest `sha256:4bad1ca06c4626df1b25dffbeb7c8326e7fd6328072d4b90d9efb0ab54d120c4`.
+- Raw DLL: 65,536 bytes.
+- Raw DLL SHA-256: `dc9b1f3494f46a903ec416679c08b9d6a3704f2132e82d8c9ac2cf21c06458b7`.
+- Primary requested test on the current save: before consuming the already-visible Inquisitor `@inquisitor_magic_item` / Eternal Ember conversation, the Inquisitor weekday must show a base marker. The same Snake `@snake_items_give` transition also authored `@bishop_magic_item` and `@merchant_magic_item`, so Bishop and Merchant should likewise show reminders while those one-shot conversations are open/actionable. After consuming one of these topics, its contribution should disappear on the next refresh unless another independent actionable interaction still requires a marker on that weekday.
+- False-positive controls: ordinary Trade / Leave / Back must not produce markers; a non-consuming submenu/header such as Snake's `@snake_about_nacklase` must not create a marker merely by being open. Existing item/relation/quality prerequisites must continue to suppress task-linked interactions until satisfied.
+- Performance check: capture the `Quest/dialogue caches prewarmed behind loading screen ... one-shot topics=...` line from the runtime log and compare the elapsed time with the roughly 508-525 ms 1.0.22 loads. Report any noticeable post-load hitch.
+- Player result: **pending**.
+- Status: candidate only; do not merge to `main`, create `baseline/1.0.23-accepted`, or publish `v1.0.23` before explicit player acceptance.
