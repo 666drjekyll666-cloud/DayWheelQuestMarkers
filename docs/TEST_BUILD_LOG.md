@@ -38,7 +38,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Development branch: `dev/1.0.22`.
 - Exact executable/build source: `f8254f2af5112359c332f66848ad081cd754de91`.
 - Candidate ref: `candidate/1.0.22` at the exact executable source above.
-- Goal: cover statically verified required intermediate weekday-NPC progression stages that are not represented by direct task-completion anchors, and use live authoritative zone quality for graph-derived cached `GameRes` quality mirrors.
+- Goal: cover statically verified required intermediate weekday-NPC progression stages that are not represented by direct task-completion anchors, and use live authoritative zone quality for graph-derived cached `GameRes` quality requirements.
 - Runtime changes: six verified intermediate manifest families; graph-derived unambiguous `Flow_SetPlayerParam <- Flow_GetQualityOfZone` requirement mirrors; all non-mirror requirements remain on authored `SmartRes` plus `Player.IsEnough`; no universal runtime provenance parser or recurring graph scan.
 - Engineering evidence: `docs/INTERMEDIATE_PROGRESS_AUDIT.md`.
 - CI: run `34679367015`, job `103514969551`, success.
@@ -124,7 +124,44 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Artifact: `DayWheelQuestMarkers-1.0.26` (`10303102216`), archive digest `sha256:6ab6e21a4e1da5bd76970a260fa5ff9e6ced984af8aaf7095efd404d4b612501`.
 - Raw DLL: 56,320 bytes.
 - Raw DLL SHA-256: `cc2a7deb7451318e2f6ad6f4751d27f05b2a631cc523a64c336cef594340605c`.
-- Build workflow was returned to manual-only after the candidate build. Later workflow/test-history bookkeeping does not alter the frozen candidate runtime source or bytes.
-- Requested test: two launches. First launch should bootstrap the persistent manifest behind the loading screen and create `DayWheelQuestMarkers.rules.1.407.bin`; the first Bishop/weekday-NPC introduction must not perform a runtime structural rebuild. After closing and relaunching, the log should report that the persistent manifest was loaded behind the loading screen and FlowCanvas graph parsing was skipped. Subsequent newly known NPCs should only trigger cheap manifest rebinding. Player should compare the formerly noticeable dialogue/start-game hitches and send the resulting log.
-- Separate known issue: the user's report of excess Charmel markers is intentionally not addressed in this performance candidate and remains a later functional fix.
-- Status: **candidate / awaiting player runtime test**. Do not merge to `main`, create an accepted baseline, or publish `v1.0.26` before acceptance.
+- Player result: **performance improvement confirmed, not accepted as final**. The first Bishop/weekday-NPC introduction no longer produced the previous ~302 ms runtime structural rebuild, and the user reported that the number of noticeable freezes dropped substantially (roughly from several per session segment to around one). A subsequent launch loaded the manifest behind the loading screen in 5.95 ms with the exact canonical counts; later new-NPC discoveries used cheap manifest rebinding only.
+- Remaining issue: intermittent noticeable hitches still occurred. The adjacent `.bin` file was also judged poor user-facing placement, so the line was superseded rather than promoted.
+- Separate known issue: excess Charmel markers remains intentionally outside this performance line.
+- Status: **tested / superseded / not accepted**. Stable remains 1.0.24.
+
+## 1.0.27 — BepInEx cache-location candidate
+
+- Date built: 2026-09-12.
+- Development branch: `dev/1.0.27`.
+- Exact executable/build source: `f420ac2db01f75c55a0f71232768b8cfb083c107`.
+- Candidate ref: `candidate/1.0.27` at the same exact source.
+- Goal: retain the 1.0.26 persistent-manifest architecture while moving the generated cache out of the plugin directory into the standard BepInEx cache area.
+- Runtime change: manifest path is `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin`. No migration/import code exists by explicit user decision; an old adjacent 1.0.26 `.bin` is simply ignored and may be deleted manually.
+- Quest/actionability semantics, manifest schema, parser bootstrap, marker rendering and gameplay refresh cadence are unchanged from 1.0.26.
+- CI: run `34712258786`, job `103603023084`, success; Release build succeeded with **0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-1.0.27` (`10304050276`), archive digest `sha256:35197e85823d6cec338a1d324ea1c417af380bec3a0ba74fe9c97c34dec5c5e9`.
+- Raw DLL: 56,320 bytes.
+- Raw DLL SHA-256: `26646982e39a308e0e56b5e8638cc01c3257dbba5afad344544968b419d3019b`.
+- Player result: cache placement **confirmed correct**. The manifest appears under `BepInEx/cache/DayWheelQuestMarkers/` and no new `.bin` appears beside the plugin DLL.
+- Supplied short-run log confirms 1.0.27 loads the persisted manifest behind loading in 5.93 ms with canonical counts and reaches `Ready`; no runtime graph rebuild is present in the captured interval.
+- Remaining performance issue: user still observes an approximately 0.5 s hitch roughly every 30–60 s. Source audit found recurring allocation pressure in our steady-state checks: the once-per-second known-NPC count check built a new dictionary; the 30-second signature check allocated/sorted a list and joined a new string; runtime validity also used reflective `MethodInfo.Invoke` with a new argument array every second. These are defects worth removing even though the supplied logs do not by themselves prove that all remaining stalls originate in Day Wheel.
+- Status: **tested / superseded by 1.0.28 / not accepted**. Stable remains 1.0.24.
+
+## 1.0.28 — allocation-free steady-state candidate
+
+- Date built: 2026-09-12.
+- Development branch: `dev/1.0.28`.
+- Exact executable/build source: `8c6864f8fb93e16cc722fd22923f0d92337405a4`.
+- Candidate ref: `candidate/1.0.28` at the same exact source.
+- Goal: eliminate recurring allocation pressure in Day Wheel's normal one-second and 30-second validation paths without changing reminder semantics or the persistent-manifest schema.
+- Runtime changes: the once-per-second known-NPC count check now reads `ICollection.Count` (or performs a direct non-allocating enumeration fallback) instead of constructing a dictionary; runtime validity compares the current live player to the already cached player without reflective `TryBindPlayer` invocation/argument-array allocation; the 30-second known-NPC set check now computes an allocation-free `ulong` fingerprint over existing NPC IDs instead of `List<string> -> Sort -> ToArray -> string.Join`. Actual bind/rebind still builds the small lookup dictionary only when membership really changes or a save is loaded.
+- Existing `rules-1.407.bin` from 1.0.27 remains valid; no cache deletion/regeneration is required.
+- Quest/actionability rules, FlowCanvas bootstrap policy, marker sprites/UI and cache location are unchanged.
+- CI: run `34712967327`, job `103604965842`, success on `windows-latest`; Release build succeeded with **0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-1.0.28` (`10303806667`), archive digest `sha256:0eece5c6e6ef06c817340f222d68459e7ce1c9d6042ff46c7ff0141e84bffb5a`.
+- Raw DLL: 57,344 bytes.
+- Raw DLL SHA-256: `fa3e64a5835cc30c730d1c083ae1531a2765f7531680340bbeda9a7ee0b14210`.
+- Build workflow was restored to manual-only after candidate production; later workflow/docs bookkeeping does not alter the frozen candidate runtime source or bytes.
+- Requested test: keep the existing BepInEx cache manifest, install 1.0.28, play continuously for several minutes, and specifically judge whether the rhythmic ~30–60 s / ~0.5 s freeze disappears or materially weakens. Normal marker behavior and newly known NPC rebinding should remain unchanged. If the same periodic freeze remains, send the resulting log; the next investigation should then separate game/other-mod GC or asset work from Day Wheel rather than returning to FlowCanvas parsing.
+- Separate known issue: excess Charmel markers remains intentionally untouched until the performance line is closed.
+- Status: **candidate / awaiting player runtime test**. Do not merge to `main`, create an accepted baseline, or publish `v1.0.28` before acceptance.
