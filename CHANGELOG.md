@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.24
+
+- Consolidates weekday-NPC quest and dialogue discovery into one unified loading-time cache.
+- Parses each of the six weekday-NPC dialogue graphs once instead of reparsing them through separate owner, cross-owner, and one-shot caches.
+- Removes the transitional hard-coded bridge/intermediate reminder manifests; those verified one-time interactions now use the same authored self-consuming dialogue rule as other one-shot reminders.
+- Preserves owner-local and cross-owner task handling, supported resource/relation gates, native marker categories, and authoritative live zone-quality handling where previously verified.
+- Reduces measured developed-save cache prewarm from 782.89 ms in 1.0.23 to 308.07 ms in the accepted regression test, with no recurring graph parsing during normal gameplay.
+
 ## 1.0.23
 
 - Broadens reminders from only task/progression-proven interactions to any currently actionable authored one-time dialogue with a weekday NPC.
