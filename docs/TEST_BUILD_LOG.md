@@ -20,7 +20,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Runtime logic base: accepted 1.0.17 reminder/actionability logic, with the public marker-resource implementation used by 1.0.21.
 - Source audit: `QuestRuleCache.cs`, `CrossOwnerRuleCache.cs`, `SessionCacheRebinder.cs`, `LoadingCachePrewarmGate.cs`, `VerifiedBridgeReminderRules.cs`, and `ReflectionUtil.cs` are byte-identical to the accepted 1.0.17 blobs.
 - CI: run `34639351706`, job `103394957694`, success, 0 warnings / 0 errors.
-- Artifact: `DayWheelQuestMarkers-1.0.21` (`10278859840`), archive digest `sha256:046c957736a4d028fbe7cb12841797fe8f72673cf901d03e6fbf611c6d3d80ac`.
+- Artifact: `DayWheelQuestMarkers-1.0.21` (`10278859840`), archive digest `sha256:046c957736a4d028fbe7cb12841797fe8f72673cf901d03e6fb611c6d3d80ac`.
 - Raw DLL: 47,616 bytes.
 - Raw DLL SHA-256: `b609da9c35cd40ce09259a4c580e371dad15c3889f4e5cf9bdb0190a00e23c9a`.
 - Requested regression test: marker rendering/category correctness, menu/HUD lifecycle, multiple markers/categories if convenient, and no noticeable post-load hitch.
@@ -70,7 +70,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Primary requested test: before consuming the already-visible Inquisitor `@inquisitor_magic_item` / Eternal Ember conversation, the Inquisitor weekday must show a base marker. The same Snake `@snake_items_give` transition also authored `@bishop_magic_item` and `@merchant_magic_item`, so Bishop and Merchant should likewise show reminders while those one-shot conversations are open/actionable. After consuming one of these topics, its contribution should disappear on the next refresh unless another independent actionable interaction still requires a marker on that weekday.
 - False-positive controls: ordinary Trade / Leave / Back must not produce markers; a non-consuming submenu/header such as Snake's `@snake_about_nacklase` must not create a marker merely by being open. Existing item/relation/quality prerequisites must continue to suppress task-linked interactions until satisfied.
 - Player result: **accepted**. Exactly three expected markers appeared for the three Snake-opened portal-item conversations: Inquisitor, Bishop and Merchant. After the player selected the Inquisitor `@inquisitor_magic_item` / Eternal Ember conversation, the Inquisitor marker disappeared as expected while the other two remained independently pending.
-- Supplied runtime log confirms `Day Wheel Quest Markers 1.0.23` loaded normally and reached `Ready`. Loading-screen prewarm completed in **782.89 ms** with `supported=75`, `cross-owner tasks=8`, `one-shot topics=41`; steady-state cache summary reports `one-shot supported rules=43` and `one-shot unsupported rules=1` (fail closed). No Day Wheel Quest Markers error/warning appears in the supplied log.
+- Supplied runtime log confirms `Day Wheel Quest Markers 1.0.23` loaded normally and reached `Ready`. Loading-screen prewarm completed in **782.89 ms** with `supported=75`, `cross-owner tasks=8`, `one-shot topics=41`; steady-state summary reports `one-shot supported rules=43` and `one-shot unsupported rules=1` (fail closed). No Day Wheel Quest Markers error/warning appears in the supplied log.
 - The same runtime log provides an additional false-positive control: before selection, Inquisitor offered `@inquisitor_magic_item` plus `Leave`; after consuming that one-shot topic, the game opened follow-up `@inquisitor_magic_100`, but that reply was explicitly unclickable (`_can_be_picked = False`). The mod's marker disappeared anyway, confirming that a newly visible but non-actionable follow-up does not keep the one-shot reminder alive.
 - Performance comparison: this current 1.0.23 load is about 258-275 ms slower than the recorded 1.0.22 507.82-525.35 ms loads. The extra work remains confined to the loading-screen prewarm; user did not report a visible post-load hitch.
 - Acceptance: user explicitly said `фиксируем` after the appearance and disappearance lifecycle test passed.
@@ -107,3 +107,24 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Published asset: `Day.Wheel.Quest.Markers.1.0.24.dll`, 43,008 bytes.
 - Published asset digest: `sha256:05aecb65054ba4890a7ffb043ead2fb4996512d911d63bb24a338e99c039971c`, exactly matching the accepted DLL.
 - Status: **stable / released**.
+
+## 1.0.26 — persistent-manifest performance candidate
+
+- Date built: 2026-09-12.
+- Development branch: `dev/1.0.26`.
+- Exact executable/build source: `b9e698fc6eeeea46cf20e3b51eb1e737cb35b01a`.
+- Candidate ref: `candidate/1.0.26` at the exact build source above.
+- Goal: remove synchronous FlowCanvas structural parsing from gameplay, especially the measured fresh-game first-weekday-NPC hitch, while preserving the accepted 1.0.24 reminder/actionability semantics.
+- Preceding evidence: fresh-game 1.0.25 testing measured a `302.22 ms` runtime structural rebuild at the first Bishop introduction. Later `known_npc` additions used cheap rebinding and did not require graph parsing, confirming that live membership can be separated from static structure. Source review also found the intended 1.0.25 prewarm gate had the wrong `game_starting` polarity.
+- Runtime architecture: `PersistentRuleManifest` persists only pure structural rule data to `DayWheelQuestMarkers.rules.1.407.bin`, versioned for GK 1.407. The first cache miss bootstraps the accepted parser only in the verified loading-screen window (`game_started=false`, `game_starting=false`) and persists the result. Future launches deserialize the compact manifest and re-create only live SmartRes/WGO/player/KnownNpc bindings. Gameplay is not permitted to invoke the graph parser; if the manifest cannot be restored there, reminders fail closed for the affected session rather than paying a synchronous parse hitch.
+- Integrity guard: bootstrap/persist is accepted only when structural counts match the accepted 1.0.24 universe exactly: owner 75 supported / 6 unsupported; 8 cross-owner tasks / 6 supported / 0 unsupported; 55 one-shot topics / 54 supported / 1 unsupported.
+- Native marker sprites remain game-owned. Existing bounded loaded-Sprite lookup/caching is retained; no copied Graveyard Keeper pixel payloads were embedded.
+- Engineering design/evidence: `docs/PERSISTENT_MANIFEST_1.0.26.md`.
+- CI: run `34710799403`, job `103599117362`, success on `windows-latest`; Release build succeeded with **0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-1.0.26` (`10303102216`), archive digest `sha256:6ab6e21a4e1da5bd76970a260fa5ff9e6ced984af8aaf7095efd404d4b612501`.
+- Raw DLL: 56,320 bytes.
+- Raw DLL SHA-256: `cc2a7deb7451318e2f6ad6f4751d27f05b2a631cc523a64c336cef594340605c`.
+- Build workflow was returned to manual-only after the candidate build. Later workflow/test-history bookkeeping does not alter the frozen candidate runtime source or bytes.
+- Requested test: two launches. First launch should bootstrap the persistent manifest behind the loading screen and create `DayWheelQuestMarkers.rules.1.407.bin`; the first Bishop/weekday-NPC introduction must not perform a runtime structural rebuild. After closing and relaunching, the log should report that the persistent manifest was loaded behind the loading screen and FlowCanvas graph parsing was skipped. Subsequent newly known NPCs should only trigger cheap manifest rebinding. Player should compare the formerly noticeable dialogue/start-game hitches and send the resulting log.
+- Separate known issue: the user's report of excess Charmel markers is intentionally not addressed in this performance candidate and remains a later functional fix.
+- Status: **candidate / awaiting player runtime test**. Do not merge to `main`, create an accepted baseline, or publish `v1.0.26` before acceptance.
