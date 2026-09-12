@@ -91,7 +91,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Accepted baseline ref: `baseline/1.0.24-accepted` at the same exact build source.
 - Goal: consolidate the accepted 1.0.23 owner-local, cross-owner and one-shot classifiers into one loading-time graph parser, and retire transitional hard-coded bridge/intermediate manifests without changing the canonical interaction-reminder rule.
 - Runtime changes: `WeekdayInteractionRuleCache` parses each of the six weekday-NPC graphs once and derives owner-local completion rules, cross-owner completion rules and self-consuming one-shot topics from the same node/connection index. Direct completion answers remain excluded from the generic one-shot set. Owner-local live zone-quality mirrors are preserved; cross-owner and one-shot SmartRes semantics are not broadened. The unified cache directly owns session rebind/state validation.
-- Removed production source: `QuestRuleCache`, `CrossOwnerRuleCache`, `OneShotDialogueRuleCache`, `SessionCacheRebinder`, `VerifiedBridgeReminderRules`, and `VerifiedIntermediateReminderRules`. Previously verified bridge/intermediate topic IDs are handled by their accepted exact self-consuming authored structure.
+- Removed production source: `QuestRuleCache`, `CrossOwnerRuleCache`, `OneShotDialogueRuleCache`, `SessionCacheRebinder`, `LoadingCachePrewarmGate`, `VerifiedBridgeReminderRules`, and `VerifiedIntermediateReminderRules`. Previously verified bridge/intermediate topic IDs are handled by their accepted exact self-consuming authored structure.
 - Engineering evidence/design: `docs/UNIFIED_CACHE_REFACTOR_1.0.24.md`.
 - CI: run `34682455605`, job `103523471693`, success on `windows-latest`; Release build succeeded with **0 warnings / 0 errors**.
 - Artifact: `DayWheelQuestMarkers-1.0.24` (`10294740350`), archive digest `sha256:c05a205daaff183062522ed29e2b8aad7a295bf8a1fbc0945ba6d27c7c55c6cf`.
@@ -107,6 +107,21 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Published asset: `Day.Wheel.Quest.Markers.1.0.24.dll`, 43,008 bytes.
 - Published asset digest: `sha256:05aecb65054ba4890a7ffb043ead2fb4996512d911d63bb24a338e99c039971c`, exactly matching the accepted DLL.
 - Status: **stable / released**.
+
+## 1.0.25 — first-NPC rebind candidate
+
+- Date built: 2026-09-12.
+- Development branch: `dev/1.0.25`.
+- Exact executable/build source: `736b09179dc81b0587690cfda584a0fdf11a8cfd`.
+- Candidate ref: `candidate/1.0.25` at the exact build source above.
+- Goal: decouple static graph-rule discovery from the current save's initially known NPC set so later NPC discoveries can use cheap runtime rebinding instead of reparsing all weekday graphs.
+- CI: run `34708821462`, job `103593698227`, success.
+- Artifact: `DayWheelQuestMarkers-1.0.25` (`10301969224`), archive digest `sha256:c63d837a0810dff1bfb1819437b528c860852311b542ab4e054d989473c086e9`.
+- Raw DLL: 43,520 bytes.
+- Raw DLL SHA-256: `c234d13ba00b0ce7a116b2ca62a4a976aaf390da25f6a05f4bf807f922d557f2`.
+- Player result: first Bishop discovery still triggered a `302.22 ms` runtime structural rebuild. Later NPC discoveries only refreshed known-NPC bindings without graph parsing, confirming the rebind model itself worked.
+- Diagnosis: the intended loading prewarm gate had the wrong `game_starting` polarity, so the graph-ready loading window was skipped on fresh saves.
+- Status: **tested / superseded by 1.0.26 / not accepted**. Stable remains 1.0.24.
 
 ## 1.0.26 — persistent-manifest performance candidate
 
@@ -162,6 +177,26 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Raw DLL: 57,344 bytes.
 - Raw DLL SHA-256: `fa3e64a5835cc30c730d1c083ae1531a2765f7531680340bbeda9a7ee0b14210`.
 - Build workflow was restored to manual-only after candidate production; later workflow/docs bookkeeping does not alter the frozen candidate runtime source or bytes.
-- Requested test: keep the existing BepInEx cache manifest, install 1.0.28, play continuously for several minutes, and specifically judge whether the rhythmic ~30–60 s / ~0.5 s freeze disappears or materially weakens. Normal marker behavior and newly known NPC rebinding should remain unchanged. If the same periodic freeze remains, send the resulting log; the next investigation should then separate game/other-mod GC or asset work from Day Wheel rather than returning to FlowCanvas parsing.
-- Separate known issue: excess Charmel markers remains intentionally untouched until the performance line is closed.
-- Status: **candidate / awaiting player runtime test**. Do not merge to `main`, create an accepted baseline, or publish `v1.0.28` before acceptance.
+- Player result: **performance objective confirmed**. The previous roughly 30-second rhythmic freezes disappeared. The user still observed about two or three random short hitches over several minutes, but a control run with Day Wheel removed produced a comparable two or three random hitches over a similar interval.
+- Supplied 1.0.28 log confirms the persistent manifest loaded behind the loading screen in **6.16 ms**, FlowCanvas graph parsing was skipped, no runtime structural rebuild occurred, and later NPC discoveries used cheap manifest rebinding only.
+- Conclusion: the recurring Day Wheel allocation/GC-pressure defect is closed. Remaining sporadic hitches are at the measured game/modpack baseline and are not attributed to Day Wheel without new evidence.
+- Separate known issue: excess Charmel markers remains intentionally untouched by 1.0.28.
+- Status: **tested / performance line closed / superseded by 1.0.29 functional fix / not accepted separately**. Stable remains 1.0.24.
+
+## 1.0.29 — Charmel nested-dialogue reachability candidate
+
+- Date built: 2026-09-12.
+- Development branch: `dev/1.0.29`.
+- Exact executable/build source: `b5b09311bf60552ea411028c8d5068fc9609eeb4`.
+- Candidate ref: `candidate/1.0.29` at the exact build source above.
+- Goal: remove the two false Charmel/Lust-day markers observed while both visible top-level dialogue choices are locked.
+- Evidence: runtime log shows `actress_2a_2` and `actress_2b` are both rendered but unpickable in the reported state. Static persisted-topic evidence identifies exactly two self-consuming nested topics, `@actress_2b_1a` and `@actress_2b_1b`, behind parent answer `actress_2b`; both have no own `AnswerData` gate and both blacklist `actress_2b` when consumed. The existing generic one-shot classifier therefore evaluated the children in isolation and missed parent-menu reachability.
+- Runtime change: add a narrow verified supplemental reachability gate for those two exact Charmel child topics. They contribute reminders only while parent `actress_2b` is not blacklisted and the game's own `Player.IsEnough(SmartRes)` accepts the authored relation prerequisite `_rel >= 10` linked to `npc_actress`. All other topic/task logic is unchanged and unknown state fails closed.
+- Persistent manifest schema/data are unchanged; the existing `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin` remains valid and must not be deleted/regenerated for this test.
+- CI: run `34715252218`, job `103611226672`, success on `windows-latest`; Release build succeeded with **0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-1.0.29` (`10304453035`), archive digest `sha256:2e9c4602373f9c3ddcb61c10ad17eef92e99d89f384c17f264110b75421c733c`.
+- Raw DLL: 58,880 bytes.
+- Raw DLL SHA-256: `0d447eaf442b7838584960ad6b0e2e80e54b81381dbc9fc67f36c716ea631a88`.
+- Build workflow was restored to manual-only after candidate production; later workflow/docs bookkeeping does not alter the frozen candidate runtime source or bytes.
+- Requested test: at the early Charmel state with 0/5 Faith and relation below 10, neither nested `actress_2b` child may produce a Lust-day marker. If convenient, after relation reaches 10 while the parent remains unconsumed, the two child one-shots may both legitimately produce reminders; after consuming either child, the parent is blacklisted and the sibling must no longer remain as a reachable reminder. Independent Charmel interactions may still contribute their own markers.
+- Status: **candidate / awaiting player runtime test**. Do not merge to `main`, create an accepted baseline, or publish `v1.0.29` before acceptance.
