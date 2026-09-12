@@ -10,10 +10,10 @@ Read the global engineering contract in `666drjekyll666-cloud/DevRules` before s
 - Game: Graveyard Keeper 1.407
 - Stable BepInEx GUID: `nikich.gyk.calendarquestspins`
 - Legacy source namespace `CalendarQuestsPins` is intentionally retained; do not change the GUID or namespace merely for cosmetic normalization.
-- Current accepted stable public baseline: **1.0.21**.
-- Exact accepted runtime source: `7638343438dad6cdf522e37595f3fb21b442193a`.
-- Accepted baseline ref: `baseline/1.0.21-accepted`.
-- Accepted DLL SHA-256: `b609da9c35cd40ce09259a4c580e371dad15c3889f4e5cf9bdb0190a00e23c9a`.
+- Current accepted stable public baseline: **1.0.23**.
+- Exact accepted runtime source: `3da21541a38753387cf9c4d343559e5fb1181f34`.
+- Accepted baseline ref: `baseline/1.0.23-accepted`.
+- Accepted DLL SHA-256: `dc9b1f3494f46a903ec416679c08b9d6a3704f2132e82d8c9ac2cf21c06458b7`.
 
 ## Product rule
 
@@ -34,7 +34,7 @@ Unknown or unsupported structures fail closed. False positives remain undesirabl
 
 ## Accepted runtime architecture
 
-Preserve the accepted 1.0.21 architecture and the narrow later additions unless a tested change explicitly replaces them:
+Preserve the accepted 1.0.23 architecture unless a tested change explicitly replaces it:
 
 - owner-local actionability comes from verified task completion routes in the owning weekday NPC graph;
 - cross-owner actionability comes only from an explicit authored weekday-NPC completion route for the foreign-owned task;
@@ -43,7 +43,7 @@ Preserve the accepted 1.0.21 architecture and the narrow later additions unless 
 - direct task-completion answers are kept out of the generic one-shot layer to prevent duplicate markers with owner/cross-owner rules;
 - phrase state and blacklist state are honored;
 - supported price/lock gates are reconstructed as game SmartRes and evaluated through `Player.IsEnough`;
-- the two audited rare objective-bridge families and the 1.0.22 intermediate manifest remain narrow controls during the 1.0.23 one-shot rollout; their exact IDs are excluded from the generic layer so they cannot double-count;
+- the two audited rare objective-bridge families and the 1.0.22 intermediate manifest remain narrow controls; their exact IDs are excluded from the generic layer so they cannot double-count;
 - heavy graph parsing is prewarmed under the loading screen when all required runtime objects are verified present;
 - gameplay refresh uses cached structure and a one-second cadence; broad graph/hierarchy scans do not belong in the steady-state path;
 - HUD work is deferred until a real marker exists;
