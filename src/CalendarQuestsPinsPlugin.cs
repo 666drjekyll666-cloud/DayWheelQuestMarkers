@@ -11,7 +11,7 @@ namespace CalendarQuestsPins
         // Stable legacy GUID retained across the public product rename so upgrades stay on the same plugin identity.
         public const string PluginGuid = "nikich.gyk.calendarquestspins";
         public const string PluginName = "Day Wheel Quest Markers";
-        public const string PluginVersion = "1.0.22";
+        public const string PluginVersion = "1.0.23";
 
         private const float TickSeconds = 1f;
         private const float CrossStructureCheckSeconds = 30f;
@@ -31,6 +31,7 @@ namespace CalendarQuestsPins
         private readonly List<MarkerStyle>[] _currentSinMarkers = new List<MarkerStyle>[7];
         private QuestRuleCache _rules;
         private CrossOwnerRuleCache _crossRules;
+        private OneShotDialogueRuleCache _oneShotRules;
         private CalendarMarkers _markers;
         private LoadingCachePrewarmGate _prewarmGate;
         private VerifiedBridgeReminderRules _bridgeRules;
@@ -41,6 +42,7 @@ namespace CalendarQuestsPins
             _mainGameType = ReflectionUtil.FindType("MainGame");
             _rules = new QuestRuleCache();
             _crossRules = new CrossOwnerRuleCache();
+            _oneShotRules = new OneShotDialogueRuleCache();
             _markers = new CalendarMarkers();
             _prewarmGate = new LoadingCachePrewarmGate();
             _bridgeRules = new VerifiedBridgeReminderRules();
@@ -59,7 +61,7 @@ namespace CalendarQuestsPins
 
             // Accepted runtime probes show a several-second window where the loaded save, player and all six
             // periodic-NPC graphs already exist while the loading screen is still active and game_started is false.
-            // Do the expensive one-time graph parse there so the first playable frame does not pay ~500 ms.
+            // Do the expensive one-time graph parse there so the first playable frame does not pay the cost.
             if (TryPrewarmDuringLoading()) return;
 
             Tick();
@@ -70,6 +72,7 @@ namespace CalendarQuestsPins
             if (_markers != null) _markers.Dispose();
             if (_rules != null) _rules.Clear();
             if (_crossRules != null) _crossRules.Clear();
+            if (_oneShotRules != null) _oneShotRules.Clear();
             if (_bridgeRules != null) _bridgeRules.Clear();
             if (_intermediateRules != null) _intermediateRules.Clear();
         }
@@ -100,10 +103,12 @@ namespace CalendarQuestsPins
             _prewarmAttemptedSave = candidateSave;
 
             // If this exact structural cache is already alive from an earlier load in the same process,
-            // reuse it immediately. Otherwise build both existing caches while the loading overlay is still up.
+            // reuse it immediately. The one-shot cache only needs the final player binding refreshed; its
+            // graph-derived topics and NPC world-object links stay valid while those Unity objects survive.
             if (!string.IsNullOrEmpty(_cachedKnownNpcSignature) &&
                 string.Equals(_cachedKnownNpcSignature, signature, StringComparison.Ordinal) &&
-                SessionCacheRebinder.TryRebind(_rules, _crossRules, candidateSave, _mainGame))
+                SessionCacheRebinder.TryRebind(_rules, _crossRules, candidateSave, _mainGame) &&
+                _oneShotRules.TryRebind(_mainGame))
             {
                 _save = candidateSave;
                 _cacheReady = true;
@@ -113,27 +118,30 @@ namespace CalendarQuestsPins
                 _prewarmedDuringLoading = true;
                 _nextCrossStructureCheck = Time.realtimeSinceStartup + CrossStructureCheckSeconds;
                 _loggedReady = false;
-                Logger.LogInfo("Quest cache rebound during loading; no graph parse required.");
+                Logger.LogInfo("Quest/dialogue cache rebound during loading; no graph parse required.");
                 return true;
             }
 
             _rules.Clear();
             _crossRules.Clear();
+            _oneShotRules.Clear();
             var sw = System.Diagnostics.Stopwatch.StartNew();
             var ownerReady = _rules.Build(candidateSave, _mainGame);
             var crossReady = ownerReady && _crossRules.Build(candidateSave, _mainGame);
+            var oneShotReady = crossReady && _oneShotRules.Build(candidateSave, _mainGame);
             sw.Stop();
 
-            if (!ownerReady || !crossReady)
+            if (!ownerReady || !crossReady || !oneShotReady)
             {
                 _rules.Clear();
                 _crossRules.Clear();
+                _oneShotRules.Clear();
                 _cacheReady = false;
                 _crossCacheReady = false;
                 _cachedKnownNpcSignature = null;
                 _currentKnownNpcSignature = null;
                 _prewarmedDuringLoading = false;
-                Logger.LogWarning("Loading-screen quest-cache prewarm could not complete; gameplay-safe fallback will be used.");
+                Logger.LogWarning("Loading-screen quest/dialogue-cache prewarm could not complete; gameplay-safe fallback will be used.");
                 return true;
             }
 
@@ -147,9 +155,10 @@ namespace CalendarQuestsPins
             _nextCrossStructureCheck = Time.realtimeSinceStartup + CrossStructureCheckSeconds;
             _loggedReady = false;
 
-            Logger.LogInfo("Quest caches prewarmed behind loading screen in " + sw.Elapsed.TotalMilliseconds.ToString("F2") +
+            Logger.LogInfo("Quest/dialogue caches prewarmed behind loading screen in " + sw.Elapsed.TotalMilliseconds.ToString("F2") +
                            " ms. supported=" + _rules.SupportedRuleCount +
-                           ", cross-owner tasks=" + _crossRules.TrackedTaskCount + ".");
+                           ", cross-owner tasks=" + _crossRules.TrackedTaskCount +
+                           ", one-shot topics=" + _oneShotRules.TopicCount + ".");
             return true;
         }
 
@@ -189,7 +198,8 @@ namespace CalendarQuestsPins
             if (!_waitingForPeriodicNpc && !_cacheReady &&
                 !string.IsNullOrEmpty(_cachedKnownNpcSignature) &&
                 string.Equals(_cachedKnownNpcSignature, _currentKnownNpcSignature, StringComparison.Ordinal) &&
-                SessionCacheRebinder.TryRebind(_rules, _crossRules, _save, _mainGame))
+                SessionCacheRebinder.TryRebind(_rules, _crossRules, _save, _mainGame) &&
+                _oneShotRules.TryRebind(_mainGame))
             {
                 _cacheReady = true;
                 _crossCacheReady = true;
@@ -197,7 +207,7 @@ namespace CalendarQuestsPins
                 _loggedReady = false;
             }
 
-            if (!_cacheReady || (!_waitingForPeriodicNpc && _rules.NeedsRebuild()))
+            if (!_cacheReady || (!_waitingForPeriodicNpc && (_rules.NeedsRebuild() || _oneShotRules.NeedsRebuild())))
             {
                 if (!HasKnownPeriodicNpc(_save))
                 {
@@ -209,8 +219,10 @@ namespace CalendarQuestsPins
                 }
                 else
                 {
-                    _cacheReady = _rules.Build(_save, _mainGame);
-                    _crossCacheReady = _crossRules.Build(_save, _mainGame);
+                    var ownerReady = _rules.Build(_save, _mainGame);
+                    var oneShotReady = ownerReady && _oneShotRules.Build(_save, _mainGame);
+                    _cacheReady = ownerReady && oneShotReady;
+                    _crossCacheReady = _cacheReady && _crossRules.Build(_save, _mainGame);
                     _nextCrossStructureCheck = Time.realtimeSinceStartup + CrossStructureCheckSeconds;
                     if (!_cacheReady)
                     {
@@ -295,9 +307,26 @@ namespace CalendarQuestsPins
                 }
             }
 
+            // Broader product rule: a currently-open authored one-shot conversation is itself a useful weekday
+            // reminder, even when it is not the direct completion anchor of a visible journal task. The cache only
+            // contains exact @topics whose own branch persistently blacklists itself; task-completion answers and
+            // the already-verified 1.0.22 supplemental topics are excluded at build time to prevent duplicates.
+            foreach (var target in _oneShotRules.AllTargets)
+            {
+                var sinTypeValue = GetSinTypeValue(target.NpcId);
+                if (sinTypeValue <= 0 || sinTypeValue >= _currentSinMarkers.Length) continue;
+                for (var i = 0; i < target.Topics.Count; i++)
+                {
+                    var topic = target.Topics[i];
+                    if (!_oneShotRules.IsActionable(topic, unlocked, blacklisted)) continue;
+                    AddMarker(sinTypeValue, MarkerStyle.Base);
+                }
+            }
+
             // These six GK 1.407 families were proved by static authored-graph dependency audit: the source task
             // is active, the exact topic is required, and consuming it is a downstream progression dependency.
-            // The compact manifest is evaluated only against live task/phrase state plus native SmartRes gates.
+            // They remain during the 1.0.23 expansion as accepted controls; their IDs are excluded from one-shot
+            // classification so no duplicate marker can be emitted.
             if (_intermediateRules != null)
             {
                 var families = _intermediateRules.Families;
@@ -309,10 +338,8 @@ namespace CalendarQuestsPins
                 }
             }
 
-            // The full 0.1.26-0.1.29 authored-universe audit found only two objective-bridge families
-            // that fall outside the normal owner-local/cross-owner completion-anchor models. Keep them as a tiny
-            // explicit GK 1.407 mapping rather than retaining the expensive universal provenance parser. Each
-            // family contributes at most one base-game marker across its entry and verified continuation stage.
+            // Keep the two verified bridge families as controls during the broader one-shot rollout. Their entry
+            // and continuation IDs are also excluded from the generic cache, so these remain single reminders.
             if (_bridgeRules != null)
             {
                 if (_bridgeRules.IsAstrologerMillActionable(_mainGame, unlocked, blacklisted))
@@ -360,14 +387,17 @@ namespace CalendarQuestsPins
             _loggedReady = true;
             if (_waitingForPeriodicNpc)
             {
-                Logger.LogInfo("Ready. Cached supported rules=0, unsupported/fail-closed rules=0, cross-owner tasks=0, cross-owner supported rules=0, cross-owner unsupported rules=0.");
+                Logger.LogInfo("Ready. Cached supported rules=0, unsupported/fail-closed rules=0, cross-owner tasks=0, cross-owner supported rules=0, cross-owner unsupported rules=0, one-shot topics=0.");
                 return;
             }
             Logger.LogInfo("Ready. Cached supported rules=" + _rules.SupportedRuleCount +
                            ", unsupported/fail-closed rules=" + _rules.UnsupportedRuleCount +
                            ", cross-owner tasks=" + (_crossCacheReady ? _crossRules.TrackedTaskCount : 0) +
                            ", cross-owner supported rules=" + (_crossCacheReady ? _crossRules.SupportedRuleCount : 0) +
-                           ", cross-owner unsupported rules=" + (_crossCacheReady ? _crossRules.UnsupportedRuleCount : 0) + ".");
+                           ", cross-owner unsupported rules=" + (_crossCacheReady ? _crossRules.UnsupportedRuleCount : 0) +
+                           ", one-shot topics=" + _oneShotRules.TopicCount +
+                           ", one-shot supported rules=" + _oneShotRules.SupportedRuleCount +
+                           ", one-shot unsupported rules=" + _oneShotRules.UnsupportedRuleCount + ".");
         }
 
         private bool EnsureRuntime()
@@ -403,7 +433,8 @@ namespace CalendarQuestsPins
                 var valid = hasPeriodicNpc &&
                             !string.IsNullOrEmpty(liveSignature) &&
                             string.Equals(liveSignature, _cachedKnownNpcSignature, StringComparison.Ordinal) &&
-                            SessionCacheRebinder.TryRebind(_rules, _crossRules, _save, _mainGame);
+                            SessionCacheRebinder.TryRebind(_rules, _crossRules, _save, _mainGame) &&
+                            _oneShotRules.TryRebind(_mainGame);
 
                 _prewarmedDuringLoading = false;
                 _currentKnownNpcSignature = liveSignature;
@@ -418,7 +449,7 @@ namespace CalendarQuestsPins
                     _cacheReady = false;
                     _crossCacheReady = false;
                     _cachedKnownNpcSignature = null;
-                    Logger.LogWarning("Loading-screen quest-cache prewarm did not survive final runtime validation; rebuilding safely after load.");
+                    Logger.LogWarning("Loading-screen quest/dialogue-cache prewarm did not survive final runtime validation; rebuilding safely after load.");
                 }
             }
 
