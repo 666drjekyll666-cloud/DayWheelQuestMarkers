@@ -107,3 +107,24 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Published asset: `Day.Wheel.Quest.Markers.1.0.24.dll`, 43,008 bytes.
 - Published asset digest: `sha256:05aecb65054ba4890a7ffb043ead2fb4996512d911d63bb24a338e99c039971c`, exactly matching the accepted DLL.
 - Status: **stable / released**.
+
+## 1.0.25 — fresh-save stutter performance candidate
+
+- Date built: 2026-09-12.
+- Development branch: `dev/1.0.25`.
+- Exact executable/build source: `736b09179dc81b0587690cfda584a0fdf11a8cfd`.
+- Candidate ref: `candidate/1.0.25` at the exact build source above.
+- Goal: remove repeated gameplay graph reparses observed on a new save when unrelated NPCs become known, while preserving the accepted 1.0.24 reminder rules.
+- Root cause evidence: the supplied fresh-save 1.0.24 log shows repeated unified-cache `Ready` cycles after NPC introductions; at least five post-Bishop rebuilds produced unchanged rule counts. Historical accepted Probe 0.1.17 established synchronous graph-cache parsing as a roughly 500 ms hitch source, while ordinary actionability evaluation was only a few milliseconds or less.
+- Runtime changes: the six weekday-NPC graphs are now parsed structurally independently of current `known_npcs` membership. Owner-local, cross-owner and self-consuming one-shot rule structure is retained even when its live KnownNpc binding is not yet present. New NPC discoveries perform only cheap reference rebinding; full `Build` is reserved for actual structural invalidation or failed safe rebind. One-shot marker emission still requires the target weekday NPC to be known, preserving 1.0.24 behavior.
+- Fresh-save loading change: once the existing readiness gate proves player plus all six serialized weekday-NPC graphs are ready, structural cache and native game marker-sprite lookup are prewarmed under the loading screen even before the first weekday NPC is known. No copied game sprite payloads are embedded.
+- Diagnostics: every cheap dynamic update logs `Known-NPC bindings refreshed; graph parse not required.` A true gameplay graph rebuild logs `Runtime structural rebuild (...) completed in ... ms. This should be rare.`
+- Engineering evidence/design: `docs/FRESH_SAVE_STUTTER_1.0.25.md`.
+- CI: run `34708821462`, job `103593698227`, success on `windows-latest`; Release build succeeded with **0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-1.0.25` (`10301969224`), archive digest `sha256:c63d837a0810dff1bfb1819437b528c860852311b542ab4e054d989473c086e9`.
+- Raw DLL: 43,520 bytes.
+- Raw DLL SHA-256: `c234d13ba00b0ce7a116b2ca62a4a976aaf390da25f6a05f4bf807f922d557f2`.
+- Build workflow was returned to manual-only immediately after producing the candidate; later bookkeeping does not alter the frozen candidate source/bytes.
+- Requested runtime test: start a brand-new game or use the same very early save and progress through/after the first Bishop introduction and several later NPC introductions (guards, tavern owner, Mrs Chain, blacksmith when convenient). Compare dialogue/general hitching with 1.0.24 and attach the log. Expected Day Wheel behavior is one loading prewarm plus cheap binding-refresh messages; no repeated `Runtime structural rebuild` should occur during ordinary NPC introductions. Confirm reminders still appear/disappear normally when naturally encountered.
+- Player result: **pending**.
+- Status: **candidate only**. Do not merge to `main`, create `baseline/1.0.25-accepted`, or publish `v1.0.25` before explicit player acceptance.
