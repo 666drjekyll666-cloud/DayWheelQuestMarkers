@@ -102,4 +102,8 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Supplied runtime log confirms `Day Wheel Quest Markers 1.0.24` loaded normally and reached `Ready`. Prewarm completed in **308.07 ms** with `owner supported=75`, `cross-owner tasks=8`, `one-shot topics=55`; steady-state summary reports owner supported=75, owner unsupported=6, cross-owner supported=6, cross-owner unsupported=0, one-shot supported=54, one-shot unsupported=1. No Day Wheel Quest Markers error/warning appears in the supplied log.
 - Performance result: **308.07 ms** versus accepted 1.0.23's **782.89 ms**, a reduction of **474.82 ms / about 60.6%** for the loading-prewarm work on the developed regression save. The unified implementation is also substantially faster than the recorded 1.0.22 507.82-525.35 ms loads while covering the broader accepted one-shot behavior.
 - Acceptance: user explicitly said `Фиксируем.` after the parity/lifecycle test and performance log review.
-- Status before publication: **accepted / release-ready**. Publish the exact tested artifact; do not rebuild 1.0.24.
+- GitHub Release publication: workflow run `34683059338`, job `103525126377`, success.
+- Release: `v1.0.24`, target commit `99d961abef528e14378c3dc8fd074a550b1138e9`.
+- Published asset: `Day.Wheel.Quest.Markers.1.0.24.dll`, 43,008 bytes.
+- Published asset digest: `sha256:05aecb65054ba4890a7ffb043ead2fb4996512d911d63bb24a338e99c039971c`, exactly matching the accepted DLL.
+- Status: **stable / released**.
