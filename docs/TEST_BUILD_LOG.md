@@ -52,7 +52,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Superseded direction: 1.0.23 broadens reminders to currently actionable authored one-shot weekday dialogue while preserving the existing task-linked rules and gate checks.
 - Status: **tested / superseded / not accepted**. Do not merge to `main`, create `baseline/1.0.22-accepted`, or publish `v1.0.22`.
 
-## 1.0.23 — candidate, awaiting player test
+## 1.0.23 — candidate, partially confirmed
 
 - Date built: 2026-09-12.
 - Development branch: `dev/1.0.23`.
@@ -67,6 +67,8 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Raw DLL SHA-256: `dc9b1f3494f46a903ec416679c08b9d6a3704f2132e82d8c9ac2cf21c06458b7`.
 - Primary requested test on the current save: before consuming the already-visible Inquisitor `@inquisitor_magic_item` / Eternal Ember conversation, the Inquisitor weekday must show a base marker. The same Snake `@snake_items_give` transition also authored `@bishop_magic_item` and `@merchant_magic_item`, so Bishop and Merchant should likewise show reminders while those one-shot conversations are open/actionable. After consuming one of these topics, its contribution should disappear on the next refresh unless another independent actionable interaction still requires a marker on that weekday.
 - False-positive controls: ordinary Trade / Leave / Back must not produce markers; a non-consuming submenu/header such as Snake's `@snake_about_nacklase` must not create a marker merely by being open. Existing item/relation/quality prerequisites must continue to suppress task-linked interactions until satisfied.
-- Performance check: capture the `Quest/dialogue caches prewarmed behind loading screen ... one-shot topics=...` line from the runtime log and compare the elapsed time with the roughly 508-525 ms 1.0.22 loads. Report any noticeable post-load hitch.
-- Player result: **pending**.
-- Status: candidate only; do not merge to `main`, create `baseline/1.0.23-accepted`, or publish `v1.0.23` before explicit player acceptance.
+- Player result so far: **primary appearance behavior confirmed**. On the supplied current save, the player reported exactly three markers appeared for the three Snake-opened portal-item conversations: Inquisitor, Bishop and Merchant.
+- Supplied runtime log confirms `Day Wheel Quest Markers 1.0.23` loaded normally and reached `Ready`. Loading-screen prewarm completed in **782.89 ms** with `supported=75`, `cross-owner tasks=8`, `one-shot topics=41`; steady-state cache summary reports `one-shot supported rules=43` and `one-shot unsupported rules=1` (fail closed). No Day Wheel Quest Markers error/warning appears in the supplied log.
+- Performance comparison: this current 1.0.23 load is about 258-275 ms slower than the recorded 1.0.22 507.82-525.35 ms loads. The extra work remains confined to the loading-screen prewarm; user has not reported a visible post-load hitch in this test.
+- Remaining acceptance check: consume at least one of the three portal-item one-shot conversations and verify that its reminder contribution disappears on the next refresh unless another independent actionable interaction remains for that weekday; also report any obvious unrelated/utility false-positive marker encountered during normal play.
+- Status: **candidate / partially confirmed**. Do not merge to `main`, create `baseline/1.0.23-accepted`, or publish `v1.0.23` before explicit player acceptance.
