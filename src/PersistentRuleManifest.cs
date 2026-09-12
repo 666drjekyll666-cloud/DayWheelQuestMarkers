@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using BepInEx;
 using UnityEngine;
 
 namespace CalendarQuestsPins
@@ -85,9 +86,7 @@ namespace CalendarQuestsPins
 
             _worldObjectGetter = FindWorldObjectGetter();
 
-            var assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (string.IsNullOrEmpty(assemblyDir)) assemblyDir = ".";
-            _path = Path.Combine(assemblyDir, "DayWheelQuestMarkers.rules.1.407.bin");
+            _path = Path.Combine(Paths.CachePath, "DayWheelQuestMarkers", "rules-1.407.bin");
         }
 
         internal bool HasPersistedManifest()
