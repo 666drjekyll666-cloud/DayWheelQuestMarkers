@@ -13,7 +13,8 @@ namespace CalendarQuestsPins
     ///
     /// Each graph is parsed once during loading. The same node/connection index is then used to
     /// derive owner-local task completions, cross-owner task completions, and authored self-consuming
-    /// one-shot dialogue topics. Gameplay only evaluates cached state/gates; no graph traversal occurs.
+    /// one-shot dialogue topics. Known-NPC membership is a cheap dynamic binding layered on top of
+    /// that structure; gameplay never reparses graphs merely because the player met another NPC.
     /// </summary>
     internal sealed class WeekdayInteractionRuleCache
     {
@@ -125,16 +126,6 @@ namespace CalendarQuestsPins
 
             _save = save;
             var knownNpcMap = ReadKnownNpcs(save, out _knownNpcCount);
-            var hasKnownPeriodicNpc = false;
-            for (var i = 0; i < NpcIds.Length; i++)
-            {
-                if (knownNpcMap.ContainsKey(NpcIds[i]))
-                {
-                    hasKnownPeriodicNpc = true;
-                    break;
-                }
-            }
-            if (!hasKnownPeriodicNpc) return false;
 
             for (var i = 0; i < NpcIds.Length; i++)
             {
@@ -158,7 +149,10 @@ namespace CalendarQuestsPins
                 _targets.Add(target);
             }
 
-            return _targets.Count > 0;
+            // The loading readiness gate proves all six graphs before normal prewarm. Requiring all six here
+            // also makes runtime fallback fail closed instead of retaining a partial structural universe that
+            // would have to be reparsed later when a missing weekday NPC becomes known.
+            return _targets.Count == NpcIds.Length;
         }
 
         internal bool TryRebind(object save, object mainGame)
@@ -170,19 +164,17 @@ namespace CalendarQuestsPins
             foreach (var target in _targets)
             {
                 if (target == null || !ReflectionUtil.IsUnityAlive(target.WorldObject)) return false;
-                if (target.KnownNpc != null)
-                {
-                    object knownNpc;
-                    if (!knownNpcMap.TryGetValue(target.NpcId, out knownNpc)) return false;
-                    target.KnownNpc = knownNpc;
-                }
+
+                object knownNpc;
+                knownNpcMap.TryGetValue(target.NpcId, out knownNpc);
+                target.KnownNpc = knownNpc;
 
                 for (var i = 0; i < target.CrossTasks.Count; i++)
                 {
                     var task = target.CrossTasks[i];
                     if (task == null) return false;
                     object owner;
-                    if (!knownNpcMap.TryGetValue(task.OwnerNpcId, out owner)) return false;
+                    knownNpcMap.TryGetValue(task.OwnerNpcId, out owner);
                     task.KnownNpc = owner;
                 }
             }
@@ -192,15 +184,19 @@ namespace CalendarQuestsPins
             return !NeedsRebuild();
         }
 
+        internal bool NeedsRebind()
+        {
+            if (_save == null) return true;
+            return CountKnownNpcs(_save) != _knownNpcCount;
+        }
+
         internal bool NeedsRebuild()
         {
             if (!ReflectionUtil.IsUnityAlive(_player) || _save == null) return true;
+            if (_targets.Count != NpcIds.Length) return true;
             foreach (var target in _targets)
                 if (target == null || !ReflectionUtil.IsUnityAlive(target.WorldObject)) return true;
-
-            int currentCount;
-            ReadKnownNpcs(_save, out currentCount);
-            return currentCount != _knownNpcCount;
+            return false;
         }
 
         internal bool IsOwnerTaskActionable(TargetRules target, string taskId, object unlockedPhrases, object blacklistedPhrases)
@@ -326,8 +322,9 @@ namespace CalendarQuestsPins
                 list.Add(c);
             }
 
-            if (target.KnownNpc != null)
-                RegisterZoneQualityMirrors(serialized, nodes, incomingValue);
+            // Quality mirrors describe authored graph structure, not whether this NPC is already in the save's
+            // known-NPC list. Discover them once with the rest of the structural cache.
+            RegisterZoneQualityMirrors(serialized, nodes, incomingValue);
 
             var completionAnswerIds = new HashSet<string>(StringComparer.Ordinal);
             var crossByTask = new Dictionary<string, CrossTaskRules>(StringComparer.Ordinal);
@@ -347,14 +344,13 @@ namespace CalendarQuestsPins
 
                 if (string.IsNullOrEmpty(ownerNpcId) || string.Equals(ownerNpcId, target.NpcId, StringComparison.Ordinal))
                 {
-                    if (target.KnownNpc == null) continue;
                     for (var i = 0; i < anchors.Count; i++)
                         AddOwnerRulesForAnchor(target, taskId, anchors[i], serialized, nodes, connections, incomingValue);
                     continue;
                 }
 
                 object ownerKnownNpc;
-                if (!knownNpcMap.TryGetValue(ownerNpcId, out ownerKnownNpc)) continue;
+                knownNpcMap.TryGetValue(ownerNpcId, out ownerKnownNpc);
                 var key = ownerNpcId + "\n" + taskId;
                 CrossTaskRules crossTask;
                 if (!crossByTask.TryGetValue(key, out crossTask))
@@ -367,8 +363,6 @@ namespace CalendarQuestsPins
                 for (var i = 0; i < anchors.Count; i++)
                     AddCrossRulesForAnchor(target, crossTask, anchors[i], serialized, nodes, connections, incomingValue);
             }
-
-            if (target.KnownNpc == null) return;
 
             var byAnswer = new Dictionary<string, TopicRule>(StringComparer.Ordinal);
             foreach (var node in nodes.Values)
@@ -886,6 +880,19 @@ namespace CalendarQuestsPins
                 if (!string.IsNullOrEmpty(id)) result[id] = npc;
             }
             return result;
+        }
+
+        private static int CountKnownNpcs(object save)
+        {
+            var count = 0;
+            if (save == null) return count;
+            object known;
+            if (!ReflectionUtil.TryRead(save, "known_npcs", out known) || known == null) return count;
+            var npcs = ReflectionUtil.EnumerateMember(known, "npcs");
+            if (npcs == null) return count;
+            foreach (var npc in npcs)
+                if (npc != null) count++;
+            return count;
         }
 
         private static bool IsPeriodicNpc(string npcId)
