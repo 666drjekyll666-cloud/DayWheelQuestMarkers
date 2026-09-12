@@ -79,3 +79,24 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Published asset: `Day.Wheel.Quest.Markers.1.0.23.dll`, 65,536 bytes.
 - Published asset digest: `sha256:dc9b1f3494f46a903ec416679c08b9d6a3704f2132e82d8c9ac2cf21c06458b7`, exactly matching the accepted DLL.
 - Status: **stable / released**.
+
+## 1.0.24 — unified-cache candidate, awaiting player test
+
+- Date built: 2026-09-12.
+- Development branch: `dev/1.0.24`.
+- Exact build source: `99d961abef528e14378c3dc8fd074a550b1138e9`.
+- Runtime/source consolidation was complete by `513613f539b19b89d6ee03f3ac3331bbc0ca1d8d`; later commits before the build only changed engineering docs/workflow control, not production C# or the project file.
+- Candidate ref: `candidate/1.0.24` at exact build source `99d961abef528e14378c3dc8fd074a550b1138e9`.
+- Goal: consolidate the accepted 1.0.23 owner-local, cross-owner and one-shot classifiers into one loading-time graph parser, and retire transitional hard-coded bridge/intermediate manifests without changing the canonical interaction-reminder rule.
+- Runtime changes: new `WeekdayInteractionRuleCache` parses each of the six weekday-NPC graphs once and derives owner-local completion rules, cross-owner completion rules and self-consuming one-shot topics from the same node/connection index. Direct completion answers remain excluded from the generic one-shot set. Owner-local live zone-quality mirrors are preserved; cross-owner and one-shot SmartRes semantics are not broadened. The unified cache directly owns session rebind/state validation.
+- Removed production source: `QuestRuleCache`, `CrossOwnerRuleCache`, `OneShotDialogueRuleCache`, `SessionCacheRebinder`, `VerifiedBridgeReminderRules`, and `VerifiedIntermediateReminderRules`. The previously verified bridge/intermediate topic IDs are no longer excluded from generic one-shot classification and are handled by their accepted exact self-consuming authored structure.
+- Engineering evidence/design: `docs/UNIFIED_CACHE_REFACTOR_1.0.24.md`.
+- CI: run `34682455605`, job `103523471693`, success on `windows-latest`; Release build succeeded with **0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-1.0.24` (`10294740350`), archive digest `sha256:c05a205daaff183062522ed29e2b8aad7a295bf8a1fbc0945ba6d27c7c55c6cf`.
+- Raw DLL: 43,008 bytes.
+- Raw DLL SHA-256: `05aecb65054ba4890a7ffb043ead2fb4996512d911d63bb24a338e99c039971c`.
+- Build workflow was returned to manual-only immediately after producing the candidate; that bookkeeping does not alter the frozen candidate bytes/source.
+- Requested runtime regression: on the current save, the already-consumed Inquisitor portal-item one-shot should remain absent while Bishop/Merchant reminders remain if their one-shots are still open; consuming one of those remaining one-shots should remove its marker on the next refresh. If an ordinary task-linked reminder is naturally present, confirm it still behaves as before. Report any obvious Trade/Leave/Back or submenu-header false positive.
+- Performance check: attach the runtime log. The key line is `Weekday interaction cache prewarmed behind loading screen in ... ms`; compare with accepted 1.0.23's **782.89 ms**. The refactor is expected to reduce duplicate loading work, but the improvement is not accepted until measured in-game.
+- Player result: **pending**.
+- Status: **candidate only**. Do not merge to `main`, create `baseline/1.0.24-accepted`, or publish `v1.0.24` before explicit player acceptance.
