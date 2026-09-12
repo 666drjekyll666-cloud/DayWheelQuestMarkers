@@ -10,10 +10,10 @@ Read the global engineering contract in `666drjekyll666-cloud/DevRules` before s
 - Game: Graveyard Keeper 1.407
 - Stable BepInEx GUID: `nikich.gyk.calendarquestspins`
 - Legacy source namespace `CalendarQuestsPins` is intentionally retained; do not change the GUID or namespace merely for cosmetic normalization.
-- Current accepted stable public baseline: **1.0.23**.
-- Exact accepted runtime source: `3da21541a38753387cf9c4d343559e5fb1181f34`.
-- Accepted baseline ref: `baseline/1.0.23-accepted`.
-- Accepted DLL SHA-256: `dc9b1f3494f46a903ec416679c08b9d6a3704f2132e82d8c9ac2cf21c06458b7`.
+- Current accepted stable public baseline: **1.0.24**.
+- Exact accepted runtime source: `99d961abef528e14378c3dc8fd074a550b1138e9`.
+- Accepted baseline ref: `baseline/1.0.24-accepted`.
+- Accepted DLL SHA-256: `05aecb65054ba4890a7ffb043ead2fb4996512d911d63bb24a338e99c039971c`.
 
 ## Product rule
 
@@ -32,39 +32,39 @@ Do not treat arbitrary visible menu options as reminders. Repeatable utility/men
 
 Unknown or unsupported structures fail closed. False positives remain undesirable, but the old rule that required every reminder to prove downstream quest progression is retired: it incorrectly hid real one-time conversations such as the portal-item dialogue opened by Snake at the Inquisitor.
 
-## Accepted 1.0.23 runtime architecture
+## Accepted 1.0.24 runtime architecture
 
-The accepted stable 1.0.23 implementation used three loading-time structural caches plus two narrow supplemental manifests:
+The accepted production architecture is one unified loading-time structural cache:
 
-- `QuestRuleCache` for owner-local direct task-completion routes and live zone-quality mirrors;
-- `CrossOwnerRuleCache` for direct task completion in a different weekday NPC graph;
-- `OneShotDialogueRuleCache` for exact self-consuming authored topics;
-- `VerifiedBridgeReminderRules` and `VerifiedIntermediateReminderRules` as temporary controls for known non-direct progression stages;
-- `SessionCacheRebinder` to reconnect those separate caches across compatible save/session reloads.
-
-This implementation is accepted and remains the stable fallback until 1.0.24 is tested.
-
-## 1.0.24 development architecture
-
-`dev/1.0.24` is a behavior-preserving/consolidating refactor of the accepted model, with one deliberate product-aligned simplification: previously verified bridge/intermediate topics are now handled by the already-accepted generic self-consuming one-shot rule instead of explicit manifests.
-
-The candidate architecture is:
-
-- one `WeekdayInteractionRuleCache` owns the structural index for all six weekday NPC graphs;
+- `WeekdayInteractionRuleCache` owns the structural index for all six weekday NPC graphs;
 - each NPC serialized graph is converted to node/connection/incoming-flow/incoming-value indexes **once per cache build**;
 - the same parsed index emits owner-local task rules, cross-owner task rules, and one-shot dialogue rules;
 - direct task-completion answers are excluded from the generic one-shot set so one interaction cannot be double-counted;
 - owner-local rules retain the verified authoritative `WorldZone.GetTotalQuality()` fallback for unambiguous authored quality mirrors;
-- cross-owner and generic one-shot gates preserve the accepted 1.0.23 SmartRes/`Player.IsEnough` behavior rather than silently broadening zone-mirror semantics;
-- exact self-consuming bridge/intermediate topics no longer require a parallel hard-coded manifest. Their authored phrase/gate state is the reminder source, consistent with the accepted product rule;
-- the unified cache directly rebinds player/save/KnownNPC references, so the reflection-based `SessionCacheRebinder` is removed;
-- graph parsing remains loading-time only. Normal gameplay still evaluates cached rules on the one-second cadence;
-- structural staleness remains low-frequency; the 1.0.24 candidate additionally compares the known-NPC signature at that cadence so same-count NPC-set changes cannot be missed;
-- `QuestRuleCache`, `CrossOwnerRuleCache`, `OneShotDialogueRuleCache`, `SessionCacheRebinder`, `VerifiedBridgeReminderRules`, and `VerifiedIntermediateReminderRules` are removed from the 1.0.24 production compile.
+- cross-owner and generic one-shot gates preserve the accepted SmartRes/`Player.IsEnough` behavior rather than silently broadening zone-mirror semantics;
+- previously verified bridge/intermediate topics are handled by the same exact self-consuming authored one-shot structure instead of parallel hard-coded manifests;
+- the unified cache directly rebinds player/save/KnownNPC references;
+- graph parsing remains loading-time only. Normal gameplay evaluates cached rules on the one-second cadence;
+- structural staleness remains low-frequency and compares the known-NPC signature so same-count NPC-set changes cannot be missed.
 
-This consolidation must not be treated as accepted until a 1.0.24 DLL is built from frozen source and the player verifies marker parity/expected one-shot behavior plus the loading-prewarm timing.
+Superseded production classes removed by 1.0.24:
 
-The rejected universal provenance parser is still rejected. The unified cache only combines already-accepted local structural classifiers; it does not walk arbitrary external dependency/provenance chains.
+- `QuestRuleCache`
+- `CrossOwnerRuleCache`
+- `OneShotDialogueRuleCache`
+- `SessionCacheRebinder`
+- `VerifiedBridgeReminderRules`
+- `VerifiedIntermediateReminderRules`
+
+The rejected universal provenance parser remains rejected. The unified cache only combines accepted local structural classifiers; it does not walk arbitrary external dependency/provenance chains.
+
+Accepted runtime evidence on the developed regression save:
+
+- the same three portal-item reminders appeared as in accepted 1.0.23;
+- selecting Inquisitor `@inquisitor_magic_item` removed only that reminder as expected;
+- unified cache prewarm completed in **308.07 ms**, versus **782.89 ms** for accepted 1.0.23 on the corresponding developed-save test;
+- the mod reached `Ready` with owner supported=75, owner unsupported=6, cross-owner tasks=8, cross-owner supported=6, cross-owner unsupported=0, one-shot topics=55, one-shot supported=54, one-shot unsupported=1;
+- no Day Wheel Quest Markers error/warning was present in the supplied runtime log.
 
 ## Marker sprite contract
 
@@ -93,7 +93,7 @@ Steady-state runtime should be effectively negligible relative to the game:
 - reuse marker GameObjects and cached references;
 - use the existing slow structural-staleness cadence rather than broad recurring validation.
 
-The rejected universal provenance parser that pushed prewarm toward ~1.8 s must not return. Accepted 1.0.23 prewarm on the developed test save was 782.89 ms because three structural caches independently reparsed the same six NPC graphs. The explicit 1.0.24 performance goal is to remove that duplicate parsing; the actual candidate timing must be measured from the player runtime log rather than assumed.
+The rejected universal provenance parser that pushed prewarm toward ~1.8 s must not return. Accepted 1.0.24 unified-cache prewarm on the developed regression save was 308.07 ms, substantially below accepted 1.0.23's 782.89 ms because the six NPC graphs are no longer reparsed by multiple independent caches.
 
 ## Repository workflow
 
