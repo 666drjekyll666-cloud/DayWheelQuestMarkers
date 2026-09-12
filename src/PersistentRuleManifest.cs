@@ -12,17 +12,15 @@ using UnityEngine;
 namespace CalendarQuestsPins
 {
     /// <summary>
-    /// Persistent, pure-data structural manifest for the verified Graveyard Keeper 1.407 weekday graphs.
-    ///
-    /// The expensive graph parser remains only as a bootstrap generator on a cache miss. Once generated,
-    /// subsequent saves/process launches deserialize compact rule data and only bind live Player/KnownNpc/WGO
-    /// references. No FlowCanvas graph parsing is required on the normal runtime path.
+    /// Schema-2 persistent manifest. It stores the accepted structural reminder rules plus compact
+    /// root-to-answer navigation predicates derived from the same six Graveyard Keeper 1.407 graphs.
+    /// Graph parsing remains loading-screen/bootstrap-only.
     /// </summary>
     internal sealed class PersistentRuleManifest
     {
         internal const string VerifiedGameVersion = "1.407";
         private const string Magic = "DWQM_RULE_MANIFEST";
-        private const int SchemaVersion = 1;
+        private const int SchemaVersion = 2;
 
         private const int ExpectedOwnerSupported = 75;
         private const int ExpectedOwnerUnsupported = 6;
@@ -43,6 +41,7 @@ namespace CalendarQuestsPins
             RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
         private readonly WeekdayInteractionRuleCache _cache;
+        private readonly NavigationReachabilityCache _navigation;
         private readonly Type _cacheType = typeof(WeekdayInteractionRuleCache);
         private readonly Type _controllerType = ReflectionUtil.FindType("FlowCanvas.FlowScriptController");
         private readonly Type _worldMapType = ReflectionUtil.FindType("WorldMap");
@@ -65,11 +64,17 @@ namespace CalendarQuestsPins
         private int _boundKnownNpcCount;
 
         internal string ManifestPath { get { return _path; } }
+        internal int NavigationAnswerCount { get { return _navigation.AnswerCount; } }
+        internal int NavigationPathCount { get { return _navigation.PathCount; } }
+        internal int NavigationPredicateCount { get { return _navigation.PredicateCount; } }
+        internal int NavigationUnsupportedPathCount { get { return _navigation.UnsupportedPathCount; } }
 
-        internal PersistentRuleManifest(WeekdayInteractionRuleCache cache)
+        internal PersistentRuleManifest(WeekdayInteractionRuleCache cache, NavigationReachabilityCache navigation)
         {
             if (cache == null) throw new ArgumentNullException("cache");
+            if (navigation == null) throw new ArgumentNullException("navigation");
             _cache = cache;
+            _navigation = navigation;
 
             const BindingFlags instance = BindingFlags.Instance | BindingFlags.NonPublic;
             _targetsField = _cacheType.GetField("_targets", instance);
@@ -89,12 +94,6 @@ namespace CalendarQuestsPins
             _path = Path.Combine(Paths.CachePath, "DayWheelQuestMarkers", "rules-1.407.bin");
         }
 
-        internal bool HasPersistedManifest()
-        {
-            try { return File.Exists(_path); }
-            catch { return false; }
-        }
-
         internal bool KnownNpcCountChanged(object save)
         {
             return CountKnownNpcsNoAlloc(save) != _boundKnownNpcCount;
@@ -103,21 +102,15 @@ namespace CalendarQuestsPins
         internal bool IsRuntimeValid(object mainGame)
         {
             if (mainGame == null || _playerField == null) return false;
-
             object livePlayer;
-            if (!ReflectionUtil.TryRead(mainGame, "player", out livePlayer) || !ReflectionUtil.IsUnityAlive(livePlayer))
-                return false;
-
+            if (!ReflectionUtil.TryRead(mainGame, "player", out livePlayer) || !ReflectionUtil.IsUnityAlive(livePlayer)) return false;
             var cachedPlayer = _playerField.GetValue(_cache);
             if (!ReferenceEquals(livePlayer, cachedPlayer)) return false;
 
             var targets = GetTargets();
-            if (targets == null || targets.Count != NpcIds.Length) return false;
+            if (targets == null || targets.Count != NpcIds.Length || !_navigation.IsReadyForTargets(targets)) return false;
             for (var i = 0; i < targets.Count; i++)
-            {
-                var target = targets[i];
-                if (target == null || !ReflectionUtil.IsUnityAlive(target.WorldObject)) return false;
-            }
+                if (targets[i] == null || !ReflectionUtil.IsUnityAlive(targets[i].WorldObject)) return false;
             return true;
         }
 
@@ -127,92 +120,44 @@ namespace CalendarQuestsPins
             failure = null;
             try
             {
-                if (!File.Exists(_path))
-                {
-                    failure = "manifest file is missing";
-                    return false;
-                }
-                if (!PrepareRuntime(save, mainGame))
-                {
-                    failure = "runtime bindings are not ready";
-                    return false;
-                }
+                if (!File.Exists(_path)) { failure = "manifest file is missing"; return false; }
+                if (!PrepareRuntime(save, mainGame)) { failure = "runtime bindings are not ready"; return false; }
 
                 using (var stream = new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.Read))
                 using (var reader = new BinaryReader(stream))
                 {
                     if (!string.Equals(reader.ReadString(), Magic, StringComparison.Ordinal))
-                    {
-                        failure = "manifest magic mismatch";
-                        return false;
-                    }
+                    { failure = "manifest magic mismatch"; return false; }
                     if (reader.ReadInt32() != SchemaVersion)
-                    {
-                        failure = "manifest schema mismatch";
-                        return false;
-                    }
+                    { failure = "manifest schema mismatch; schema 2 rebuild required"; return false; }
                     if (!string.Equals(reader.ReadString(), VerifiedGameVersion, StringComparison.Ordinal))
-                    {
-                        failure = "manifest game version mismatch";
-                        return false;
-                    }
-
+                    { failure = "manifest game version mismatch"; return false; }
                     var gameVersion = ReadGameVersion(save);
                     if (!string.Equals(gameVersion, VerifiedGameVersion, StringComparison.Ordinal))
-                    {
-                        failure = "loaded save game version is " + (gameVersion ?? "<unknown>");
-                        return false;
-                    }
+                    { failure = "loaded save game version is " + (gameVersion ?? "<unknown>"); return false; }
 
-                    _cache.Clear();
-                    if (!PrepareRuntime(save, mainGame))
-                    {
-                        failure = "runtime bindings were lost during manifest load";
-                        return false;
-                    }
+                    ClearCaches();
+                    if (!PrepareRuntime(save, mainGame)) { failure = "runtime bindings were lost during manifest load"; return false; }
 
                     var targets = GetTargets();
-                    if (targets == null)
-                    {
-                        failure = "cache target storage unavailable";
-                        return false;
-                    }
+                    var worldObjects = new Dictionary<string, object>(StringComparer.Ordinal);
+                    if (targets == null) { failure = "cache target storage unavailable"; return false; }
 
                     var targetCount = reader.ReadInt32();
-                    if (targetCount != NpcIds.Length)
-                    {
-                        failure = "manifest target count mismatch";
-                        return false;
-                    }
-
+                    if (targetCount != NpcIds.Length) { failure = "manifest target count mismatch"; return false; }
                     for (var i = 0; i < targetCount; i++)
                     {
                         var npcId = reader.ReadString();
                         if (!string.Equals(npcId, NpcIds[i], StringComparison.Ordinal))
-                        {
-                            failure = "manifest target order/id mismatch at index " + i;
-                            return false;
-                        }
-
+                        { failure = "manifest target order/id mismatch at index " + i; return false; }
                         var wgo = GetWorldObject(npcId);
                         if (!ReflectionUtil.IsUnityAlive(wgo))
-                        {
-                            failure = "weekday NPC world object not ready: " + npcId;
-                            return false;
-                        }
-
-                        var target = new WeekdayInteractionRuleCache.TargetRules
-                        {
-                            NpcId = npcId,
-                            WorldObject = wgo
-                        };
+                        { failure = "weekday NPC world object not ready: " + npcId; return false; }
+                        worldObjects[npcId] = wgo;
+                        var target = new WeekdayInteractionRuleCache.TargetRules { NpcId = npcId, WorldObject = wgo };
 
                         var ownerTaskCount = reader.ReadInt32();
-                        if (ownerTaskCount < 0 || ownerTaskCount > 256)
-                        {
-                            failure = "owner task count out of range";
-                            return false;
-                        }
+                        if (ownerTaskCount < 0 || ownerTaskCount > 256) { failure = "owner task count out of range"; return false; }
                         for (var t = 0; t < ownerTaskCount; t++)
                         {
                             var taskId = reader.ReadString();
@@ -222,11 +167,7 @@ namespace CalendarQuestsPins
                         }
 
                         var crossTaskCount = reader.ReadInt32();
-                        if (crossTaskCount < 0 || crossTaskCount > 128)
-                        {
-                            failure = "cross-task count out of range";
-                            return false;
-                        }
+                        if (crossTaskCount < 0 || crossTaskCount > 128) { failure = "cross-task count out of range"; return false; }
                         for (var c = 0; c < crossTaskCount; c++)
                         {
                             var cross = new WeekdayInteractionRuleCache.CrossTaskRules
@@ -239,50 +180,33 @@ namespace CalendarQuestsPins
                         }
 
                         var topicCount = reader.ReadInt32();
-                        if (topicCount < 0 || topicCount > 256)
-                        {
-                            failure = "topic count out of range";
-                            return false;
-                        }
+                        if (topicCount < 0 || topicCount > 256) { failure = "topic count out of range"; return false; }
                         for (var p = 0; p < topicCount; p++)
                         {
                             var topic = new WeekdayInteractionRuleCache.TopicRule { AnswerId = reader.ReadString() };
                             if (!ReadVariants(reader, wgo, topic.Variants, out failure)) return false;
                             target.Topics.Add(topic);
                         }
-
                         targets.Add(target);
                     }
 
+                    if (!_navigation.Read(reader, worldObjects, out failure)) return false;
                     var counts = ReadCounts(reader);
-                    if (!CountsAreCanonical(counts))
-                    {
-                        failure = "manifest canonical-count check failed";
-                        return false;
-                    }
+                    if (!CountsAreCanonical(counts)) { failure = "manifest canonical-count check failed"; return false; }
                     ApplyCounts(counts);
-
-                    if (stream.Position != stream.Length)
-                    {
-                        failure = "manifest has trailing data";
-                        return false;
-                    }
+                    if (stream.Position != stream.Length) { failure = "manifest has trailing data"; return false; }
                 }
 
                 ulong ignoredFingerprint;
                 bool ignoredPeriodic;
                 if (!Bind(save, mainGame, out ignoredFingerprint, out ignoredPeriodic))
-                {
-                    failure = "manifest loaded but live binding failed";
-                    return false;
-                }
-
+                { failure = "manifest loaded but live binding failed"; return false; }
                 return IsRuntimeValid(mainGame);
             }
             catch (Exception ex)
             {
                 failure = ex.GetType().Name + ": " + ex.Message;
-                _cache.Clear();
+                ClearCaches();
                 return false;
             }
             finally
@@ -299,35 +223,20 @@ namespace CalendarQuestsPins
             try
             {
                 if (!string.Equals(ReadGameVersion(save), VerifiedGameVersion, StringComparison.Ordinal))
-                {
-                    failure = "bootstrap is supported only for Graveyard Keeper " + VerifiedGameVersion;
-                    return false;
-                }
+                { failure = "bootstrap is supported only for Graveyard Keeper " + VerifiedGameVersion; return false; }
+                ClearCaches();
+                if (!PrepareRuntime(save, mainGame)) { failure = "runtime bindings are not ready for bootstrap"; return false; }
 
-                _cache.Clear();
-                if (!PrepareRuntime(save, mainGame))
-                {
-                    failure = "runtime bindings are not ready for bootstrap";
-                    return false;
-                }
-
-                var knownNpcMap = ReadKnownNpcs(save, out _boundKnownNpcCount);
+                int ignoredKnownCount;
+                var knownNpcMap = ReadKnownNpcs(save, out ignoredKnownCount);
                 var graphs = new Dictionary<string, string>(StringComparer.Ordinal);
-
                 for (var i = 0; i < NpcIds.Length; i++)
                 {
                     var npcId = NpcIds[i];
                     var serialized = ReadSerializedGraph(npcId);
-                    if (string.IsNullOrEmpty(serialized))
-                    {
-                        failure = "serialized graph not ready: " + npcId;
-                        return false;
-                    }
+                    if (string.IsNullOrEmpty(serialized)) { failure = "serialized graph not ready: " + npcId; return false; }
                     graphs[npcId] = serialized;
-
-                    if (!knownNpcMap.ContainsKey(npcId))
-                        knownNpcMap[npcId] = new object();
-
+                    if (!knownNpcMap.ContainsKey(npcId)) knownNpcMap[npcId] = new object();
                     foreach (Match match in OwnerNpcRegex.Matches(serialized))
                     {
                         if (!match.Success || match.Groups.Count < 2) continue;
@@ -338,40 +247,39 @@ namespace CalendarQuestsPins
                 }
 
                 var targets = GetTargets();
-                if (targets == null)
-                {
-                    failure = "cache target storage unavailable";
-                    return false;
-                }
-
+                if (targets == null) { failure = "cache target storage unavailable"; return false; }
                 for (var i = 0; i < NpcIds.Length; i++)
                 {
                     var npcId = NpcIds[i];
                     var wgo = GetWorldObject(npcId);
-                    if (!ReflectionUtil.IsUnityAlive(wgo))
-                    {
-                        failure = "weekday NPC world object not ready: " + npcId;
-                        return false;
-                    }
-
+                    if (!ReflectionUtil.IsUnityAlive(wgo)) { failure = "weekday NPC world object not ready: " + npcId; return false; }
                     object knownNpc;
                     knownNpcMap.TryGetValue(npcId, out knownNpc);
-                    var target = new WeekdayInteractionRuleCache.TargetRules
-                    {
-                        NpcId = npcId,
-                        KnownNpc = knownNpc,
-                        WorldObject = wgo
-                    };
-
+                    var target = new WeekdayInteractionRuleCache.TargetRules { NpcId = npcId, KnownNpc = knownNpc, WorldObject = wgo };
                     _parseGraph.Invoke(_cache, new object[] { target, graphs[npcId], knownNpcMap });
                     targets.Add(target);
+                    string navigationFailure;
+                    if (!_navigation.BuildTarget(npcId, graphs[npcId], wgo, target, out navigationFailure))
+                    {
+                        failure = "navigation bootstrap failed: " + navigationFailure;
+                        ClearCaches();
+                        return false;
+                    }
+                }
+
+                string verifiedFailure;
+                if (!_navigation.ValidateVerifiedContracts(out verifiedFailure))
+                {
+                    failure = "navigation verification failed: " + verifiedFailure;
+                    ClearCaches();
+                    return false;
                 }
 
                 var counts = CaptureCounts();
                 if (!CountsAreCanonical(counts))
                 {
-                    failure = "bootstrap produced non-canonical counts: " + CountsToString(counts);
-                    _cache.Clear();
+                    failure = "bootstrap produced non-canonical rule counts: " + CountsToString(counts);
+                    ClearCaches();
                     return false;
                 }
 
@@ -380,27 +288,25 @@ namespace CalendarQuestsPins
                 if (!Bind(save, mainGame, out ignoredFingerprint, out ignoredPeriodic))
                 {
                     failure = "bootstrap completed but live binding failed";
-                    _cache.Clear();
+                    ClearCaches();
                     return false;
                 }
 
                 string persistFailure;
-                if (!TryPersist(out persistFailure))
-                    failure = "bootstrap succeeded in memory, but " + persistFailure;
-
+                if (!TryPersist(out persistFailure)) failure = "bootstrap succeeded in memory, but " + persistFailure;
                 return true;
             }
             catch (TargetInvocationException ex)
             {
                 var inner = ex.InnerException ?? ex;
                 failure = inner.GetType().Name + ": " + inner.Message;
-                _cache.Clear();
+                ClearCaches();
                 return false;
             }
             catch (Exception ex)
             {
                 failure = ex.GetType().Name + ": " + ex.Message;
-                _cache.Clear();
+                ClearCaches();
                 return false;
             }
             finally
@@ -415,22 +321,19 @@ namespace CalendarQuestsPins
             fingerprint = 0UL;
             hasPeriodicNpc = false;
             if (save == null || mainGame == null || !InvokeTryBindPlayer(mainGame)) return false;
-
             int knownCount;
             var knownNpcMap = ReadKnownNpcs(save, out knownCount);
             var targets = GetTargets();
-            if (targets == null || targets.Count != NpcIds.Length) return false;
+            if (targets == null || targets.Count != NpcIds.Length || !_navigation.IsReadyForTargets(targets)) return false;
 
             for (var i = 0; i < targets.Count; i++)
             {
                 var target = targets[i];
                 if (target == null || !ReflectionUtil.IsUnityAlive(target.WorldObject)) return false;
-
                 object knownNpc;
                 knownNpcMap.TryGetValue(target.NpcId, out knownNpc);
                 target.KnownNpc = knownNpc;
                 if (knownNpc != null) hasPeriodicNpc = true;
-
                 for (var c = 0; c < target.CrossTasks.Count; c++)
                 {
                     var cross = target.CrossTasks[c];
@@ -454,29 +357,20 @@ namespace CalendarQuestsPins
             const ulong offset = 14695981039346656037UL;
             const ulong prime = 1099511628211UL;
             var hash = offset;
-
             object known;
             if (save == null || !ReflectionUtil.TryRead(save, "known_npcs", out known) || known == null) return hash;
             var npcs = ReflectionUtil.EnumerateMember(known, "npcs");
             if (npcs == null) return hash;
-
             foreach (var npc in npcs)
             {
                 if (npc == null) continue;
                 var id = ReflectionUtil.ReadString(npc, "npc_id");
                 if (string.IsNullOrEmpty(id)) continue;
-
-                for (var i = 0; i < id.Length; i++)
-                {
-                    hash ^= id[i];
-                    hash *= prime;
-                }
+                for (var i = 0; i < id.Length; i++) { hash ^= id[i]; hash *= prime; }
                 hash ^= 0x1FUL;
                 hash *= prime;
-
                 if (IsPeriodicNpc(id)) hasPeriodicNpc = true;
             }
-
             return hash;
         }
 
@@ -488,21 +382,18 @@ namespace CalendarQuestsPins
                 var directory = Path.GetDirectoryName(_path);
                 if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
                 var temp = _path + ".tmp";
-
                 using (var stream = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (var writer = new BinaryWriter(stream))
                 {
                     writer.Write(Magic);
                     writer.Write(SchemaVersion);
                     writer.Write(VerifiedGameVersion);
-
                     var targets = GetTargets();
                     writer.Write(targets.Count);
                     for (var i = 0; i < targets.Count; i++)
                     {
                         var target = targets[i];
                         writer.Write(target.NpcId ?? string.Empty);
-
                         var taskIds = new List<string>(target.OwnerTaskRules.Keys);
                         taskIds.Sort(StringComparer.Ordinal);
                         writer.Write(taskIds.Count);
@@ -512,7 +403,6 @@ namespace CalendarQuestsPins
                             writer.Write(taskId);
                             WriteVariants(writer, target.OwnerTaskRules[taskId]);
                         }
-
                         writer.Write(target.CrossTasks.Count);
                         for (var c = 0; c < target.CrossTasks.Count; c++)
                         {
@@ -521,7 +411,6 @@ namespace CalendarQuestsPins
                             writer.Write(cross.TaskId ?? string.Empty);
                             WriteVariants(writer, cross.Rules);
                         }
-
                         writer.Write(target.Topics.Count);
                         for (var p = 0; p < target.Topics.Count; p++)
                         {
@@ -530,19 +419,18 @@ namespace CalendarQuestsPins
                             WriteVariants(writer, topic.Variants);
                         }
                     }
-
+                    _navigation.Write(writer);
                     WriteCounts(writer, CaptureCounts());
                     writer.Flush();
                     stream.Flush(true);
                 }
-
                 if (File.Exists(_path)) File.Delete(_path);
                 File.Move(temp, _path);
                 return true;
             }
             catch (Exception ex)
             {
-                failure = "could not persist manifest: " + ex.GetType().Name + ": " + ex.Message;
+                failure = "could not persist schema-2 manifest: " + ex.GetType().Name + ": " + ex.Message;
                 try { if (File.Exists(_path + ".tmp")) File.Delete(_path + ".tmp"); } catch { }
                 return false;
             }
@@ -550,18 +438,14 @@ namespace CalendarQuestsPins
 
         private bool PrepareRuntime(object save, object mainGame)
         {
-            if (save == null || mainGame == null ||
-                _targetsField == null || _saveField == null || _playerField == null || _knownNpcCountField == null ||
-                _worldObjectGetterField == null || _smartResFactoryField == null ||
-                _findWorldObjectGetter == null || _findSmartResFactory == null ||
+            if (save == null || mainGame == null || _targetsField == null || _saveField == null ||
+                _playerField == null || _knownNpcCountField == null || _worldObjectGetterField == null ||
+                _smartResFactoryField == null || _findWorldObjectGetter == null || _findSmartResFactory == null ||
                 _tryBindPlayer == null || _parseGraph == null || _createSmartRes == null ||
-                _worldObjectGetter == null || _controllerType == null)
-                return false;
-
+                _worldObjectGetter == null || _controllerType == null) return false;
             var gameGetter = _findWorldObjectGetter.Invoke(_cache, null) as MethodInfo;
             var smartResFactory = _findSmartResFactory.Invoke(_cache, null) as MethodInfo;
             if (gameGetter == null || smartResFactory == null) return false;
-
             _worldObjectGetterField.SetValue(_cache, gameGetter);
             _smartResFactoryField.SetValue(_cache, smartResFactory);
             return InvokeTryBindPlayer(mainGame);
@@ -600,18 +484,15 @@ namespace CalendarQuestsPins
             foreach (var method in _worldMapType.GetMethods(ReflectionUtil.AnyStatic))
             {
                 if (method.Name != "GetWorldGameObjectByObjId") continue;
-                var p = method.GetParameters();
-                if (p.Length == 2 && p[0].ParameterType == typeof(string) && p[1].ParameterType == typeof(bool))
-                    return method;
+                var parameters = method.GetParameters();
+                if (parameters.Length == 2 && parameters[0].ParameterType == typeof(string) && parameters[1].ParameterType == typeof(bool)) return method;
             }
             return null;
         }
 
         private List<WeekdayInteractionRuleCache.TargetRules> GetTargets()
         {
-            return _targetsField == null
-                ? null
-                : _targetsField.GetValue(_cache) as List<WeekdayInteractionRuleCache.TargetRules>;
+            return _targetsField == null ? null : _targetsField.GetValue(_cache) as List<WeekdayInteractionRuleCache.TargetRules>;
         }
 
         private bool ReadVariants(BinaryReader reader, object linkedWgo,
@@ -619,12 +500,7 @@ namespace CalendarQuestsPins
         {
             failure = null;
             var count = reader.ReadInt32();
-            if (count < 0 || count > 256)
-            {
-                failure = "variant count out of range";
-                return false;
-            }
-
+            if (count < 0 || count > 256) { failure = "variant count out of range"; return false; }
             for (var i = 0; i < count; i++)
             {
                 var variant = new WeekdayInteractionRuleCache.RuleVariant
@@ -632,22 +508,11 @@ namespace CalendarQuestsPins
                     AnswerId = reader.ReadString(),
                     Unsupported = reader.ReadBoolean()
                 };
-
                 bool valid;
                 variant.Price = ReadRequirement(reader, linkedWgo, out valid);
-                if (!valid)
-                {
-                    failure = "invalid price requirement for " + variant.AnswerId;
-                    return false;
-                }
-
+                if (!valid) { failure = "invalid price requirement for " + variant.AnswerId; return false; }
                 variant.Lock = ReadRequirement(reader, linkedWgo, out valid);
-                if (!valid)
-                {
-                    failure = "invalid lock requirement for " + variant.AnswerId;
-                    return false;
-                }
-
+                if (!valid) { failure = "invalid lock requirement for " + variant.AnswerId; return false; }
                 destination.Add(variant);
             }
             return true;
@@ -657,27 +522,17 @@ namespace CalendarQuestsPins
         {
             valid = true;
             if (!reader.ReadBoolean()) return null;
-
-            var req = new WeekdayInteractionRuleCache.Requirement
+            var requirement = new WeekdayInteractionRuleCache.Requirement
             {
                 ResType = reader.ReadString(),
                 Id = reader.ReadString(),
                 Value = reader.ReadSingle(),
                 AuthoritativeZoneId = ReadNullableString(reader)
             };
-
-            try
-            {
-                req.SmartRes = _createSmartRes.Invoke(_cache, new object[] { req, linkedWgo });
-            }
-            catch
-            {
-                req.SmartRes = null;
-            }
-
-            if (req.SmartRes == null && string.IsNullOrEmpty(req.AuthoritativeZoneId))
-                valid = false;
-            return req;
+            try { requirement.SmartRes = _createSmartRes.Invoke(_cache, new object[] { requirement, linkedWgo }); }
+            catch { requirement.SmartRes = null; }
+            if (requirement.SmartRes == null && string.IsNullOrEmpty(requirement.AuthoritativeZoneId)) valid = false;
+            return requirement;
         }
 
         private static void WriteVariants(BinaryWriter writer, List<WeekdayInteractionRuleCache.RuleVariant> variants)
@@ -693,14 +548,14 @@ namespace CalendarQuestsPins
             }
         }
 
-        private static void WriteRequirement(BinaryWriter writer, WeekdayInteractionRuleCache.Requirement req)
+        private static void WriteRequirement(BinaryWriter writer, WeekdayInteractionRuleCache.Requirement requirement)
         {
-            writer.Write(req != null);
-            if (req == null) return;
-            writer.Write(req.ResType ?? string.Empty);
-            writer.Write(req.Id ?? string.Empty);
-            writer.Write(req.Value);
-            WriteNullableString(writer, req.AuthoritativeZoneId);
+            writer.Write(requirement != null);
+            if (requirement == null) return;
+            writer.Write(requirement.ResType ?? string.Empty);
+            writer.Write(requirement.Id ?? string.Empty);
+            writer.Write(requirement.Value);
+            WriteNullableString(writer, requirement.AuthoritativeZoneId);
         }
 
         private static void WriteNullableString(BinaryWriter writer, string value)
@@ -782,30 +637,30 @@ namespace CalendarQuestsPins
 
         private void SetAutoPropertyBackingField(string propertyName, int value)
         {
-            var field = _cacheType.GetField("<" + propertyName + ">k__BackingField",
-                BindingFlags.Instance | BindingFlags.NonPublic);
+            var field = _cacheType.GetField("<" + propertyName + ">k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
             if (field != null) field.SetValue(_cache, value);
         }
 
         private static bool CountsAreCanonical(Counts counts)
         {
-            return counts != null &&
-                   counts.OwnerSupported == ExpectedOwnerSupported &&
-                   counts.OwnerUnsupported == ExpectedOwnerUnsupported &&
-                   counts.CrossTasks == ExpectedCrossTasks &&
-                   counts.CrossSupported == ExpectedCrossSupported &&
-                   counts.CrossUnsupported == ExpectedCrossUnsupported &&
-                   counts.Topics == ExpectedTopics &&
-                   counts.TopicSupported == ExpectedTopicSupported &&
-                   counts.TopicUnsupported == ExpectedTopicUnsupported;
+            return counts != null && counts.OwnerSupported == ExpectedOwnerSupported && counts.OwnerUnsupported == ExpectedOwnerUnsupported &&
+                   counts.CrossTasks == ExpectedCrossTasks && counts.CrossSupported == ExpectedCrossSupported &&
+                   counts.CrossUnsupported == ExpectedCrossUnsupported && counts.Topics == ExpectedTopics &&
+                   counts.TopicSupported == ExpectedTopicSupported && counts.TopicUnsupported == ExpectedTopicUnsupported;
         }
 
-        private static string CountsToString(Counts c)
+        private static string CountsToString(Counts counts)
         {
-            if (c == null) return "<null>";
-            return "owner=" + c.OwnerSupported + "/" + c.OwnerUnsupported +
-                   ", cross=" + c.CrossTasks + "/" + c.CrossSupported + "/" + c.CrossUnsupported +
-                   ", topics=" + c.Topics + "/" + c.TopicSupported + "/" + c.TopicUnsupported;
+            if (counts == null) return "<null>";
+            return "owner=" + counts.OwnerSupported + "/" + counts.OwnerUnsupported +
+                   ", cross=" + counts.CrossTasks + "/" + counts.CrossSupported + "/" + counts.CrossUnsupported +
+                   ", topics=" + counts.Topics + "/" + counts.TopicSupported + "/" + counts.TopicUnsupported;
+        }
+
+        private void ClearCaches()
+        {
+            _cache.Clear();
+            _navigation.Clear();
         }
 
         private static Dictionary<string, object> ReadKnownNpcs(object save, out int count)
@@ -834,13 +689,10 @@ namespace CalendarQuestsPins
             if (!ReflectionUtil.TryRead(save, "known_npcs", out known) || known == null) return 0;
             var npcs = ReflectionUtil.EnumerateMember(known, "npcs");
             if (npcs == null) return 0;
-
             var collection = npcs as ICollection;
             if (collection != null) return collection.Count;
-
             var count = 0;
-            foreach (var npc in npcs)
-                if (npc != null) count++;
+            foreach (var npc in npcs) if (npc != null) count++;
             return count;
         }
 
@@ -858,9 +710,7 @@ namespace CalendarQuestsPins
             try
             {
                 var formattable = raw as IFormattable;
-                return formattable != null
-                    ? formattable.ToString(null, CultureInfo.InvariantCulture)
-                    : raw.ToString();
+                return formattable != null ? formattable.ToString(null, CultureInfo.InvariantCulture) : raw.ToString();
             }
             catch { return null; }
         }
