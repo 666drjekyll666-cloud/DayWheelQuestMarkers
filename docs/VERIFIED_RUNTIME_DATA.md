@@ -82,8 +82,8 @@ Production guardrails for this rule:
 3. `Flow_AddPhraseToBlacklist` nodes with `remove=true` are not consumption evidence;
 4. the phrase must currently be unlocked and not blacklisted;
 5. any supported authored `Flow_Answer` price/lock gates must pass `Player.IsEnough`;
-6. direct task-completion answers remain handled by the task-linked caches rather than being double-counted by the generic one-shot layer;
-7. the existing 1.0.22 bridge/intermediate IDs remain excluded from the generic layer while those narrow implementations are retained as controls.
+6. direct task-completion answers remain handled by the task-linked rule set rather than being double-counted by the generic one-shot layer;
+7. previously verified bridge/intermediate topics use this same exact self-consuming structure in accepted 1.0.24 and no longer require separate hard-coded manifests.
 
 No translated/display text is used for this classification.
 
@@ -101,33 +101,44 @@ Cross-owner task reminder is allowed only when a weekday NPC graph explicitly co
 
 These task-linked rules remain necessary because not every actionable quest interaction is represented by the generic one-shot condition.
 
-## Verified bridge / intermediate controls
+## Verified bridge / intermediate topics
 
-The prior research established narrow special mappings for objective stages that the task-completion model missed:
+Prior research established narrow special mappings for objective stages that the direct task-completion model missed:
 
 - Miller -> Astrologer mill-calculation bridge: `@astrologer_fix_mill` -> `@astrologer_fix`, continuation relation gate 60;
 - Astrologer -> Snake instrument bridge: `@snake_instrument` -> `@snake_instrument_ready`, continuation relation gate 40;
 - six verified 1.0.22 intermediate families covering `astrologer_daghter`, `bishop_invitation_2`, `inquisitor_guards`, `merchant_support`, `snake_help`, and `actress_necklace` stages.
 
-Static persisted-topic evidence confirms these stage topics are also self-consuming. During the 1.0.23 behavior expansion they remain as narrow controls instead of being removed immediately; their exact answer IDs are excluded from generic one-shot classification, preventing duplicate markers. Once the broad rule is player-accepted they may be simplified in a later cleanup without changing behavior.
+Static persisted-topic evidence confirms these reminder-bearing stage topics are exact self-consuming authored topics. Accepted 1.0.24 therefore derives them through the same generic one-shot classifier instead of maintaining parallel `VerifiedBridgeReminderRules` / `VerifiedIntermediateReminderRules` manifests. Runtime parity testing on the portal-item lifecycle confirmed that retiring the supplemental layer did not regress the accepted one-shot behavior.
 
 ## Authoritative zone-quality mirrors
 
 GK 1.407 graphs can mirror live `WorldZone.GetTotalQuality()` into a player `GameRes` through an authored `Flow_SetPlayerParam <- Flow_GetQualityOfZone` value edge. The Snake `sacrifice_quality` case proved that the stored player parameter may be stale before the real dialogue branch refreshes it.
 
-Production may derive an authoritative mirror only when that exact graph edge is unambiguous. For such a requirement it compares the live `WorldZone.GetTotalQuality()` against the authored requirement value instead of trusting the stale mirrored player parameter. Ambiguous or unresolved mirrors fail closed.
+Production may derive an authoritative mirror only when that exact graph edge is unambiguous. For such an owner-local requirement it compares the live `WorldZone.GetTotalQuality()` against the authored requirement value instead of trusting the stale mirrored player parameter. Ambiguous or unresolved mirrors fail closed.
 
-## Loading/performance contract
+Cross-owner and generic one-shot routes retain their accepted SmartRes/`Player.IsEnough` semantics unless separate evidence establishes that authoritative zone substitution is required there.
 
-Accepted baseline architecture and the 1.0.23 candidate design:
+## Accepted unified loading/performance contract
+
+Accepted 1.0.24 architecture:
 
 - per frame: timer comparison only until one-second refresh is due;
-- developed save: once save/player/weekday-NPC objects and serialized graphs are verified ready while loading is still active, build structural caches there;
-- the generic one-shot classifier parses only the six weekday-NPC graphs in that same loading prewarm; it does not run graph traversal during gameplay;
+- developed save: once save/player/weekday-NPC objects and serialized graphs are verified ready while loading is still active, build one `WeekdayInteractionRuleCache` there;
+- each of the six weekday-NPC graphs is parsed once per cache build and the same structural index yields owner-local, cross-owner, and self-consuming one-shot rules;
 - gameplay start: rebind/revalidate prewarmed structure against final runtime objects;
 - once per second: evaluate cached task state, cached one-shot topics, phrase state, game-owned gate predicates, and live HUD semantics;
-- approximately every 30 seconds: check structural staleness;
+- approximately every 30 seconds: check structural staleness, including known-NPC signature changes;
 - fresh save with no known periodic NPC: no graph parse and no HUD/marker-resource work;
 - no background worker and no save mutation.
 
-The accepted 1.0.12/1.0.17 line moved the former roughly half-second developed-save graph parsing cost behind the loading screen. The rejected universal provenance-parser experiment pushed loading work toward roughly 1.8 seconds and is not an accepted architecture. The one-shot classifier is deliberately much narrower and its actual prewarm cost must be checked from the 1.0.23 candidate runtime log before acceptance.
+Accepted player runtime evidence for 1.0.24 on the developed regression save:
+
+- `Weekday interaction cache prewarmed behind loading screen in 308.07 ms. owner supported=75, cross-owner tasks=8, one-shot topics=55.`
+- steady-state summary: owner supported=75, owner unsupported=6, cross-owner tasks=8, cross-owner supported=6, cross-owner unsupported=0, one-shot topics=55, one-shot supported=54, one-shot unsupported=1;
+- the expected three portal-item markers appeared before the Inquisitor conversation; selecting `@inquisitor_magic_item` removed the Inquisitor marker;
+- no Day Wheel Quest Markers error/warning was present in the supplied log.
+
+For comparison, accepted 1.0.23 required three separate structural caches and measured **782.89 ms** on the corresponding developed-save test. The unified 1.0.24 cache measured **308.07 ms**, reducing this loading-prewarm work by about **60.6%** while preserving the tested behavior.
+
+The rejected universal provenance-parser experiment pushed loading work toward roughly 1.8 seconds and is not an accepted architecture. Do not reintroduce arbitrary external dependency/provenance traversal into production.
