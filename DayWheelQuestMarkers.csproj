@@ -4,7 +4,7 @@
     <LangVersion>7.3</LangVersion>
     <AssemblyName>DayWheelQuestMarkers</AssemblyName>
     <RootNamespace>DayWheelQuestMarkers</RootNamespace>
-    <Version>1.0.28</Version>
+    <Version>1.0.29</Version>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Optimize>true</Optimize>
     <DebugType>none</DebugType>
@@ -19,6 +19,7 @@
     <Compile Include="src\ReflectionUtil.cs" />
     <Compile Include="src\WeekdayInteractionRuleCache.cs" />
     <Compile Include="src\PersistentRuleManifest.cs" />
+    <Compile Include="src\VerifiedNestedDialogueGate.cs" />
     <Compile Include="src\LoadingCachePrewarmGate.cs" />
     <Compile Include="src\NativeMarkerSprites.cs" />
     <Compile Include="src\CalendarMarkers.cs" />
