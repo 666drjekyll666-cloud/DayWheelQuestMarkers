@@ -36,7 +36,7 @@ The accepted visual contract is the native art and category color, placed at the
 
 Public production resolves these game-owned Sprite objects from the installed game's already-loaded runtime objects. The normal lookup is performed once during developed-save loading prewarm and cached. If a requested DLC style was not resident then, at most one bounded fallback lookup is allowed when that real marker is first requested. Game-owned Sprite objects are referenced only and are never destroyed by the mod.
 
-## Journal state and actionability
+## Journal state and task-linked actionability
 
 `KnownNPC.TaskState` contains task ID and state. `Visible` alone does not mean actionable: verified negative cases include missing quest items, quality requirements, relation requirements, restoration tools, wine, trade license, church/cemetery quality, and other prerequisites.
 
@@ -44,7 +44,7 @@ Normal task mutation path:
 
 `FlowCanvas.Nodes.Flow_SetTaskState -> GameSave.SetTaskState`
 
-Production therefore requires an authored weekday-NPC completion route plus currently satisfied dialogue/resource gates, not merely a visible journal entry.
+For task-linked reminders production therefore requires an authored weekday-NPC route plus currently satisfied dialogue/resource gates, not merely a visible journal entry.
 
 ## Dialogue / resource gates
 
@@ -54,9 +54,42 @@ Verified direct `Flow_Answer` price/lock requirements are evaluated by Graveyard
 
 If a route uses an unsupported answer/gate shape, no reminder is emitted.
 
+## Verified persistent one-shot dialogue semantics
+
+Graveyard Keeper has authored dialogue nodes that persistently consume a topic by adding its exact phrase ID to `GameSave.black_list_of_phrases`:
+
+- `FlowCanvas.Nodes.Flow_BlackListPhrase` calls `GameSave.AddPhraseToBlackList(phrase)`;
+- `FlowCanvas.Nodes.Flow_AddPhraseToBlacklist` calls the same method when its authored `remove` input is false; when `remove` is true it removes the phrase from the blacklist instead.
+
+Raw GK 1.407 weekday-NPC graphs use persisted `@...` topic IDs in `Flow_MultiAnswer`. The authored-universe audit established a clean structural distinction relevant to the mod:
+
+- one-time conversations such as `@inquisitor_magic_item` directly blacklist their own exact phrase after selection;
+- repeatable utility choices such as Trade / Leave / Back do not self-blacklist;
+- submenu/container headers such as `@snake_about_nacklase` do not self-blacklist, while the actual one-time child topics inside that submenu do.
+
+Runtime evidence from the 1.0.22 player test confirmed `@inquisitor_magic_item` was visibly rendered and selectable by the Inquisitor while the old task/progression-only classifier emitted no marker. The earlier static universe audit had already classified that exact topic as supported, externally unlocked, self-consuming, and opening `@inquisitor_magic_100`; it was rejected only by the now-retired requirement that the source side also prove a task/progression dependency.
+
+This establishes a broader valid reminder source:
+
+`currently open + exact authored self-consuming @topic + supported/satisfied answer gates -> weekday marker`
+
+The one-shot rule intentionally does **not** require a journal task mutation or downstream quest effect. The unique authored conversation itself is reminder-worthy.
+
+Production guardrails for this rule:
+
+1. the answer ID must be an authored persisted `@...` topic on one of the six weekday-NPC graphs;
+2. its own authored route must add that same exact ID to the phrase blacklist;
+3. `Flow_AddPhraseToBlacklist` nodes with `remove=true` are not consumption evidence;
+4. the phrase must currently be unlocked and not blacklisted;
+5. any supported authored `Flow_Answer` price/lock gates must pass `Player.IsEnough`;
+6. direct task-completion answers remain handled by the task-linked caches rather than being double-counted by the generic one-shot layer;
+7. the existing 1.0.22 bridge/intermediate IDs remain excluded from the generic layer while those narrow implementations are retained as controls.
+
+No translated/display text is used for this classification.
+
 ## Owner-local and cross-owner rules
 
-Owner-local reminder:
+Owner-local task reminder:
 
 1. saved task is Visible;
 2. owning weekday NPC graph contains the authored completion route;
@@ -64,27 +97,37 @@ Owner-local reminder:
 4. phrase/blacklist state allows it;
 5. verified price/lock requirements pass the game's own sufficiency check.
 
-Cross-owner reminder is allowed only when a weekday NPC graph explicitly completes a task stored under another NPC and the same actionability gates pass.
+Cross-owner task reminder is allowed only when a weekday NPC graph explicitly completes a task stored under another NPC and the same actionability gates pass.
 
-## Verified bridge exceptions
+These task-linked rules remain necessary because not every actionable quest interaction is represented by the generic one-shot condition.
 
-The full authored-universe research found two base-game objective families that do not expose the normal task-completion anchor and are intentionally represented by narrow explicit internal-ID rules:
+## Verified bridge / intermediate controls
+
+The prior research established narrow special mappings for objective stages that the task-completion model missed:
 
 - Miller -> Astrologer mill-calculation bridge: `@astrologer_fix_mill` -> `@astrologer_fix`, continuation relation gate 60;
-- Astrologer -> Snake instrument bridge: `@snake_instrument` -> `@snake_instrument_ready`, continuation relation gate 40.
+- Astrologer -> Snake instrument bridge: `@snake_instrument` -> `@snake_instrument_ready`, continuation relation gate 40;
+- six verified 1.0.22 intermediate families covering `astrologer_daghter`, `bishop_invitation_2`, `inquisitor_guards`, `merchant_support`, `snake_help`, and `actress_necklace` stages.
 
-Each family contributes at most one reminder across entry/continuation. Arbitrary relationship-only follow-ups are not generalized from these exceptions.
+Static persisted-topic evidence confirms these stage topics are also self-consuming. During the 1.0.23 behavior expansion they remain as narrow controls instead of being removed immediately; their exact answer IDs are excluded from generic one-shot classification, preventing duplicate markers. Once the broad rule is player-accepted they may be simplified in a later cleanup without changing behavior.
+
+## Authoritative zone-quality mirrors
+
+GK 1.407 graphs can mirror live `WorldZone.GetTotalQuality()` into a player `GameRes` through an authored `Flow_SetPlayerParam <- Flow_GetQualityOfZone` value edge. The Snake `sacrifice_quality` case proved that the stored player parameter may be stale before the real dialogue branch refreshes it.
+
+Production may derive an authoritative mirror only when that exact graph edge is unambiguous. For such a requirement it compares the live `WorldZone.GetTotalQuality()` against the authored requirement value instead of trusting the stale mirrored player parameter. Ambiguous or unresolved mirrors fail closed.
 
 ## Loading/performance contract
 
-Accepted production architecture:
+Accepted baseline architecture and the 1.0.23 candidate design:
 
 - per frame: timer comparison only until one-second refresh is due;
-- developed save: once save/player/six periodic NPC objects and serialized graphs are verified ready while loading is still active, build structural caches there;
+- developed save: once save/player/weekday-NPC objects and serialized graphs are verified ready while loading is still active, build structural caches there;
+- the generic one-shot classifier parses only the six weekday-NPC graphs in that same loading prewarm; it does not run graph traversal during gameplay;
 - gameplay start: rebind/revalidate prewarmed structure against final runtime objects;
-- once per second: evaluate cached task state, phrase state, game-owned gate predicates, and live HUD semantics;
+- once per second: evaluate cached task state, cached one-shot topics, phrase state, game-owned gate predicates, and live HUD semantics;
 - approximately every 30 seconds: check structural staleness;
 - fresh save with no known periodic NPC: no graph parse and no HUD/marker-resource work;
 - no background worker and no save mutation.
 
-The accepted 1.0.12/1.0.17 line moved the former roughly half-second developed-save graph parsing cost behind the loading screen. The rejected universal provenance-parser experiment pushed loading work toward roughly 1.8 seconds and is not an accepted architecture.
+The accepted 1.0.12/1.0.17 line moved the former roughly half-second developed-save graph parsing cost behind the loading screen. The rejected universal provenance-parser experiment pushed loading work toward roughly 1.8 seconds and is not an accepted architecture. The one-shot classifier is deliberately much narrower and its actual prewarm cost must be checked from the 1.0.23 candidate runtime log before acceptance.
