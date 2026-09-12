@@ -34,7 +34,7 @@ Verified dimensions are 10x10 for base/violet/Souls and 12x12 for Stories, with 
 
 The accepted visual contract is the native art and category color, placed at the established outward position, with no custom outline or silhouette.
 
-Public production resolves these game-owned Sprite objects from the installed game's already-loaded runtime objects. The normal lookup is performed once during developed-save loading prewarm and cached. If a requested DLC style was not resident then, at most one bounded fallback lookup is allowed when that real marker is first requested. Game-owned Sprite objects are referenced only and are never destroyed by the mod.
+Public production resolves these game-owned Sprite objects from the installed game's already-loaded runtime objects. The normal lookup is performed once during loading/prewarm and cached. If a requested DLC style was not resident then, at most one bounded fallback lookup is allowed when that real marker is first requested. Game-owned Sprite objects are referenced only and are never destroyed by the mod.
 
 ## Journal state and task-linked actionability
 
@@ -44,7 +44,7 @@ Normal task mutation path:
 
 `FlowCanvas.Nodes.Flow_SetTaskState -> GameSave.SetTaskState`
 
-For task-linked reminders production therefore requires an authored weekday-NPC route plus currently satisfied dialogue/resource gates, not merely a visible journal entry.
+For task-linked reminders production therefore requires an authored weekday-NPC route plus currently satisfied dialogue/resource/navigation gates, not merely a visible journal entry.
 
 ## Dialogue / resource gates
 
@@ -71,7 +71,7 @@ Runtime evidence from the 1.0.22 player test confirmed `@inquisitor_magic_item` 
 
 This establishes a broader valid reminder source:
 
-`currently open + exact authored self-consuming @topic + supported/satisfied answer gates -> weekday marker`
+`currently reachable + exact authored self-consuming @topic + supported/satisfied answer gates -> weekday marker`
 
 The one-shot rule intentionally does **not** require a journal task mutation or downstream quest effect. The unique authored conversation itself is reminder-worthy.
 
@@ -81,11 +81,34 @@ Production guardrails for this rule:
 2. its own authored route must add that same exact ID to the phrase blacklist;
 3. `Flow_AddPhraseToBlacklist` nodes with `remove=true` are not consumption evidence;
 4. the phrase must currently be unlocked and not blacklisted;
-5. any supported authored `Flow_Answer` price/lock gates must pass `Player.IsEnough`;
-6. direct task-completion answers remain handled by the task-linked rule set rather than being double-counted by the generic one-shot layer;
-7. previously verified bridge/intermediate topics use this same exact self-consuming structure in accepted 1.0.24 and no longer require separate hard-coded manifests.
+5. any supported authored final-answer `Flow_Answer` price/lock gates must pass `Player.IsEnough`;
+6. every required ancestor menu/answer on at least one authored root-to-answer path must also currently be reachable;
+7. direct task-completion answers remain handled by the task-linked rule set rather than being double-counted by the generic one-shot layer;
+8. previously verified bridge/intermediate topics use this same exact self-consuming structure and no longer require separate hard-coded manifests.
 
 No translated/display text is used for this classification.
+
+## Verified root-to-answer navigation reachability
+
+The 1.0.30 audit established that checking only a final answer's own gates is insufficient for nested dialogue. A final child answer can look structurally actionable while its parent menu is currently blocked or already consumed.
+
+Verified defect/control cases:
+
+- Charmel: `actress_2b -> @actress_2b_1a/@actress_2b_1b`; the children have no own `AnswerData` gate, but the parent requires the relevant relation gate. In the reported player state the parent was rendered but unpickable; the old final-answer-only classifier produced two false Lust-day markers.
+- Merchant business submenu: `@merchant_business -> @merchant_marketing_done/@merchant_sales_done`; the child completions must not survive as reminders if the persisted parent route is no longer reachable.
+- Merchant debt submenu: `@merchant_2e -> @merchant_2e_1f`; final-answer price alone is not enough if the parent route is unavailable.
+- Bishop control: `about_cathedral` is an unconditional plain parent and therefore compiles away rather than becoming a recurring runtime predicate.
+
+Accepted navigation contract:
+
+- bootstrap derives one or more authored root-to-final-answer paths for reminder-bearing answers;
+- within one path, required ancestor phrase predicates and supported ancestor `AnswerData` price/lock gates are AND conditions;
+- alternative authored paths are OR;
+- unconditional plain ancestors are omitted from persisted predicates;
+- unsupported or ambiguous navigation ancestry fails closed;
+- gameplay evaluates only the compact persisted predicates and never traverses FlowCanvas/navigation graphs.
+
+First accepted schema-2 bootstrap produced: **210 answers, 270 paths, 151 predicates, 0 unsupported paths**. The verified contract checks for the known Charmel/Merchant chains and control cases passed before the manifest was accepted.
 
 ## Owner-local and cross-owner rules
 
@@ -95,21 +118,22 @@ Owner-local task reminder:
 2. owning weekday NPC graph contains the authored completion route;
 3. route resolves to a supported task-linked answer;
 4. phrase/blacklist state allows it;
-5. verified price/lock requirements pass the game's own sufficiency check.
+5. verified price/lock requirements pass the game's own sufficiency check;
+6. at least one authored root-to-final-answer navigation path is currently reachable.
 
-Cross-owner task reminder is allowed only when a weekday NPC graph explicitly completes a task stored under another NPC and the same actionability gates pass.
+Cross-owner task reminder is allowed only when a weekday NPC graph explicitly completes a task stored under another NPC and the same actionability/navigation gates pass.
 
 These task-linked rules remain necessary because not every actionable quest interaction is represented by the generic one-shot condition.
 
 ## Verified bridge / intermediate topics
 
-Prior research established narrow special mappings for objective stages that the direct task-completion model missed:
+Prior research established narrow objective stages that the direct task-completion model missed:
 
 - Miller -> Astrologer mill-calculation bridge: `@astrologer_fix_mill` -> `@astrologer_fix`, continuation relation gate 60;
 - Astrologer -> Snake instrument bridge: `@snake_instrument` -> `@snake_instrument_ready`, continuation relation gate 40;
 - six verified 1.0.22 intermediate families covering `astrologer_daghter`, `bishop_invitation_2`, `inquisitor_guards`, `merchant_support`, `snake_help`, and `actress_necklace` stages.
 
-Static persisted-topic evidence confirms these reminder-bearing stage topics are exact self-consuming authored topics. Accepted 1.0.24 therefore derives them through the same generic one-shot classifier instead of maintaining parallel `VerifiedBridgeReminderRules` / `VerifiedIntermediateReminderRules` manifests. Runtime parity testing on the portal-item lifecycle confirmed that retiring the supplemental layer did not regress the accepted one-shot behavior.
+Static persisted-topic evidence confirms these reminder-bearing stage topics are exact self-consuming authored topics. Production derives them through the same generic one-shot classifier instead of maintaining parallel `VerifiedBridgeReminderRules` / `VerifiedIntermediateReminderRules` manifests.
 
 ## Authoritative zone-quality mirrors
 
@@ -119,26 +143,36 @@ Production may derive an authoritative mirror only when that exact graph edge is
 
 Cross-owner and generic one-shot routes retain their accepted SmartRes/`Player.IsEnough` semantics unless separate evidence establishes that authoritative zone substitution is required there.
 
-## Accepted unified loading/performance contract
+## Accepted persistent loading/performance contract
 
-Accepted 1.0.24 architecture:
+Accepted 1.0.30 architecture:
 
 - per frame: timer comparison only until one-second refresh is due;
-- developed save: once save/player/weekday-NPC objects and serialized graphs are verified ready while loading is still active, build one `WeekdayInteractionRuleCache` there;
-- each of the six weekday-NPC graphs is parsed once per cache build and the same structural index yields owner-local, cross-owner, and self-consuming one-shot rules;
-- gameplay start: rebind/revalidate prewarmed structure against final runtime objects;
-- once per second: evaluate cached task state, cached one-shot topics, phrase state, game-owned gate predicates, and live HUD semantics;
-- approximately every 30 seconds: check structural staleness, including known-NPC signature changes;
-- fresh save with no known periodic NPC: no graph parse and no HUD/marker-resource work;
+- persistent manifest path: `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin`;
+- when the manifest is missing/incompatible, the six weekday-NPC graphs are parsed only in the verified loading window and the compact structural/navigation manifest is persisted;
+- later full launches deserialize the manifest and recreate only live runtime bindings; normal gameplay is not allowed to invoke the graph parser;
+- once per second: evaluate cached task/topic state, phrase state, cached navigation predicates, game-owned gate predicates, and live HUD semantics;
+- approximately every 30 seconds: perform allocation-light runtime/known-NPC validation through cached references and a `ulong` fingerprint rather than list/sort/string construction;
+- real known-NPC membership changes use cheap rebinding from the manifest, with no graph parse;
 - no background worker and no save mutation.
 
-Accepted player runtime evidence for 1.0.24 on the developed regression save:
+Accepted player evidence:
 
-- `Weekday interaction cache prewarmed behind loading screen in 308.07 ms. owner supported=75, cross-owner tasks=8, one-shot topics=55.`
-- steady-state summary: owner supported=75, owner unsupported=6, cross-owner tasks=8, cross-owner supported=6, cross-owner unsupported=0, one-shot topics=55, one-shot supported=54, one-shot unsupported=1;
-- the expected three portal-item markers appeared before the Inquisitor conversation; selecting `@inquisitor_magic_item` removed the Inquisitor marker;
-- no Day Wheel Quest Markers error/warning was present in the supplied log.
+- first 1.0.30 schema-2 bootstrap behind loading: **557.88 ms**;
+- first bootstrap summary: owner 75/6, cross-owner 8/6/0, one-shot 55/54/1, navigation 210/270/151/0;
+- subsequent full restart: persistent manifest loaded behind loading in **10.29 ms** and logged `FlowCanvas graph parse skipped`;
+- the same canonical final-rule/navigation counts were restored on the second launch;
+- the original early Charmel state with relation below 10 showed no two false Lust-day markers;
+- no Day Wheel runtime structural rebuild or repeated graph parse was present in the accepted second-run log.
 
-For comparison, accepted 1.0.23 required three separate structural caches and measured **782.89 ms** on the corresponding developed-save test. The unified 1.0.24 cache measured **308.07 ms**, reducing this loading-prewarm work by about **60.6%** while preserving the tested behavior.
+Performance lineage:
+
+- 1.0.25 exposed a measured **302.22 ms** first-weekday-NPC runtime structural rebuild;
+- 1.0.26 moved structural parsing behind loading and persisted it;
+- 1.0.27 moved the cache under BepInEx;
+- 1.0.28 removed recurring steady-state allocations and the previous roughly 30-second rhythmic freeze pattern disappeared in player testing;
+- 1.0.30 preserves that steady-state architecture while adding persisted navigation reachability.
+
+The remaining sparse hitches in the accepted 1.0.30 session are not attributed to Day Wheel: the same modpack/control work already established a comparable baseline without Day Wheel, and the 1.0.30 log contains separate Unity `UnloadUnusedAssets` operations around 0.7 s with roughly 934k loaded objects.
 
 The rejected universal provenance-parser experiment pushed loading work toward roughly 1.8 seconds and is not an accepted architecture. Do not reintroduce arbitrary external dependency/provenance traversal into production.
