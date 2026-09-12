@@ -52,12 +52,14 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Superseded direction: 1.0.23 broadens reminders to currently actionable authored one-shot weekday dialogue while preserving the existing task-linked rules and gate checks.
 - Status: **tested / superseded / not accepted**. Do not merge to `main`, create `baseline/1.0.22-accepted`, or publish `v1.0.22`.
 
-## 1.0.23 — candidate, runtime behavior confirmed
+## 1.0.23 — accepted stable
 
 - Date built: 2026-09-12.
+- Date accepted: 2026-09-12.
 - Development branch: `dev/1.0.23`.
 - Exact executable/build source: `3da21541a38753387cf9c4d343559e5fb1181f34`.
 - Candidate ref: `candidate/1.0.23` at the exact executable source above.
+- Accepted baseline ref: `baseline/1.0.23-accepted` at the same exact executable source.
 - Goal: broaden the reminder model from only task/progression-proven interactions to currently actionable authored one-shot weekday-NPC conversations, while still excluding repeatable utilities and submenu/container topics structurally.
 - Runtime changes: new loading-time `OneShotDialogueRuleCache` over the six weekday-NPC graphs. A generic candidate must be an authored persisted `@` topic whose own route blacklists that exact topic, must currently be unlocked/not blacklisted, and must pass supported authored `Flow_Answer` price/lock gates through `Player.IsEnough`. Direct task-completion answers and the retained 1.0.22 bridge/intermediate answer IDs are excluded from the generic layer to avoid duplicate markers. No recurring graph traversal or universal provenance parser was added.
 - Canonical product contract and verified blacklist semantics were updated in `AGENTS.md` and `docs/VERIFIED_RUNTIME_DATA.md`.
@@ -65,11 +67,11 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Artifact: `DayWheelQuestMarkers-1.0.23` (`10293188076`), archive digest `sha256:4bad1ca06c4626df1b25dffbeb7c8326e7fd6328072d4b90d9efb0ab54d120c4`.
 - Raw DLL: 65,536 bytes.
 - Raw DLL SHA-256: `dc9b1f3494f46a903ec416679c08b9d6a3704f2132e82d8c9ac2cf21c06458b7`.
-- Primary requested test on the current save: before consuming the already-visible Inquisitor `@inquisitor_magic_item` / Eternal Ember conversation, the Inquisitor weekday must show a base marker. The same Snake `@snake_items_give` transition also authored `@bishop_magic_item` and `@merchant_magic_item`, so Bishop and Merchant should likewise show reminders while those one-shot conversations are open/actionable. After consuming one of these topics, its contribution should disappear on the next refresh unless another independent actionable interaction still requires a marker on that weekday.
+- Primary requested test: before consuming the already-visible Inquisitor `@inquisitor_magic_item` / Eternal Ember conversation, the Inquisitor weekday must show a base marker. The same Snake `@snake_items_give` transition also authored `@bishop_magic_item` and `@merchant_magic_item`, so Bishop and Merchant should likewise show reminders while those one-shot conversations are open/actionable. After consuming one of these topics, its contribution should disappear on the next refresh unless another independent actionable interaction still requires a marker on that weekday.
 - False-positive controls: ordinary Trade / Leave / Back must not produce markers; a non-consuming submenu/header such as Snake's `@snake_about_nacklase` must not create a marker merely by being open. Existing item/relation/quality prerequisites must continue to suppress task-linked interactions until satisfied.
-- Player result: **primary one-shot lifecycle confirmed**. On the supplied current save, exactly three expected markers appeared for the three Snake-opened portal-item conversations: Inquisitor, Bishop and Merchant. After the player selected the Inquisitor `@inquisitor_magic_item` / Eternal Ember conversation, the Inquisitor marker disappeared as expected while the other two remained independently pending.
+- Player result: **accepted**. Exactly three expected markers appeared for the three Snake-opened portal-item conversations: Inquisitor, Bishop and Merchant. After the player selected the Inquisitor `@inquisitor_magic_item` / Eternal Ember conversation, the Inquisitor marker disappeared as expected while the other two remained independently pending.
 - Supplied runtime log confirms `Day Wheel Quest Markers 1.0.23` loaded normally and reached `Ready`. Loading-screen prewarm completed in **782.89 ms** with `supported=75`, `cross-owner tasks=8`, `one-shot topics=41`; steady-state cache summary reports `one-shot supported rules=43` and `one-shot unsupported rules=1` (fail closed). No Day Wheel Quest Markers error/warning appears in the supplied log.
 - The same runtime log provides an additional false-positive control: before selection, Inquisitor offered `@inquisitor_magic_item` plus `Leave`; after consuming that one-shot topic, the game opened follow-up `@inquisitor_magic_100`, but that reply was explicitly unclickable (`_can_be_picked = False`). The mod's marker disappeared anyway, confirming that a newly visible but non-actionable follow-up does not keep the one-shot reminder alive.
-- Performance comparison: this current 1.0.23 load is about 258-275 ms slower than the recorded 1.0.22 507.82-525.35 ms loads. The extra work remains confined to the loading-screen prewarm; user has not reported a visible post-load hitch in this test.
-- Acceptance state: functional behavior required by the 1.0.23 change is now confirmed in-game. Explicit player acceptance is still required before promotion to `main`, creation of `baseline/1.0.23-accepted`, or publication of `v1.0.23`.
-- Status: **candidate / runtime behavior confirmed / awaiting explicit acceptance**.
+- Performance comparison: this current 1.0.23 load is about 258-275 ms slower than the recorded 1.0.22 507.82-525.35 ms loads. The extra work remains confined to the loading-screen prewarm; user did not report a visible post-load hitch.
+- Acceptance: user explicitly said `фиксируем` after the appearance and disappearance lifecycle test passed.
+- Status: **accepted stable / release publication pending**.
