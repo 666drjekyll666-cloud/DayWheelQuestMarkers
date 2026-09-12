@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.30
+
+- Fixes false weekday markers caused by nested dialogue children being evaluated without checking whether their parent menu path is actually reachable.
+- Adds a general root-to-answer reachability layer shared by owner-task, cross-owner-task, and one-shot dialogue reminders instead of keeping a Charmel-specific exception.
+- Persists compact navigation predicates together with the structural rule manifest so normal gameplay never traverses FlowCanvas dialogue graphs.
+- Keeps the established final-rule counts and game-owned gate checks while failing closed on unsupported navigation ancestry.
+- Preserves the allocation-light steady-state path that removed the previous roughly 30-second rhythmic hitch pattern.
+- Verified first schema-2 bootstrap behind loading at 557.88 ms; subsequent full restart loaded the persistent manifest in 10.29 ms with `FlowCanvas graph parse skipped`.
+- Verified the reported early Charmel state no longer shows the two false Lust-day markers.
+
 ## 1.0.24
 
 - Consolidates weekday-NPC quest and dialogue discovery into one unified loading-time cache.
