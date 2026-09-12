@@ -11,7 +11,7 @@ namespace CalendarQuestsPins
         // Stable legacy GUID retained across the public product rename so upgrades stay on the same plugin identity.
         public const string PluginGuid = "nikich.gyk.calendarquestspins";
         public const string PluginName = "Day Wheel Quest Markers";
-        public const string PluginVersion = "1.0.26";
+        public const string PluginVersion = "1.0.27";
 
         private const float TickSeconds = 1f;
         private const float StructureCheckSeconds = 30f;
