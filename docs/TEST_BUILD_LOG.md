@@ -74,4 +74,8 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - The same runtime log provides an additional false-positive control: before selection, Inquisitor offered `@inquisitor_magic_item` plus `Leave`; after consuming that one-shot topic, the game opened follow-up `@inquisitor_magic_100`, but that reply was explicitly unclickable (`_can_be_picked = False`). The mod's marker disappeared anyway, confirming that a newly visible but non-actionable follow-up does not keep the one-shot reminder alive.
 - Performance comparison: this current 1.0.23 load is about 258-275 ms slower than the recorded 1.0.22 507.82-525.35 ms loads. The extra work remains confined to the loading-screen prewarm; user did not report a visible post-load hitch.
 - Acceptance: user explicitly said `фиксируем` after the appearance and disappearance lifecycle test passed.
-- Status: **accepted stable / release publication pending**.
+- GitHub Release publication: workflow run `34681625040`, success.
+- Release: `v1.0.23`, target commit `3da21541a38753387cf9c4d343559e5fb1181f34`.
+- Published asset: `Day.Wheel.Quest.Markers.1.0.23.dll`, 65,536 bytes.
+- Published asset digest: `sha256:dc9b1f3494f46a903ec416679c08b9d6a3704f2132e82d8c9ac2cf21c06458b7`, exactly matching the accepted DLL.
+- Status: **stable / released**.
