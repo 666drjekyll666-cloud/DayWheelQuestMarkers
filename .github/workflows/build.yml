@@ -2,14 +2,6 @@ name: Build Day Wheel Quest Markers
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - dev/1.0.24
-    paths:
-      - 'src/**'
-      - 'DayWheelQuestMarkers.csproj'
-      - 'nuget.config'
-      - '.github/workflows/build.yml'
 
 permissions:
   contents: read
