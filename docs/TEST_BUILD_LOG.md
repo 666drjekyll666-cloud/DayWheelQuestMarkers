@@ -31,3 +31,20 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Published asset: `Day.Wheel.Quest.Markers.1.0.21.dll`, 47,616 bytes.
 - Published asset digest: `sha256:b609da9c35cd40ce09259a4c580e371dad15c3889f4e5cf9bdb0190a00e23c9a`, exactly matching the accepted DLL.
 - Status: **stable / released**.
+
+## 1.0.22 — candidate, awaiting player test
+
+- Date built: 2026-09-12.
+- Development branch: `dev/1.0.22`.
+- Exact executable/build source: `f8254f2af5112359c332f66848ad081cd754de91`.
+- Candidate ref: `candidate/1.0.22` at the exact executable source above.
+- Goal: cover statically verified required intermediate weekday-NPC progression stages that are not represented by direct task-completion anchors, and use live authoritative zone quality for graph-derived cached `GameRes` quality mirrors.
+- Runtime changes: six verified intermediate manifest families; graph-derived unambiguous `Flow_SetPlayerParam <- Flow_GetQualityOfZone` requirement mirrors; all non-mirror requirements remain on authored `SmartRes` plus `Player.IsEnough`; no universal runtime provenance parser or recurring graph scan.
+- Engineering evidence: `docs/INTERMEDIATE_PROGRESS_AUDIT.md`.
+- CI: run `34679367015`, job `103514969551`, success.
+- Artifact: `DayWheelQuestMarkers-1.0.22` (`10294066070`), archive digest `sha256:dff1f2e431f6f9431dd22eb45ed642e6b31f4f67c5a574e329739a0cd89ee58d`.
+- Raw DLL: 53,760 bytes.
+- Raw DLL SHA-256: `0821133c925898b9d52c83fec49c557d7199925a5da15e424fe20ed96e741834`.
+- Requested test: verify the known Snake `snake_stars` / `@snake_help_done` case with live Dark Church quality 20 before speaking to Snake; verify any naturally reachable intermediate-chain reminders, especially Snake help/necklace, Merchant support/Ms. Charm, Astrologer daughter/Ms. Charm, Bishop invitation/Merchant, and Inquisitor guards; confirm no marker appears while the authored relation/item prerequisite is unmet; report any noticeable load/prewarm regression.
+- Player result: **pending**.
+- Status: candidate only; do not merge to `main`, create `baseline/1.0.22-accepted`, or publish `v1.0.22` before explicit player acceptance.
