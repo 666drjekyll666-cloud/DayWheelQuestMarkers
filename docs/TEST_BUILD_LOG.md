@@ -32,7 +32,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Published asset digest: `sha256:b609da9c35cd40ce09259a4c580e371dad15c3889f4e5cf9bdb0190a00e23c9a`, exactly matching the accepted DLL.
 - Status: **stable / released**.
 
-## 1.0.22 — candidate, awaiting player test
+## 1.0.22 — tested, not accepted
 
 - Date built: 2026-09-12.
 - Development branch: `dev/1.0.22`.
@@ -45,6 +45,9 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Artifact: `DayWheelQuestMarkers-1.0.22` (`10294066070`), archive digest `sha256:dff1f2e431f6f9431dd22eb45ed642e6b31f4f67c5a574e329739a0cd89ee58d`.
 - Raw DLL: 53,760 bytes.
 - Raw DLL SHA-256: `0821133c925898b9d52c83fec49c557d7199925a5da15e424fe20ed96e741834`.
-- Requested test: verify the known Snake `snake_stars` / `@snake_help_done` case with live Dark Church quality 20 before speaking to Snake; verify any naturally reachable intermediate-chain reminders, especially Snake help/necklace, Merchant support/Ms. Charm, Astrologer daughter/Ms. Charm, Bishop invitation/Merchant, and Inquisitor guards; confirm no marker appears while the authored relation/item prerequisite is unmet; report any noticeable load/prewarm regression.
-- Player result: **pending**.
-- Status: candidate only; do not merge to `main`, create `baseline/1.0.22-accepted`, or publish `v1.0.22` before explicit player acceptance.
+- Requested test included the known Snake `snake_stars` / `@snake_help_done` live-quality case and naturally reachable intermediate chains.
+- Player result: **not accepted**. The old Snake-quality state was no longer conveniently reproducible, but the current save exposed a stronger product-level false negative: after Snake opened the three portal-item conversations, the Inquisitor visibly offered `@inquisitor_magic_item` (Eternal Ember) and the player could select it, while Day Wheel Quest Markers emitted no Inquisitor reminder.
+- Runtime log confirms 1.0.22 loaded normally, reached `Ready`, and prewarmed in 525.35 ms on one load and 507.82 ms on the later current save with `supported=75`, `cross-owner tasks=8`; no load-performance regression was reported from this test.
+- Diagnosis: static universe evidence had already identified `@inquisitor_magic_item` as an authored supported self-consuming one-shot topic, but the previous progression-only policy rejected it because its Snake source path was taskless/relation-gated. That policy was too restrictive for the actual reminder product goal.
+- Superseded direction: 1.0.23 broadens reminders to currently actionable authored one-shot weekday dialogue while preserving the existing task-linked rules and gate checks.
+- Status: **tested / superseded / not accepted**. Do not merge to `main`, create `baseline/1.0.22-accepted`, or publish `v1.0.22`.
