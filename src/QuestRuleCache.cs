@@ -32,6 +32,7 @@ namespace CalendarQuestsPins
             internal string Id;
             internal float Value;
             internal object SmartRes;
+            internal string AuthoritativeZoneId;
         }
 
         private sealed class Node
@@ -57,12 +58,17 @@ namespace CalendarQuestsPins
         }
 
         private readonly Dictionary<string, NpcRules> _byNpc = new Dictionary<string, NpcRules>(StringComparer.Ordinal);
+        private readonly Dictionary<string, string> _zoneQualityMirrors = new Dictionary<string, string>(StringComparer.Ordinal);
+        private readonly HashSet<string> _ambiguousZoneQualityMirrors = new HashSet<string>(StringComparer.Ordinal);
         private readonly Type _worldMapType = ReflectionUtil.FindType("WorldMap");
         private readonly Type _controllerType = ReflectionUtil.FindType("FlowCanvas.FlowScriptController");
         private readonly Type _flowSmartResType = ReflectionUtil.FindType("FlowCanvas.Nodes.Flow_SmartRes");
+        private readonly Type _worldZoneType = ReflectionUtil.FindType("WorldZone");
         private MethodInfo _worldObjectGetter;
         private MethodInfo _smartResFactory;
         private MethodInfo _isEnough;
+        private MethodInfo _getZoneById;
+        private MethodInfo _getTotalQuality;
         private object _player;
 
         private static readonly string[] NpcIds =
@@ -72,6 +78,7 @@ namespace CalendarQuestsPins
 
         internal int SupportedRuleCount { get; private set; }
         internal int UnsupportedRuleCount { get; private set; }
+        internal int ZoneQualityMirrorCount { get { return _zoneQualityMirrors.Count; } }
 
         internal bool Build(object save, object mainGame)
         {
@@ -154,6 +161,8 @@ namespace CalendarQuestsPins
         internal void Clear()
         {
             _byNpc.Clear();
+            _zoneQualityMirrors.Clear();
+            _ambiguousZoneQualityMirrors.Clear();
             SupportedRuleCount = 0;
             UnsupportedRuleCount = 0;
             _player = null;
@@ -214,6 +223,8 @@ namespace CalendarQuestsPins
                 list.Add(c);
             }
 
+            RegisterZoneQualityMirrors(serialized, nodes, incomingValue);
+
             foreach (var node in nodes.Values)
             {
                 if (!node.Type.EndsWith("Flow_SetTaskState", StringComparison.Ordinal)) continue;
@@ -224,6 +235,52 @@ namespace CalendarQuestsPins
                 if (!string.IsNullOrEmpty(explicitNpcId) && !string.Equals(explicitNpcId, npc.NpcId, StringComparison.Ordinal)) continue;
                 var anchors = FindAnchors(nodes, incomingFlow, serialized, node.Id, 64);
                 foreach (var anchor in anchors) AddRulesForAnchor(npc, taskId, anchor, serialized, nodes, connections, incomingValue);
+            }
+        }
+
+        private void RegisterZoneQualityMirrors(string serialized, Dictionary<string, Node> nodes,
+            Dictionary<string, List<Connection>> incomingValue)
+        {
+            foreach (var node in nodes.Values)
+            {
+                if (!node.Type.EndsWith("Flow_SetPlayerParam", StringComparison.Ordinal)) continue;
+                var paramId = ReadNodeContent(serialized, node, "Param name");
+                if (string.IsNullOrEmpty(paramId) || _ambiguousZoneQualityMirrors.Contains(paramId)) continue;
+
+                List<Connection> valueInputs;
+                if (!incomingValue.TryGetValue(node.Id, out valueInputs)) continue;
+                string zoneId = null;
+                var ambiguous = false;
+                foreach (var c in valueInputs)
+                {
+                    if (!string.Equals(c.TargetPort, "Value", StringComparison.OrdinalIgnoreCase)) continue;
+                    Node source;
+                    if (!nodes.TryGetValue(c.SourceNode, out source) ||
+                        source.Type.IndexOf("Flow_GetQualityOfZone", StringComparison.Ordinal) < 0) continue;
+                    var candidate = ReadNodeContentAny(serialized, source, "zone_id", "Zone id");
+                    if (string.IsNullOrEmpty(candidate)) continue;
+                    if (zoneId == null) zoneId = candidate;
+                    else if (!string.Equals(zoneId, candidate, StringComparison.Ordinal)) { ambiguous = true; break; }
+                }
+                if (ambiguous || string.IsNullOrEmpty(zoneId))
+                {
+                    if (ambiguous)
+                    {
+                        _zoneQualityMirrors.Remove(paramId);
+                        _ambiguousZoneQualityMirrors.Add(paramId);
+                    }
+                    continue;
+                }
+
+                string existing;
+                if (_zoneQualityMirrors.TryGetValue(paramId, out existing))
+                {
+                    if (string.Equals(existing, zoneId, StringComparison.Ordinal)) continue;
+                    _zoneQualityMirrors.Remove(paramId);
+                    _ambiguousZoneQualityMirrors.Add(paramId);
+                    continue;
+                }
+                _zoneQualityMirrors[paramId] = zoneId;
             }
         }
 
@@ -307,8 +364,14 @@ namespace CalendarQuestsPins
             float value;
             if (string.IsNullOrEmpty(type) || string.IsNullOrEmpty(id) || !TryReadNodeNumber(serialized, node, out value)) return null;
             var req = new Requirement { ResType = type, Id = id, Value = value };
+            if (string.Equals(type, "GameRes", StringComparison.Ordinal))
+            {
+                string zoneId;
+                if (_zoneQualityMirrors.TryGetValue(id, out zoneId) && !_ambiguousZoneQualityMirrors.Contains(id))
+                    req.AuthoritativeZoneId = zoneId;
+            }
             req.SmartRes = CreateSmartRes(req, linkedWgo);
-            return req.SmartRes == null ? null : req;
+            return req.SmartRes == null && string.IsNullOrEmpty(req.AuthoritativeZoneId) ? null : req;
         }
 
         private object CreateSmartRes(Requirement req, object linkedWgo)
@@ -342,8 +405,52 @@ namespace CalendarQuestsPins
 
         private bool IsEnough(Requirement req)
         {
-            if (req == null || req.SmartRes == null || _player == null || _isEnough == null) return false;
+            if (req == null) return false;
+            if (!string.IsNullOrEmpty(req.AuthoritativeZoneId)) return IsZoneQualityEnough(req.AuthoritativeZoneId, req.Value);
+            if (req.SmartRes == null || _player == null || _isEnough == null) return false;
             try { var value = _isEnough.Invoke(_player, new[] { req.SmartRes }); return value is bool && (bool)value; }
+            catch { return false; }
+        }
+
+        private bool IsZoneQualityEnough(string zoneId, float required)
+        {
+            try
+            {
+                if (_worldZoneType == null) return false;
+                if (_getZoneById == null)
+                {
+                    foreach (var method in _worldZoneType.GetMethods(ReflectionUtil.AnyStatic))
+                    {
+                        var ps = method.GetParameters();
+                        if (method.Name == "GetZoneByID" && ps.Length == 2 &&
+                            ps[0].ParameterType == typeof(string) && ps[1].ParameterType == typeof(bool))
+                        {
+                            _getZoneById = method;
+                            break;
+                        }
+                    }
+                }
+                if (_getZoneById == null) return false;
+                var zone = _getZoneById.Invoke(null, new object[] { zoneId, false });
+                if (zone == null) return false;
+
+                if (_getTotalQuality == null || !_getTotalQuality.DeclaringType.IsInstanceOfType(zone))
+                {
+                    _getTotalQuality = null;
+                    foreach (var method in zone.GetType().GetMethods(ReflectionUtil.AnyInstance))
+                    {
+                        if (method.Name == "GetTotalQuality" && method.GetParameters().Length == 0)
+                        {
+                            _getTotalQuality = method;
+                            break;
+                        }
+                    }
+                }
+                if (_getTotalQuality == null) return false;
+                var raw = _getTotalQuality.Invoke(zone, null);
+                if (raw == null) return false;
+                return Convert.ToSingle(raw, CultureInfo.InvariantCulture) >= required;
+            }
             catch { return false; }
         }
 

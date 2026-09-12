@@ -11,7 +11,7 @@ namespace CalendarQuestsPins
         // Stable legacy GUID retained across the public product rename so upgrades stay on the same plugin identity.
         public const string PluginGuid = "nikich.gyk.calendarquestspins";
         public const string PluginName = "Day Wheel Quest Markers";
-        public const string PluginVersion = "1.0.21";
+        public const string PluginVersion = "1.0.22";
 
         private const float TickSeconds = 1f;
         private const float CrossStructureCheckSeconds = 30f;
@@ -34,6 +34,7 @@ namespace CalendarQuestsPins
         private CalendarMarkers _markers;
         private LoadingCachePrewarmGate _prewarmGate;
         private VerifiedBridgeReminderRules _bridgeRules;
+        private VerifiedIntermediateReminderRules _intermediateRules;
 
         private void Awake()
         {
@@ -43,6 +44,7 @@ namespace CalendarQuestsPins
             _markers = new CalendarMarkers();
             _prewarmGate = new LoadingCachePrewarmGate();
             _bridgeRules = new VerifiedBridgeReminderRules();
+            _intermediateRules = new VerifiedIntermediateReminderRules();
             for (var i = 0; i < _currentSinMarkers.Length; i++)
                 _currentSinMarkers[i] = new List<MarkerStyle>(4);
             _nextTick = Time.realtimeSinceStartup + 0.5f;
@@ -69,6 +71,7 @@ namespace CalendarQuestsPins
             if (_rules != null) _rules.Clear();
             if (_crossRules != null) _crossRules.Clear();
             if (_bridgeRules != null) _bridgeRules.Clear();
+            if (_intermediateRules != null) _intermediateRules.Clear();
         }
 
         private bool TryPrewarmDuringLoading()
@@ -289,6 +292,20 @@ namespace CalendarQuestsPins
                         if (!_crossRules.IsActionable(task, unlocked, blacklisted)) continue;
                         AddMarker(sinTypeValue, GetMarkerStyle(task.TaskId));
                     }
+                }
+            }
+
+            // These six GK 1.407 families were proved by static authored-graph dependency audit: the source task
+            // is active, the exact topic is required, and consuming it is a downstream progression dependency.
+            // The compact manifest is evaluated only against live task/phrase state plus native SmartRes gates.
+            if (_intermediateRules != null)
+            {
+                var families = _intermediateRules.Families;
+                for (var i = 0; i < families.Length; i++)
+                {
+                    var family = families[i];
+                    if (!_intermediateRules.IsActionable(family, _rules, _mainGame, unlocked, blacklisted)) continue;
+                    AddMarker(GetSinTypeValue(family.TargetNpcId), GetMarkerStyle(family.TaskId));
                 }
             }
 

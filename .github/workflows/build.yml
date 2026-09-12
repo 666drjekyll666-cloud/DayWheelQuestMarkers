@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - dev/1.0.21
+      - dev/1.0.22
     paths:
       - 'src/**'
       - 'DayWheelQuestMarkers.csproj'
