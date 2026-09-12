@@ -11,7 +11,7 @@ namespace CalendarQuestsPins
         // Stable legacy GUID retained across the public product rename so upgrades stay on the same plugin identity.
         public const string PluginGuid = "nikich.gyk.calendarquestspins";
         public const string PluginName = "Day Wheel Quest Markers";
-        public const string PluginVersion = "1.0.27";
+        public const string PluginVersion = "1.0.28";
 
         private const float TickSeconds = 1f;
         private const float StructureCheckSeconds = 30f;
@@ -27,7 +27,7 @@ namespace CalendarQuestsPins
         private bool _waitingForPeriodicNpc;
         private bool _loggedReady;
         private bool _prewarmedDuringLoading;
-        private string _currentKnownNpcSignature;
+        private ulong _currentKnownNpcFingerprint;
 
         private readonly List<MarkerStyle>[] _currentSinMarkers = new List<MarkerStyle>[7];
         private WeekdayInteractionRuleCache _rules;
@@ -74,8 +74,6 @@ namespace CalendarQuestsPins
             if (!TryReadStatic(_mainGameType, "game_started", out started) || !(started is bool) || (bool)started)
                 return false;
 
-            // Accepted 1.0.12/1.0.24 evidence places the safe graph-ready window after game_starting has
-            // already returned to false but before game_started becomes true.
             object starting;
             if (!TryReadStatic(_mainGameType, "game_starting", out starting) || !(starting is bool) || (bool)starting)
                 return false;
@@ -86,8 +84,6 @@ namespace CalendarQuestsPins
             if (!HasLoadedCollections(candidateSave)) return false;
             if (_prewarmGate == null || !_prewarmGate.IsReady(_mainGame)) return false;
 
-            // Native marker Sprite objects are game-owned. Resolve them once in the loading window and retain
-            // the references; normal gameplay never performs repeated broad sprite scans.
             if (_markers != null) _markers.TryPrewarmNativeSprites();
             _prewarmAttemptedSave = candidateSave;
 
@@ -103,7 +99,7 @@ namespace CalendarQuestsPins
                 {
                     _rules.Clear();
                     _cacheReady = false;
-                    _currentKnownNpcSignature = null;
+                    _currentKnownNpcFingerprint = 0UL;
                     _prewarmedDuringLoading = false;
                     Logger.LogWarning("Loading-screen rule-manifest initialization failed. Cache load: " +
                                       (loadFailure ?? "<none>") + "; bootstrap: " +
@@ -112,14 +108,14 @@ namespace CalendarQuestsPins
                 }
             }
 
-            string signature;
+            ulong fingerprint;
             bool hasPeriodicNpc;
-            if (!_manifest.Bind(candidateSave, _mainGame, out signature, out hasPeriodicNpc) ||
+            if (!_manifest.Bind(candidateSave, _mainGame, out fingerprint, out hasPeriodicNpc) ||
                 !_manifest.IsRuntimeValid(_mainGame))
             {
                 _rules.Clear();
                 _cacheReady = false;
-                _currentKnownNpcSignature = null;
+                _currentKnownNpcFingerprint = 0UL;
                 _prewarmedDuringLoading = false;
                 Logger.LogWarning("Loading-screen rule manifest could not bind to the loaded runtime.");
                 return true;
@@ -129,7 +125,7 @@ namespace CalendarQuestsPins
             _runtimeRestoreAttemptedSave = null;
             _cacheReady = true;
             _waitingForPeriodicNpc = !hasPeriodicNpc;
-            _currentKnownNpcSignature = signature;
+            _currentKnownNpcFingerprint = fingerprint;
             _prewarmedDuringLoading = true;
             _nextStructureCheck = Time.realtimeSinceStartup + StructureCheckSeconds;
             _loggedReady = false;
@@ -179,9 +175,9 @@ namespace CalendarQuestsPins
             }
             else if (_manifest.KnownNpcCountChanged(_save))
             {
-                string signature;
+                ulong fingerprint;
                 bool hasPeriodicNpc;
-                if (!_manifest.Bind(_save, _mainGame, out signature, out hasPeriodicNpc))
+                if (!_manifest.Bind(_save, _mainGame, out fingerprint, out hasPeriodicNpc))
                 {
                     if (!RestoreForCurrentSave("known-NPC bind failed"))
                     {
@@ -191,7 +187,7 @@ namespace CalendarQuestsPins
                 }
                 else
                 {
-                    ApplyKnownNpcState(signature, hasPeriodicNpc, true);
+                    ApplyKnownNpcState(fingerprint, hasPeriodicNpc, true);
                 }
             }
 
@@ -210,12 +206,12 @@ namespace CalendarQuestsPins
                 else
                 {
                     bool hasPeriodicNpc;
-                    var liveSignature = WeekdayInteractionRuleCache.BuildKnownNpcSignature(_save, out hasPeriodicNpc);
-                    if (!string.Equals(liveSignature, _currentKnownNpcSignature, StringComparison.Ordinal))
+                    var liveFingerprint = PersistentRuleManifest.BuildKnownNpcFingerprint(_save, out hasPeriodicNpc);
+                    if (liveFingerprint != _currentKnownNpcFingerprint)
                     {
-                        string reboundSignature;
+                        ulong reboundFingerprint;
                         bool reboundHasPeriodicNpc;
-                        if (!_manifest.Bind(_save, _mainGame, out reboundSignature, out reboundHasPeriodicNpc))
+                        if (!_manifest.Bind(_save, _mainGame, out reboundFingerprint, out reboundHasPeriodicNpc))
                         {
                             if (!RestoreForCurrentSave("scheduled known-NPC bind failed"))
                             {
@@ -225,7 +221,7 @@ namespace CalendarQuestsPins
                         }
                         else
                         {
-                            ApplyKnownNpcState(reboundSignature, reboundHasPeriodicNpc, true);
+                            ApplyKnownNpcState(reboundFingerprint, reboundHasPeriodicNpc, true);
                         }
                     }
                 }
@@ -264,8 +260,6 @@ namespace CalendarQuestsPins
                         }
                     }
 
-                    // Structural one-shot rules exist independently of save membership, but a reminder is still
-                    // emitted only after the player actually knows this weekday NPC.
                     for (var i = 0; i < target.Topics.Count; i++)
                     {
                         var topic = target.Topics[i];
@@ -297,8 +291,6 @@ namespace CalendarQuestsPins
 
         private bool RestoreForCurrentSave(string reason)
         {
-            // Production gameplay never parses FlowCanvas graphs. Bootstrap is loading-screen-only. If the
-            // persistent manifest is unavailable here, fail closed for this save instead of paying a visible hitch.
             if (ReferenceEquals(_runtimeRestoreAttemptedSave, _save)) return false;
             _runtimeRestoreAttemptedSave = _save;
 
@@ -311,23 +303,23 @@ namespace CalendarQuestsPins
                 return false;
             }
 
-            string signature;
+            ulong fingerprint;
             bool hasPeriodicNpc;
-            if (!_manifest.Bind(_save, _mainGame, out signature, out hasPeriodicNpc))
+            if (!_manifest.Bind(_save, _mainGame, out fingerprint, out hasPeriodicNpc))
                 return false;
 
             _cacheReady = true;
             _runtimeRestoreAttemptedSave = null;
-            ApplyKnownNpcState(signature, hasPeriodicNpc, false);
+            ApplyKnownNpcState(fingerprint, hasPeriodicNpc, false);
             Logger.LogInfo("Persistent rule manifest restored in " + loadMs.ToString("F2") +
                            " ms (" + reason + "); graph parse not required.");
             return true;
         }
 
-        private void ApplyKnownNpcState(string signature, bool hasPeriodicNpc, bool logRebind)
+        private void ApplyKnownNpcState(ulong fingerprint, bool hasPeriodicNpc, bool logRebind)
         {
             var wasWaiting = _waitingForPeriodicNpc;
-            _currentKnownNpcSignature = signature;
+            _currentKnownNpcFingerprint = fingerprint;
             _waitingForPeriodicNpc = !hasPeriodicNpc;
             _nextStructureCheck = Time.realtimeSinceStartup + StructureCheckSeconds;
 
@@ -394,7 +386,7 @@ namespace CalendarQuestsPins
                 _runtimeRestoreAttemptedSave = null;
                 _cacheReady = false;
                 _waitingForPeriodicNpc = false;
-                _currentKnownNpcSignature = null;
+                _currentKnownNpcFingerprint = 0UL;
                 _prewarmedDuringLoading = false;
                 _nextStructureCheck = Time.realtimeSinceStartup + StructureCheckSeconds;
                 HideMarkers();
@@ -414,15 +406,15 @@ namespace CalendarQuestsPins
             {
                 _prewarmedDuringLoading = false;
 
-                string signature;
+                ulong fingerprint;
                 bool hasPeriodicNpc;
-                var valid = _manifest.Bind(_save, _mainGame, out signature, out hasPeriodicNpc) &&
+                var valid = _manifest.Bind(_save, _mainGame, out fingerprint, out hasPeriodicNpc) &&
                             _manifest.IsRuntimeValid(_mainGame);
 
                 if (valid)
                 {
                     _cacheReady = true;
-                    _currentKnownNpcSignature = signature;
+                    _currentKnownNpcFingerprint = fingerprint;
                     _waitingForPeriodicNpc = !hasPeriodicNpc;
                     _nextStructureCheck = Time.realtimeSinceStartup + StructureCheckSeconds;
                 }
@@ -456,12 +448,12 @@ namespace CalendarQuestsPins
 
         private static int GetSinTypeValue(string npcId)
         {
-            if (string.Equals(npcId, "npc_astrologer", StringComparison.Ordinal)) return 1; // Sloth
-            if (string.Equals(npcId, "npc_inquisitor", StringComparison.Ordinal)) return 2; // Wrath
-            if (string.Equals(npcId, "npc_cultist", StringComparison.Ordinal)) return 3; // Envy
-            if (string.Equals(npcId, "npc_merchant", StringComparison.Ordinal)) return 4; // Gluttony
-            if (string.Equals(npcId, "npc_actress", StringComparison.Ordinal)) return 5; // Lust
-            if (string.Equals(npcId, "npc_bishop", StringComparison.Ordinal)) return 6; // Pride
+            if (string.Equals(npcId, "npc_astrologer", StringComparison.Ordinal)) return 1;
+            if (string.Equals(npcId, "npc_inquisitor", StringComparison.Ordinal)) return 2;
+            if (string.Equals(npcId, "npc_cultist", StringComparison.Ordinal)) return 3;
+            if (string.Equals(npcId, "npc_merchant", StringComparison.Ordinal)) return 4;
+            if (string.Equals(npcId, "npc_actress", StringComparison.Ordinal)) return 5;
+            if (string.Equals(npcId, "npc_bishop", StringComparison.Ordinal)) return 6;
             return -1;
         }
 
