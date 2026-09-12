@@ -20,7 +20,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Runtime logic base: accepted 1.0.17 reminder/actionability logic, with the public marker-resource implementation used by 1.0.21.
 - Source audit: `QuestRuleCache.cs`, `CrossOwnerRuleCache.cs`, `SessionCacheRebinder.cs`, `LoadingCachePrewarmGate.cs`, `VerifiedBridgeReminderRules.cs`, and `ReflectionUtil.cs` are byte-identical to the accepted 1.0.17 blobs.
 - CI: run `34639351706`, job `103394957694`, success, 0 warnings / 0 errors.
-- Artifact: `DayWheelQuestMarkers-1.0.21` (`10278859840`), archive digest `sha256:046c957736a4d028fbe7cb12841797fe8f72673cf901d03e6fb611c6d3d80ac`.
+- Artifact: `DayWheelQuestMarkers-1.0.21` (`10278859840`), archive digest `sha256:046c957736a4d028fbe7cb12841797fe8f72673cf901d03e6fbf611c6d3d80ac`.
 - Raw DLL: 47,616 bytes.
 - Raw DLL SHA-256: `b609da9c35cd40ce09259a4c580e371dad15c3889f4e5cf9bdb0190a00e23c9a`.
 - Requested regression test: marker rendering/category correctness, menu/HUD lifecycle, multiple markers/categories if convenient, and no noticeable post-load hitch.
@@ -125,6 +125,27 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Raw DLL: 56,320 bytes.
 - Raw DLL SHA-256: `cc2a7deb7451318e2f6ad6f4751d27f05b2a631cc523a64c336cef594340605c`.
 - Build workflow was returned to manual-only after the candidate build. Later workflow/test-history bookkeeping does not alter the frozen candidate runtime source or bytes.
-- Requested test: two launches. First launch should bootstrap the persistent manifest behind the loading screen and create `DayWheelQuestMarkers.rules.1.407.bin`; the first Bishop/weekday-NPC introduction must not perform a runtime structural rebuild. After closing and relaunching, the log should report that the persistent manifest was loaded behind the loading screen and FlowCanvas graph parsing was skipped. Subsequent newly known NPCs should only trigger cheap manifest rebinding. Player should compare the formerly noticeable dialogue/start-game hitches and send the resulting log.
-- Separate known issue: the user's report of excess Charmel markers is intentionally not addressed in this performance candidate and remains a later functional fix.
-- Status: **candidate / awaiting player runtime test**. Do not merge to `main`, create an accepted baseline, or publish `v1.0.26` before acceptance.
+- Player result: **performance fix confirmed, but candidate superseded for cache-file UX**. The first-launch log was not retained, but the generated 8,335-byte manifest appeared as expected. On the second launch, the supplied log reports `Persistent rule manifest loaded behind loading screen in 5.95 ms; FlowCanvas graph parse skipped`, followed by the exact canonical rule counts. Subsequent newly known NPCs use only `Known-NPC bindings refreshed from persistent manifest; graph parse not required`; no runtime structural rebuild appears. The user reported that the former Bishop hitch disappeared and total noticeable hitches fell from roughly five to about one on the comparable early-game pass.
+- Product/UX follow-up: the generated `.bin` beside the plugin DLL was considered confusing for users. The persistent-manifest architecture itself is retained; 1.0.27 moves only this cache file to BepInEx's standard cache path. No automatic migration is desired; the user will delete the 1.0.26 adjacent `.bin` manually.
+- Separate known issue: the user's report of excess Charmel markers remains intentionally outside this performance/cache-location work.
+- Status: **tested / superseded by 1.0.27 for cache placement / not merged or released**.
+
+## 1.0.27 — BepInEx-cache placement candidate
+
+- Date built: 2026-09-12.
+- Development branch: `dev/1.0.27`.
+- Exact executable/build source: `f420ac2db01f75c55a0f71232768b8cfb083c107`.
+- Candidate ref: `candidate/1.0.27` at the exact build source above.
+- Base behavior: 1.0.26 persistent-manifest architecture and runtime behavior are unchanged.
+- Change: manifest storage moved from the plugin DLL directory to `Path.Combine(Paths.CachePath, "DayWheelQuestMarkers", "rules-1.407.bin")`, i.e. `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin` under the standard BepInEx path contract. The cache directory is created lazily by the existing persistence path.
+- No migration/legacy handling is included by design. A 1.0.26 `DayWheelQuestMarkers.rules.1.407.bin` left beside the DLL is ignored; the user explicitly chose to delete it manually rather than ship migration code.
+- Runtime diff versus `dev/1.0.26`: only the manifest path construction plus version metadata changed. Reminder rules, parser, bind/rebind behavior, sprite handling and HUD code are unchanged.
+- Dependency evidence: BepInEx exposes `Paths.CachePath`, initialized as `<BepInExRootPath>/cache`; BepInEx itself stores generated type-loader cache data there.
+- CI: run `34712258786`, job `103603023084`, success on `windows-latest`; Release build succeeded with **0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-1.0.27` (`10304050276`), archive digest `sha256:35197e85823d6cec338a1d324ea1c417af380bec3a0ba74fe9c97c34dec5c5e9`.
+- Raw DLL: 56,320 bytes.
+- Raw DLL SHA-256: `26646982e39a308e0e56b5e8638cc01c3257dbba5afad344544968b419d3019b`.
+- Build workflow was returned to manual-only immediately after the candidate build; later documentation/bookkeeping commits do not alter the frozen candidate source or bytes.
+- Requested test: delete the old adjacent 1.0.26 `.bin` manually, install 1.0.27, launch/load once and confirm `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin` is created while no new `.bin` appears beside the DLL. Fully restart the game and load again; log should report persistent-manifest load behind the loading screen with FlowCanvas parsing skipped and no runtime structural rebuild. Marker behavior should remain unchanged.
+- Separate known issue: excess Charmel markers remains the next isolated functional investigation after this cache-location check.
+- Status: **candidate / awaiting player cache-location regression test**. Do not merge to `main`, create an accepted baseline, or publish `v1.0.27` before acceptance.
