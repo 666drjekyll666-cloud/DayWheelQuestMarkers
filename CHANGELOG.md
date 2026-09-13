@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.35
+
+- Generalizes authored one-time dialogue reminders beyond the `@` identifier convention: a non-`@` answer may now produce a reminder when its own authored branch persistently blacklists that exact answer ID.
+- Replaces the tactical 1.0.33 Astrologer and 1.0.34 Snake fixes with one evidence-backed structural rule derived from the complete six-weekday-NPC Graveyard Keeper 1.407 census.
+- The audited non-`@` universe contains 77 unique answer IDs and exactly 19 exact-self-consuming candidates, with 0 reversible and 0 utility-like `Leave`/`Back`/`Trade` candidates.
+- Preserves authored price/lock requirements, nested-dialogue navigation reachability, and fail-closed behavior; exact CustomFunction jumps and numbered WaitForFlow inputs are handled only during loading-time derivation.
+- Persists the new structural supplement under `BepInEx/cache/DayWheelQuestMarkers/non-at-self-consuming-1.407.bin`; the existing schema-2 `rules-1.407.bin` remains valid and normal gameplay still performs no FlowCanvas graph traversal.
+- Verified in-game: Snake `snake_1a` produced a marker while its 5-Faith requirement was satisfied and disappeared after the interaction consumed it; a simultaneous Ms. Charm marker disappeared when spending those 5 Faith made her own authored gate unsatisfied.
+
 ## 1.0.32
 
 - Adds verified reminder coverage for owner-local completion routes that cross WaitForFlow, exact CustomFunction boundaries, FireEvent -> CustomEvent, or mandatory interaction-event stages.
