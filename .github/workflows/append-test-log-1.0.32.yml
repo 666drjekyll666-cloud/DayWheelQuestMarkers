@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   record:
-    if: github.actor != 'github-actions[bot]'
+    if: ${{ github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
@@ -22,37 +22,35 @@ jobs:
       - name: Append canonical test-build entry and self-remove
         shell: bash
         run: |
+          cat > /tmp/entry.txt <<'ENTRY'
+          ## 1.0.32 — verified completion-route candidate
+
+          - Date built: 2026-09-13.
+          - Development branch: `dev/1.0.32`, from current stable `main` (`b113c5e34158747c2d174a1a30f993e3e12abd4a`; accepted executable ancestor 1.0.30 is `a67355b2cca84954d8b0da06e91516212466969b`).
+          - Exact executable/build source: `1c64cff7d9e15c97007b70fd5e4ed9b27d82c93f`.
+          - Candidate ref: `candidate/1.0.32` at that exact source. The numbered DLL is frozen to those bytes/source; later workflow/docs commits on `dev/1.0.32` do not change it.
+          - Goal: cover the audited owner-local completion routes missed by accepted 1.0.30 when progression crosses `WaitForFlow`, exact CustomFunction boundaries, `Flow_FireEvent -> CustomEvent`, or a verified mandatory later interaction event.
+          - Implementation: `VerifiedCompletionReminderRules` reuses the accepted schema-2 one-shot `TopicRule` and `NavigationReachabilityCache` predicates for `@souls_s_s30_ask`, `@snake_give_key`, `@souls_s_s33_ask`, `@souls_s_s31_ask`, and `@bishop_get_citezen`; unsupported `@souls_s_s33_ask` remains fail-closed. Promoted topics are suppressed from the generic base-marker layer while their visible owner task is evaluated through the verified task mapping.
+          - `npc_cultist/snake_trap` uses verified answer `snake_stone_ready`, existing navigation reachability, and authored `GameRes:_rel >= 10` evaluated with game-owned `Player.IsEnough(SmartRes)`.
+          - `npc_inquisitor/inquisitor_talk` and `npc_cultist/snake_back` are exact verified mandatory interaction-event task mappings only. There is no broad `CustomEvent` or `Visible task` classifier.
+          - Persistent manifest schema/parser/path/counts are unchanged from 1.0.30; existing `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin` remains valid. No gameplay graph parsing or cache regeneration is added.
+          - 1.0.31 remains a separate unaccepted allocation-pressure A/B candidate and is not part of this functional line.
+          - CI: run `34757773978`, job `103725042100`, success; Release build **0 warnings / 0 errors**.
+          - Artifact: `DayWheelQuestMarkers-1.0.32` (`10317779076`), archive digest `sha256:4bfa1be47e4cb07542b82133401482d5625339818c7345c36d6fb91a9b560e21`.
+          - Raw DLL: 79,360 bytes; SHA-256 `0aecfa5178fcbbaef25bd195a9174a16074e0a73f0ca45cae872b781d50ef5c4`.
+          - Requested test: remove research probe 0.1.2, install 1.0.32, load the current save where `npc_inquisitor/inquisitor_talk` is Visible, verify a Wrath/Inquisitor marker before interaction, then interact and verify that this task contribution disappears after the mandatory scene unless another independent actionable Inquisitor interaction legitimately remains. Provide the resulting log.
+          - Regression controls: schema-2 manifest counts remain 75/6 owner, 8/6/0 cross-owner, 55/54/1 one-shot, navigation 210/270/151/0; no gameplay FlowCanvas parse; existing one-shot and nested-dialogue behavior unchanged.
+          - Player result: pending.
+          - Status: **candidate / awaiting player validation / do not merge to `main` or publish**.
+          ENTRY
           python - <<'PY'
           from pathlib import Path
           log = Path('docs/TEST_BUILD_LOG.md')
           text = log.read_text(encoding='utf-8')
-          marker = '## 1.0.32 — verified completion-route candidate'
-          entry = r'''
-
-## 1.0.32 — verified completion-route candidate
-
-- Date built: 2026-09-13.
-- Development branch: `dev/1.0.32`, created from current stable `main` (`b113c5e34158747c2d174a1a30f993e3e12abd4a`, whose executable runtime ancestor is accepted 1.0.30 source `a67355b2cca84954d8b0da06e91516212466969b`).
-- Exact executable/build source: `1c64cff7d9e15c97007b70fd5e4ed9b27d82c93f`.
-- Candidate ref: `candidate/1.0.32` at that exact source. This numbered DLL is frozen to those bytes/source; later workflow/docs commits on `dev/1.0.32` do not change it.
-- Goal: cover the audited owner-local completion routes that accepted 1.0.30 misses when progression crosses `WaitForFlow`, exact CustomFunction boundaries, `Flow_FireEvent -> CustomEvent`, or a verified mandatory later interaction event.
-- Production implementation is deliberately narrow. `VerifiedCompletionReminderRules` reuses the accepted schema-2 one-shot `TopicRule` plus `NavigationReachabilityCache` predicates for the verified promoted answers `@souls_s_s30_ask`, `@snake_give_key`, `@souls_s_s33_ask`, `@souls_s_s31_ask`, and `@bishop_get_citezen`; the unsupported `@souls_s_s33_ask` gate therefore remains fail-closed. Those promoted topics are suppressed from the generic base-marker layer so a visible owner task contributes the correct task/DLC marker rather than a duplicate generic marker.
-- `npc_cultist/snake_trap` is represented by the verified final answer `snake_stone_ready`, its normal cached navigation reachability, and the authored `GameRes:_rel >= 10` gate evaluated through game-owned `Player.IsEnough(SmartRes)`.
-- `npc_inquisitor/inquisitor_talk` and `npc_cultist/snake_back` are the two runtime/static-audit-proven mandatory interaction-event stages. They are exact task/NPC mappings only; there is no broad `CustomEvent` or `Visible task` classifier.
-- Persistent manifest schema, parser, path, and canonical 1.0.30 manifest counts are unchanged. Existing `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin` remains valid; no graph parsing is added to gameplay and no cache deletion/regeneration is requested.
-- 1.0.31 remains a separate unaccepted allocation-pressure A/B candidate and was not used as the source base for this functional line.
-- CI: run `34757773978`, job `103725042100`, success; Release build succeeded with **0 warnings / 0 errors**.
-- Artifact: `DayWheelQuestMarkers-1.0.32` (`10317779076`), archive digest `sha256:4bfa1be47e4cb07542b82133401482d5625339818c7345c36d6fb91a9b560e21`.
-- Raw DLL: 79,360 bytes.
-- Raw DLL SHA-256: `0aecfa5178fcbbaef25bd195a9174a16074e0a73f0ca45cae872b781d50ef5c4`.
-- Primary requested test: remove research probe 0.1.2, replace production DLL with 1.0.32, load the current save where `npc_inquisitor/inquisitor_talk` is still Visible, and verify that the Wrath/Inquisitor day now has a marker before interacting. Then interact with the Inquisitor and verify that this task's contribution disappears after the mandatory scene completes, unless another independent actionable Inquisitor interaction legitimately keeps a marker on that day. Provide the resulting log.
-- Regression controls: manifest should still load with the accepted schema-2 counts (75/6 owner, 8/6/0 cross-owner, 55/54/1 one-shot, navigation 210/270/151/0), with no gameplay FlowCanvas parse. Existing one-shot/portal-item and nested-dialogue behavior must remain unchanged.
-- Player result: pending.
-- Status: **candidate / awaiting player validation / do not merge to `main` or publish**.
-'''
-          if marker not in text:
-              log.write_text(text.rstrip() + entry + '\n', encoding='utf-8')
-          Path('.github/workflows/append-test-log-1.0.32.yml').unlink(missing_ok=True)
+          entry = Path('/tmp/entry.txt').read_text(encoding='utf-8')
+          if '## 1.0.32 — verified completion-route candidate' not in text:
+              log.write_text(text.rstrip() + '\n\n' + entry.strip() + '\n', encoding='utf-8')
+          Path('.github/workflows/append-test-log-1.0.32.yml').unlink()
           PY
 
       - name: Commit canonical log
@@ -61,8 +59,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/TEST_BUILD_LOG.md .github/workflows/append-test-log-1.0.32.yml
-          if git diff --cached --quiet; then
-            exit 0
-          fi
           git commit -m "Record 1.0.32 candidate in test log"
           git push origin HEAD:dev/1.0.32
