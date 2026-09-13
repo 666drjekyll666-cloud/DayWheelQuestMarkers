@@ -1,0 +1,548 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
+using BepInEx;
+using UnityEngine;
+
+namespace CalendarQuestsPins
+{
+    [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
+    public sealed class AutoInteractionAuditProbePluginV2 : BaseUnityPlugin
+    {
+        public const string PluginGuid = "nikich.gyk.calendarquestspins.autointeractionaudit.v2";
+        public const string PluginName = "Day Wheel Quest Markers - auto interaction audit";
+        public const string PluginVersion = "0.1.1";
+
+        private static readonly string[] NpcIds =
+        {
+            "npc_astrologer", "npc_inquisitor", "npc_cultist",
+            "npc_merchant", "npc_actress", "npc_bishop"
+        };
+
+        private Type _mainGameType;
+        private Type _worldMapType;
+        private Type _controllerType;
+        private MethodInfo _worldObjectGetter;
+        private bool _finished;
+        private float _nextAttempt;
+        private int _attempts;
+
+        private sealed class Node
+        {
+            internal string Id;
+            internal string Type;
+            internal int TypePosition;
+        }
+
+        private sealed class Connection
+        {
+            internal string SourcePort;
+            internal string TargetPort;
+            internal string SourceNode;
+            internal string TargetNode;
+            internal bool SyntheticFunctionLink;
+        }
+
+        private sealed class ReverseNode
+        {
+            internal string Id;
+            internal int Depth;
+        }
+
+        private void Awake()
+        {
+            _mainGameType = ReflectionUtil.FindType("MainGame");
+            _worldMapType = ReflectionUtil.FindType("WorldMap");
+            _controllerType = ReflectionUtil.FindType("FlowCanvas.FlowScriptController");
+            _worldObjectGetter = FindWorldObjectGetter();
+            _nextAttempt = Time.realtimeSinceStartup + 1f;
+            Logger.LogInfo(PluginName + " " + PluginVersion + " loaded. Refined read-only structural audit; WaitForFlow and CustomFunction UID links enabled.");
+        }
+
+        private void Update()
+        {
+            if (_finished || Time.realtimeSinceStartup < _nextAttempt) return;
+            _nextAttempt = Time.realtimeSinceStartup + 1f;
+            _attempts++;
+            if (!RuntimeReady())
+            {
+                if (_attempts >= 120)
+                {
+                    Logger.LogError("AUTO2_ABORT runtime did not become ready after 120 attempts.");
+                    _finished = true;
+                }
+                return;
+            }
+
+            try { RunAudit(); }
+            catch (Exception ex) { Logger.LogError("AUTO2_FATAL " + ex); }
+            finally { _finished = true; enabled = false; }
+        }
+
+        private bool RuntimeReady()
+        {
+            if (_mainGameType == null || _worldMapType == null || _controllerType == null || _worldObjectGetter == null) return false;
+            object started;
+            if (!TryReadStatic(_mainGameType, "game_started", out started) || !(started is bool) || !(bool)started) return false;
+            for (var i = 0; i < NpcIds.Length; i++)
+                if (ReadSerializedGraph(NpcIds[i]) == null) return false;
+            return true;
+        }
+
+        private void RunAudit()
+        {
+            Logger.LogInfo("AUTO2_BEGIN game=1.407 npcs=6 refinedFlow=WaitForFlow-numbered refinedFunctions=UID-jumps");
+            var totalComplete = 0;
+            var totalMapped = 0;
+            var totalCandidates = 0;
+            for (var i = 0; i < NpcIds.Length; i++)
+            {
+                int complete;
+                int mapped;
+                int candidates;
+                AuditNpc(NpcIds[i], out complete, out mapped, out candidates);
+                totalComplete += complete;
+                totalMapped += mapped;
+                totalCandidates += candidates;
+            }
+            Logger.LogInfo("AUTO2_SUMMARY ownerComplete=" + totalComplete + " mappedSelectable=" + totalMapped + " candidateNonSelectable=" + totalCandidates);
+            Logger.LogInfo("AUTO2_END probe disabled after this snapshot");
+        }
+
+        private void AuditNpc(string npcId, out int ownerComplete, out int mappedSelectable, out int candidates)
+        {
+            ownerComplete = 0;
+            mappedSelectable = 0;
+            candidates = 0;
+            var serialized = ReadSerializedGraph(npcId);
+            if (serialized == null)
+            {
+                Logger.LogWarning("AUTO2_NPC npc=" + npcId + " status=NO_GRAPH");
+                return;
+            }
+
+            var nodes = BuildNodeIndex(serialized);
+            var connections = ParseConnections(serialized);
+            var incomingFlow = BuildIncomingFlow(nodes, connections);
+            var functionLinks = AddFunctionLinks(serialized, nodes, incomingFlow);
+
+            foreach (var node in nodes.Values)
+            {
+                if (!node.Type.EndsWith("Flow_SetTaskState", StringComparison.Ordinal)) continue;
+                if (!string.Equals(ReadNodeContent(serialized, node, "State"), "Complete", StringComparison.Ordinal)) continue;
+                var taskId = ReadNodeContent(serialized, node, "Task");
+                if (string.IsNullOrEmpty(taskId)) continue;
+                var ownerNpcId = ReadNodeContent(serialized, node, "NPC id");
+                if (!string.IsNullOrEmpty(ownerNpcId) && !string.Equals(ownerNpcId, npcId, StringComparison.Ordinal)) continue;
+
+                ownerComplete++;
+                string answer;
+                string trace;
+                if (TryResolveSelectable(node.Id, serialized, nodes, incomingFlow, out answer, out trace))
+                {
+                    mappedSelectable++;
+                    if (taskId == "bishop_rcitezen" || taskId.StartsWith("dlc_souls_s29_", StringComparison.Ordinal) || taskId == "inquisitor_talk")
+                        Logger.LogInfo("AUTO2_MAPPED npc=" + npcId + " task=" + taskId + " answer=" + Safe(answer) + " trace=" + Safe(trace));
+                    continue;
+                }
+
+                candidates++;
+                EmitCandidate(npcId, taskId, node.Id, serialized, nodes, incomingFlow, functionLinks);
+            }
+
+            Logger.LogInfo("AUTO2_NPC npc=" + npcId + " ownerComplete=" + ownerComplete + " mappedSelectable=" + mappedSelectable + " candidateNonSelectable=" + candidates + " functionLinks=" + functionLinks);
+        }
+
+        private bool TryResolveSelectable(string startNodeId, string serialized, Dictionary<string, Node> nodes,
+            Dictionary<string, List<Connection>> incomingFlow, out string answer, out string trace)
+        {
+            answer = null;
+            trace = null;
+            var queue = new Queue<ReverseNode>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            var parent = new Dictionary<string, string>(StringComparer.Ordinal);
+            queue.Enqueue(new ReverseNode { Id = startNodeId, Depth = 0 });
+            seen.Add(startNodeId);
+
+            while (queue.Count > 0 && seen.Count <= 512)
+            {
+                var current = queue.Dequeue();
+                if (current.Depth >= 160) continue;
+                Node currentNode;
+                if (!nodes.TryGetValue(current.Id, out currentNode)) continue;
+
+                List<Connection> incoming;
+                if (!incomingFlow.TryGetValue(current.Id, out incoming)) continue;
+                for (var i = 0; i < incoming.Count; i++)
+                {
+                    Node source;
+                    if (!nodes.TryGetValue(incoming[i].SourceNode, out source)) continue;
+                    if (source.Type.EndsWith("Flow_MultiAnswer", StringComparison.Ordinal))
+                    {
+                        var index = ParseOutPortIndex(incoming[i].SourcePort);
+                        var answers = ReadMultiAnswers(serialized, source);
+                        if (index >= 0 && index < answers.Count)
+                        {
+                            answer = answers[index];
+                            trace = BuildTrace(current.Id, source.Id, parent) + (incoming[i].SyntheticFunctionLink ? ">uid" : "");
+                            return true;
+                        }
+                    }
+
+                    if (!seen.Add(source.Id)) continue;
+                    parent[source.Id] = current.Id;
+                    queue.Enqueue(new ReverseNode { Id = source.Id, Depth = current.Depth + 1 });
+                }
+            }
+            return false;
+        }
+
+        private void EmitCandidate(string npcId, string taskId, string completeNodeId, string serialized,
+            Dictionary<string, Node> nodes, Dictionary<string, List<Connection>> incomingFlow, int functionLinks)
+        {
+            var closure = BuildReverseClosure(completeNodeId, incomingFlow, 160, 512);
+            var roots = new List<ReverseNode>();
+            for (var i = 0; i < closure.Count; i++)
+            {
+                List<Connection> incoming;
+                if (!incomingFlow.TryGetValue(closure[i].Id, out incoming) || incoming.Count == 0) roots.Add(closure[i]);
+            }
+
+            Logger.LogInfo("AUTO2_CANDIDATE npc=" + npcId + " task=" + taskId + " completeNode=" + completeNodeId + " reverseNodes=" + closure.Count + " roots=" + roots.Count + " functionLinks=" + functionLinks);
+            roots.Sort(delegate(ReverseNode a, ReverseNode b) { return b.Depth.CompareTo(a.Depth); });
+            for (var i = 0; i < roots.Count; i++)
+            {
+                Node root;
+                if (!nodes.TryGetValue(roots[i].Id, out root)) continue;
+                Logger.LogInfo("AUTO2_ROOT npc=" + npcId + " task=" + taskId + " node=" + root.Id + " depth=" + roots[i].Depth + " type=" + ShortType(root.Type) + " fields=" + DescribeFields(serialized, root));
+            }
+
+            closure.Sort(delegate(ReverseNode a, ReverseNode b) { return b.Depth.CompareTo(a.Depth); });
+            for (var i = 0; i < closure.Count && i < 96; i++)
+            {
+                Node n;
+                if (!nodes.TryGetValue(closure[i].Id, out n)) continue;
+                if (n.Type.IndexOf("SmartRes", StringComparison.Ordinal) >= 0 ||
+                    n.Type.IndexOf("Flow_Answer", StringComparison.Ordinal) >= 0 ||
+                    n.Type.IndexOf("CustomFunction", StringComparison.Ordinal) >= 0 ||
+                    n.Type.IndexOf("CustomEvent", StringComparison.Ordinal) >= 0 ||
+                    n.Type.IndexOf("Flow_WaitForFlow", StringComparison.Ordinal) >= 0 ||
+                    n.Type.IndexOf("Flow_AddPhraseToBlacklist", StringComparison.Ordinal) >= 0 ||
+                    n.Type.IndexOf("Flow_RemoveItem", StringComparison.Ordinal) >= 0 ||
+                    n.Type.IndexOf("Flow_Check", StringComparison.Ordinal) >= 0)
+                {
+                    Logger.LogInfo("AUTO2_SIGNAL npc=" + npcId + " task=" + taskId + " depth=" + closure[i].Depth + " node=" + n.Id + " type=" + ShortType(n.Type) + " fields=" + DescribeFields(serialized, n));
+                }
+            }
+        }
+
+        private static int AddFunctionLinks(string serialized, Dictionary<string, Node> nodes,
+            Dictionary<string, List<Connection>> incomingFlow)
+        {
+            var eventsByUid = new Dictionary<string, string>(StringComparer.Ordinal);
+            var calls = new List<Tuple<string, string>>();
+            foreach (var node in nodes.Values)
+            {
+                if (node.Type.EndsWith("CustomFunctionEvent", StringComparison.Ordinal))
+                {
+                    var uid = ReadRawNodeString(serialized, node, "_UID");
+                    if (!string.IsNullOrEmpty(uid)) eventsByUid[uid] = node.Id;
+                }
+                else if (node.Type.EndsWith("CustomFunctionCall", StringComparison.Ordinal))
+                {
+                    var uid = ReadRawNodeString(serialized, node, "_sourceOutputUID");
+                    if (!string.IsNullOrEmpty(uid)) calls.Add(Tuple.Create(node.Id, uid));
+                }
+            }
+
+            var added = 0;
+            for (var i = 0; i < calls.Count; i++)
+            {
+                string eventNode;
+                if (!eventsByUid.TryGetValue(calls[i].Item2, out eventNode)) continue;
+                List<Connection> list;
+                if (!incomingFlow.TryGetValue(eventNode, out list)) incomingFlow[eventNode] = list = new List<Connection>();
+                list.Add(new Connection { SourceNode = calls[i].Item1, TargetNode = eventNode, SourcePort = "uid", TargetPort = "uid", SyntheticFunctionLink = true });
+                added++;
+            }
+            return added;
+        }
+
+        private static Dictionary<string, List<Connection>> BuildIncomingFlow(Dictionary<string, Node> nodes, List<Connection> connections)
+        {
+            var result = new Dictionary<string, List<Connection>>(StringComparer.Ordinal);
+            for (var i = 0; i < connections.Count; i++)
+            {
+                var c = connections[i];
+                Node target;
+                if (!nodes.TryGetValue(c.TargetNode, out target)) continue;
+                var isFlow = string.Equals(c.TargetPort, "In", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(c.TargetPort);
+                if (!isFlow && target.Type.EndsWith("Flow_WaitForFlow", StringComparison.Ordinal) && IsIntegerPort(c.TargetPort)) isFlow = true;
+                if (!isFlow) continue;
+                List<Connection> list;
+                if (!result.TryGetValue(c.TargetNode, out list)) result[c.TargetNode] = list = new List<Connection>();
+                list.Add(c);
+            }
+            return result;
+        }
+
+        private static bool IsIntegerPort(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return false;
+            for (var i = 0; i < value.Length; i++) if (!char.IsDigit(value[i])) return false;
+            return true;
+        }
+
+        private static List<ReverseNode> BuildReverseClosure(string startNodeId,
+            Dictionary<string, List<Connection>> incomingFlow, int maxDepth, int maxNodes)
+        {
+            var result = new List<ReverseNode>();
+            var queue = new Queue<ReverseNode>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            queue.Enqueue(new ReverseNode { Id = startNodeId, Depth = 0 });
+            seen.Add(startNodeId);
+            while (queue.Count > 0 && result.Count < maxNodes)
+            {
+                var current = queue.Dequeue();
+                result.Add(current);
+                if (current.Depth >= maxDepth) continue;
+                List<Connection> incoming;
+                if (!incomingFlow.TryGetValue(current.Id, out incoming)) continue;
+                for (var i = 0; i < incoming.Count; i++)
+                    if (seen.Add(incoming[i].SourceNode))
+                        queue.Enqueue(new ReverseNode { Id = incoming[i].SourceNode, Depth = current.Depth + 1 });
+            }
+            return result;
+        }
+
+        private string ReadSerializedGraph(string npcId)
+        {
+            try
+            {
+                var wgo = _worldObjectGetter.Invoke(null, new object[] { npcId, true });
+                var component = wgo as Component;
+                if (component == null) return null;
+                var controller = component.GetComponent(_controllerType);
+                object graph;
+                object serialized;
+                if (controller == null || !ReflectionUtil.TryRead(controller, "_graph", out graph) || graph == null) return null;
+                if (!ReflectionUtil.TryRead(graph, "_serializedGraph", out serialized)) return null;
+                return serialized as string;
+            }
+            catch { return null; }
+        }
+
+        private static Dictionary<string, Node> BuildNodeIndex(string serialized)
+        {
+            var result = new Dictionary<string, Node>(StringComparer.Ordinal);
+            const string typeMarker = "\"$type\":\"";
+            const string idMarker = "\"$id\":\"";
+            var start = 0;
+            while (start < serialized.Length)
+            {
+                var typePos = serialized.IndexOf(typeMarker, start, StringComparison.Ordinal);
+                if (typePos < 0) break;
+                int typeEnd;
+                var type = ReadJsonString(serialized, typePos + typeMarker.Length, out typeEnd);
+                if (type == null) break;
+                var nextType = serialized.IndexOf(typeMarker, typeEnd, StringComparison.Ordinal);
+                var idPos = serialized.IndexOf(idMarker, typeEnd, StringComparison.Ordinal);
+                if (idPos >= 0 && (nextType < 0 || idPos < nextType) && idPos - typeEnd < 240)
+                {
+                    int idEnd;
+                    var id = ReadJsonString(serialized, idPos + idMarker.Length, out idEnd);
+                    if (!string.IsNullOrEmpty(id)) result[id] = new Node { Id = id, Type = type, TypePosition = typePos };
+                }
+                start = typeEnd + 1;
+            }
+            return result;
+        }
+
+        private static List<Connection> ParseConnections(string serialized)
+        {
+            var result = new List<Connection>();
+            const string spMarker = "\"_sourcePortName\":\"";
+            const string tpMarker = "\"_targetPortName\":\"";
+            const string srcMarker = "\"_sourceNode\":{\"$ref\":\"";
+            const string dstMarker = "\"_targetNode\":{\"$ref\":\"";
+            var start = 0;
+            while (start < serialized.Length)
+            {
+                var spPos = serialized.IndexOf(spMarker, start, StringComparison.Ordinal);
+                if (spPos < 0) break;
+                int spEnd;
+                var sp = ReadJsonString(serialized, spPos + spMarker.Length, out spEnd);
+                var tpPos = serialized.IndexOf(tpMarker, spEnd, StringComparison.Ordinal);
+                if (tpPos < 0 || tpPos - spEnd > 300) { start = spEnd + 1; continue; }
+                int tpEnd;
+                var tp = ReadJsonString(serialized, tpPos + tpMarker.Length, out tpEnd);
+                var srcPos = serialized.IndexOf(srcMarker, tpEnd, StringComparison.Ordinal);
+                if (srcPos < 0 || srcPos - tpEnd > 300) { start = tpEnd + 1; continue; }
+                int srcEnd;
+                var src = ReadJsonString(serialized, srcPos + srcMarker.Length, out srcEnd);
+                var dstPos = serialized.IndexOf(dstMarker, srcEnd, StringComparison.Ordinal);
+                if (dstPos < 0 || dstPos - srcEnd > 300) { start = srcEnd + 1; continue; }
+                int dstEnd;
+                var dst = ReadJsonString(serialized, dstPos + dstMarker.Length, out dstEnd);
+                if (!string.IsNullOrEmpty(src) && !string.IsNullOrEmpty(dst)) result.Add(new Connection { SourcePort = sp, TargetPort = tp, SourceNode = src, TargetNode = dst });
+                start = dstEnd + 1;
+            }
+            return result;
+        }
+
+        private static string ReadNodeContent(string serialized, Node node, string key)
+        {
+            if (node == null) return null;
+            var begin = Math.Max(0, node.TypePosition - 3000);
+            var window = serialized.Substring(begin, node.TypePosition - begin);
+            var marker = "\"" + key + "\":{\"$content\":\"";
+            var pos = window.LastIndexOf(marker, StringComparison.Ordinal);
+            if (pos < 0) return null;
+            int end;
+            return ReadJsonString(window, pos + marker.Length, out end);
+        }
+
+        private static string ReadRawNodeString(string serialized, Node node, string key)
+        {
+            if (node == null) return null;
+            var begin = Math.Max(0, node.TypePosition - 3500);
+            var window = serialized.Substring(begin, node.TypePosition - begin);
+            var marker = "\"" + key + "\":\"";
+            var pos = window.LastIndexOf(marker, StringComparison.Ordinal);
+            if (pos < 0) return null;
+            int end;
+            return ReadJsonString(window, pos + marker.Length, out end);
+        }
+
+        private static List<string> ReadMultiAnswers(string serialized, Node node)
+        {
+            var result = new List<string>();
+            var begin = Math.Max(0, node.TypePosition - 18000);
+            var window = serialized.Substring(begin, node.TypePosition - begin);
+            const string marker = "\"answers\":[";
+            var pos = window.LastIndexOf(marker, StringComparison.Ordinal);
+            if (pos < 0) return result;
+            var p = pos + marker.Length;
+            while (p < window.Length)
+            {
+                while (p < window.Length && (char.IsWhiteSpace(window[p]) || window[p] == ',')) p++;
+                if (p >= window.Length || window[p] == ']') break;
+                if (window[p] != '"') break;
+                int end;
+                var value = ReadJsonString(window, p + 1, out end);
+                if (value == null) break;
+                result.Add(value);
+                p = end + 1;
+            }
+            return result;
+        }
+
+        private static int ParseOutPortIndex(string port)
+        {
+            const string prefix = "out_";
+            int value;
+            return port != null && port.StartsWith(prefix, StringComparison.Ordinal) && int.TryParse(port.Substring(prefix.Length), out value) ? value : -1;
+        }
+
+        private static string BuildTrace(string current, string root, Dictionary<string, string> parent)
+        {
+            var sb = new StringBuilder(root);
+            var cursor = root;
+            var guard = 0;
+            while (parent.ContainsKey(cursor) && guard++ < 24)
+            {
+                cursor = parent[cursor];
+                sb.Append('>').Append(cursor);
+                if (cursor == current) break;
+            }
+            return sb.ToString();
+        }
+
+        private static string DescribeFields(string serialized, Node node)
+        {
+            var keys = new[] { "identifier", "Text", "Task", "State", "NPC id", "Phrase", "Phrase ID", "Param name", "id", "res_type", "Event", "event" };
+            var sb = new StringBuilder();
+            var identifier = ReadRawNodeString(serialized, node, "identifier");
+            if (!string.IsNullOrEmpty(identifier)) sb.Append("identifier=").Append(Safe(identifier));
+            for (var i = 1; i < keys.Length; i++)
+            {
+                var value = ReadNodeContent(serialized, node, keys[i]);
+                if (string.IsNullOrEmpty(value)) continue;
+                if (sb.Length > 0) sb.Append(',');
+                sb.Append(keys[i].Replace(' ', '_')).Append('=').Append(Safe(value));
+            }
+            var uid = ReadRawNodeString(serialized, node, "_UID");
+            var sourceUid = ReadRawNodeString(serialized, node, "_sourceOutputUID");
+            if (!string.IsNullOrEmpty(uid)) { if (sb.Length > 0) sb.Append(','); sb.Append("uid=").Append(Safe(uid)); }
+            if (!string.IsNullOrEmpty(sourceUid)) { if (sb.Length > 0) sb.Append(','); sb.Append("sourceUid=").Append(Safe(sourceUid)); }
+            return sb.Length == 0 ? "<none>" : sb.ToString();
+        }
+
+        private static string ShortType(string type)
+        {
+            if (string.IsNullOrEmpty(type)) return "<unknown>";
+            var comma = type.IndexOf(',');
+            if (comma >= 0) type = type.Substring(0, comma);
+            var dot = type.LastIndexOf('.');
+            return dot >= 0 && dot + 1 < type.Length ? type.Substring(dot + 1) : type;
+        }
+
+        private static string Safe(string value)
+        {
+            return string.IsNullOrEmpty(value) ? "<none>" : value.Replace("\r", " ").Replace("\n", " ").Replace("\t", " ").Replace("|", "/");
+        }
+
+        private static string ReadJsonString(string text, int start, out int end)
+        {
+            end = start;
+            var escaped = false;
+            for (var i = start; i < text.Length; i++)
+            {
+                var ch = text[i];
+                if (escaped) { escaped = false; continue; }
+                if (ch == '\\') { escaped = true; continue; }
+                if (ch != '"') continue;
+                end = i;
+                var raw = text.Substring(start, i - start);
+                try { return Regex.Unescape(raw.Replace("\\/", "/")); }
+                catch { return raw; }
+            }
+            return null;
+        }
+
+        private object GetWorldObject(string npcId)
+        {
+            try { return _worldObjectGetter.Invoke(null, new object[] { npcId, true }); }
+            catch { return null; }
+        }
+
+        private MethodInfo FindWorldObjectGetter()
+        {
+            if (_worldMapType == null) return null;
+            foreach (var method in _worldMapType.GetMethods(ReflectionUtil.AnyStatic))
+            {
+                if (method.Name != "GetWorldGameObjectByObjId") continue;
+                var p = method.GetParameters();
+                if (p.Length == 2 && p[0].ParameterType == typeof(string) && p[1].ParameterType == typeof(bool)) return method;
+            }
+            return null;
+        }
+
+        private static bool TryReadStatic(Type type, string name, out object value)
+        {
+            value = null;
+            if (type == null) return false;
+            try
+            {
+                var field = type.GetField(name, ReflectionUtil.AnyStatic);
+                if (field != null) { value = field.GetValue(null); return true; }
+                var prop = type.GetProperty(name, ReflectionUtil.AnyStatic);
+                if (prop != null && prop.GetIndexParameters().Length == 0) { value = prop.GetValue(null, null); return true; }
+            }
+            catch { }
+            return false;
+        }
+    }
+}
