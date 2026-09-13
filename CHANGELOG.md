@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.32
+
+- Adds verified reminder coverage for owner-local completion routes that cross WaitForFlow, exact CustomFunction boundaries, FireEvent -> CustomEvent, or mandatory interaction-event stages.
+- Fixes the Inquisitor `inquisitor_talk` stage: the weekday marker now appears before the mandatory interaction and disappears after the scene completes the task.
+- Adds narrow verified coverage for Snake `snake_key`, `snake_trap`, and the later mandatory `snake_back` interaction stage, while preserving their authored item/relation/navigation prerequisites.
+- Reuses the existing schema-2 manifest, one-shot topic rules, and navigation predicates; no new gameplay-time FlowCanvas parsing or cache regeneration is introduced.
+- Keeps unsupported `@souls_s_s33_ask` fail-closed rather than guessing its AnswerData semantics.
+- Verified on the current save: after `inquisitor_talk` completed, its marker disappeared; after the next Inquisitor resource prerequisite was satisfied, the normal prerequisite-aware marker appeared again.
+- Verified existing manifest load in 10.80 ms with graph parsing skipped and canonical rule/navigation counts unchanged.
+
 ## 1.0.30
 
 - Fixes false weekday markers caused by nested dialogue children being evaluated without checking whether their parent menu path is actually reachable.
