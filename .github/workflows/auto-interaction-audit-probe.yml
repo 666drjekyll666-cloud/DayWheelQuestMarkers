@@ -1,0 +1,65 @@
+name: Build auto-interaction audit probe
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/auto-interaction-task-audit
+    paths:
+      - 'AutoInteractionAuditProbe.csproj'
+      - 'src/AutoInteractionAuditProbePlugin.cs'
+      - 'src/ReflectionUtil.cs'
+      - '.github/workflows/auto-interaction-audit-probe.yml'
+      - 'nuget.config'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auto-interaction-audit-probe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore AutoInteractionAuditProbe.csproj --configfile nuget.config
+
+      - name: Build probe DLL
+        run: dotnet build AutoInteractionAuditProbe.csproj -c Release --no-restore
+
+      - name: Stage artifact
+        id: artifact
+        shell: pwsh
+        run: |
+          $source = Get-Content 'src/AutoInteractionAuditProbePlugin.cs' -Raw
+          if ($source -notmatch 'PluginVersion\s*=\s*"([^"]+)"') {
+            throw 'Could not read PluginVersion from src/AutoInteractionAuditProbePlugin.cs'
+          }
+          $version = $Matches[1]
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $asset = "DayWheelQuestMarkers.AutoInteractionAuditProbe.$version.dll"
+          Copy-Item 'bin/AutoInteractionProbe/DayWheelQuestMarkers.AutoInteractionAuditProbe.dll' "dist/$asset"
+          $hash = (Get-FileHash "dist/$asset" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "asset=$asset" >> $env:GITHUB_OUTPUT
+          "sha256=$hash" >> $env:GITHUB_OUTPUT
+          Write-Host "Auto-interaction audit probe $version SHA-256: $hash"
+
+      - name: Upload probe DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoInteractionAuditProbe-${{ steps.artifact.outputs.version }}
+          path: dist/${{ steps.artifact.outputs.asset }}
+          if-no-files-found: error
+          retention-days: 7
