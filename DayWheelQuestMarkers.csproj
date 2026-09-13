@@ -19,6 +19,7 @@
     <Compile Include="src\ReflectionUtil.cs" />
     <Compile Include="src\WeekdayInteractionRuleCache.cs" />
     <Compile Include="src\NavigationReachabilityCache.cs" />
+    <Compile Include="src\RuntimeActionabilityEvaluator.cs" />
     <Compile Include="src\PersistentRuleManifest.cs" />
     <Compile Include="src\LoadingCachePrewarmGate.cs" />
     <Compile Include="src\NativeMarkerSprites.cs" />
