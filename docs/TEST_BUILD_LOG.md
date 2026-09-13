@@ -16,7 +16,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Development branch: `dev/1.0.21`.
 - Exact executable/build source: `7638343438dad6cdf522e37595f3fb21b442193a`.
 - Candidate ref: `candidate/1.0.21` at the same commit.
-- Accepted baseline ref: `baseline/1.0.21-accepted` at the same commit.
+- Accepted baseline ref: `baseline/1.0.21-accepted` at the same exact executable source.
 - Runtime logic base: accepted 1.0.17 reminder/actionability logic, with the public marker-resource implementation used by 1.0.21.
 - Source audit: `QuestRuleCache.cs`, `CrossOwnerRuleCache.cs`, `SessionCacheRebinder.cs`, `LoadingCachePrewarmGate.cs`, `VerifiedBridgeReminderRules.cs`, and `ReflectionUtil.cs` are byte-identical to the accepted 1.0.17 blobs.
 - CI: run `34639351706`, job `103394957694`, success, 0 warnings / 0 errors.
@@ -230,3 +230,19 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Published asset: `Day.Wheel.Quest.Markers.1.0.30.dll`, asset ID `560005580`, 76,288 bytes.
 - Published asset digest: `sha256:c08d84a601f923ac2b7a3b5a83ee07d4f56c4a2ef7ba54dffc6d1632fb59cef9`, exactly matching the accepted DLL.
 - Status: **stable / released**.
+
+## Auto-interaction audit probe 0.1.0 — research diagnostic
+
+- Date built: 2026-09-13.
+- Research branch: `research/auto-interaction-task-audit`.
+- Exact executable/build source: `59119817acff6a92b3c97cd9b0a28c44bba912dc`.
+- Frozen ref: `frozen/auto-interaction-audit-probe-0.1.0` at the exact executable source above.
+- Goal: statically audit all six weekday-NPC FlowCanvas graphs for owner-local task completions reached through non-selectable automatic interaction routes, including upstream branch/value dependencies, without changing save state, UI, or production reminder logic.
+- Scope: read-only one-shot diagnostic plugin. It disables itself after one graph snapshot. No production source behavior, manifest schema, marker rendering, or `main` runtime was changed.
+- CI: run `34754526415`, job `103716544481`, success.
+- Artifact: `AutoInteractionAuditProbe-0.1.0` (`10315994217`), archive digest `sha256:0dcd1b503ee20079e811b37399b518efa34e5771fb549861321c912118880167`.
+- Raw DLL: 22,016 bytes.
+- Raw DLL SHA-256: `03161fd1f06c47b3c00f6cfac53d9fa9b70ffb49abd1b2a57b0eca78bdf83588`.
+- Requested test: install beside the accepted production mod, load any developed normal save, wait until gameplay is fully ready, then provide the resulting log. No NPC interaction is required; the probe audits serialized graph topology once and disables itself.
+- Player result: pending.
+- Status: **research only / not production / main unchanged**.
