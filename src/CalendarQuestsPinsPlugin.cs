@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using BepInEx;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace CalendarQuestsPins
     {
         public const string PluginGuid = "nikich.gyk.calendarquestspins";
         public const string PluginName = "Day Wheel Quest Markers";
-        public const string PluginVersion = "1.0.32";
+        public const string PluginVersion = "1.0.33";
 
         private const float TickSeconds = 1f;
         private const float StructureCheckSeconds = 30f;
@@ -213,6 +214,8 @@ namespace CalendarQuestsPins
                         if (!_reachability.IsTopicActionable(target, topic, unlocked, blacklisted)) continue;
                         AddMarker(sinTypeValue, MarkerStyle.Base);
                     }
+                    if (IsVerifiedAstrologerPortalInteractionActionable(target, unlocked, blacklisted))
+                        AddMarker(sinTypeValue, MarkerStyle.Base);
                 }
 
                 for (var i = 0; i < target.CrossTasks.Count; i++)
@@ -335,6 +338,29 @@ namespace CalendarQuestsPins
             var npcs = ReflectionUtil.EnumerateMember(known, "npcs");
             if (npcs == null) return false;
             foreach (var ignored in npcs) return true;
+            return false;
+        }
+
+        private bool IsVerifiedAstrologerPortalInteractionActionable(WeekdayInteractionRuleCache.TargetRules target,
+            object unlockedPhrases, object blacklistedPhrases)
+        {
+            if (target == null || _reachability == null ||
+                !string.Equals(target.NpcId, "npc_astrologer", StringComparison.Ordinal)) return false;
+
+            const string parentTopic = "@astrologer_2a_1b_1";
+            const string finalAnswer = "astrologer_2a_1b_6c";
+
+            if (!ContainsString(unlockedPhrases, parentTopic)) return false;
+            if (ContainsString(blacklistedPhrases, parentTopic) || ContainsString(blacklistedPhrases, finalAnswer)) return false;
+            return _reachability.IsNavigationReachable(target.NpcId, finalAnswer, unlockedPhrases, blacklistedPhrases);
+        }
+
+        private static bool ContainsString(object collection, string value)
+        {
+            var enumerable = collection as IEnumerable;
+            if (enumerable == null) return false;
+            foreach (var item in enumerable)
+                if (string.Equals(item as string, value, StringComparison.Ordinal)) return true;
             return false;
         }
 
