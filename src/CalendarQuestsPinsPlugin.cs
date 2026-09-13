@@ -31,6 +31,7 @@ namespace CalendarQuestsPins
         private readonly List<MarkerStyle>[] _currentSinMarkers = new List<MarkerStyle>[7];
         private WeekdayInteractionRuleCache _rules;
         private NavigationReachabilityCache _reachability;
+        private RuntimeActionabilityEvaluator _runtimeEvaluator;
         private PersistentRuleManifest _manifest;
         private CalendarMarkers _markers;
         private LoadingCachePrewarmGate _prewarmGate;
@@ -40,6 +41,7 @@ namespace CalendarQuestsPins
             _mainGameType = ReflectionUtil.FindType("MainGame");
             _rules = new WeekdayInteractionRuleCache();
             _reachability = new NavigationReachabilityCache(_rules);
+            _runtimeEvaluator = new RuntimeActionabilityEvaluator(_rules, _reachability);
             _manifest = new PersistentRuleManifest(_rules, _reachability);
             _markers = new CalendarMarkers();
             _prewarmGate = new LoadingCachePrewarmGate();
@@ -180,6 +182,7 @@ namespace CalendarQuestsPins
             object blacklisted = null;
             ReflectionUtil.TryRead(_save, "unlocked_phrases", out unlocked);
             ReflectionUtil.TryRead(_save, "black_list_of_phrases", out blacklisted);
+            if (_runtimeEvaluator != null) _runtimeEvaluator.RefreshRuntimeBindings();
             ClearMarkerSets();
 
             foreach (var target in _rules.AllTargets)
@@ -196,14 +199,14 @@ namespace CalendarQuestsPins
                         {
                             string taskId;
                             if (!WeekdayInteractionRuleCache.IsVisibleTask(task, out taskId)) continue;
-                            if (!_reachability.IsOwnerTaskActionable(target, taskId, unlocked, blacklisted)) continue;
+                            if (_runtimeEvaluator == null || !_runtimeEvaluator.IsOwnerTaskActionable(target, taskId, unlocked, blacklisted)) continue;
                             AddMarker(sinTypeValue, GetMarkerStyle(taskId));
                         }
                     }
                     for (var i = 0; i < target.Topics.Count; i++)
                     {
                         var topic = target.Topics[i];
-                        if (!_reachability.IsTopicActionable(target, topic, unlocked, blacklisted)) continue;
+                        if (_runtimeEvaluator == null || !_runtimeEvaluator.IsTopicActionable(target, topic, unlocked, blacklisted)) continue;
                         AddMarker(sinTypeValue, MarkerStyle.Base);
                     }
                 }
@@ -212,7 +215,7 @@ namespace CalendarQuestsPins
                 {
                     var task = target.CrossTasks[i];
                     if (!_rules.IsCrossTaskVisible(task)) continue;
-                    if (!_reachability.IsCrossTaskActionable(target, task, unlocked, blacklisted)) continue;
+                    if (_runtimeEvaluator == null || !_runtimeEvaluator.IsCrossTaskActionable(target, task, unlocked, blacklisted)) continue;
                     AddMarker(sinTypeValue, GetMarkerStyle(task.TaskId));
                 }
             }
