@@ -97,7 +97,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Artifact: `DayWheelQuestMarkers-1.0.24` (`10294740350`), archive digest `sha256:c05a205daaff183062522ed29e2b8aad7a295bf8a1fbc0945ba6d27c7c55c6cf`.
 - Raw DLL: 43,008 bytes.
 - Raw DLL SHA-256: `05aecb65054ba4890a7ffb043ead2fb4996512d911d63bb24a338e99c039971c`.
-- Build workflow was returned to manual-only immediately after producing the candidate; that bookkeeping does not alter the frozen candidate bytes/source.
+- Build workflow was returned to manual-only after candidate production; later workflow/docs bookkeeping does not alter the frozen candidate bytes/source.
 - Player regression result: **accepted**. The user loaded the pre-conversation save where all three portal-item reminders were still pending; all three markers appeared. After selecting Inquisitor `@inquisitor_magic_item` / Eternal Ember, the Inquisitor marker disappeared as expected.
 - Supplied runtime log confirms `Day Wheel Quest Markers 1.0.24` loaded normally and reached `Ready`. Prewarm completed in **308.07 ms** with `owner supported=75`, `cross-owner tasks=8`, `one-shot topics=55`; steady-state summary reports owner supported=75, owner unsupported=6, cross-owner supported=6, cross-owner unsupported=0, one-shot supported=54, one-shot unsupported=1. No Day Wheel Quest Markers error/warning appears in the supplied log.
 - Performance result: **308.07 ms** versus accepted 1.0.23's **782.89 ms**, a reduction of **474.82 ms / about 60.6%** for the loading-prewarm work on the developed regression save. The unified implementation is also substantially faster than the recorded 1.0.22 507.82-525.35 ms loads while covering the broader accepted one-shot behavior.
@@ -231,12 +231,14 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Published asset digest: `sha256:c08d84a601f923ac2b7a3b5a83ee07d4f56c4a2ef7ba54dffc6d1632fb59cef9`, exactly matching the accepted DLL.
 - Status: **stable / released**.
 
-## 1.0.32 — verified completion-route candidate
+## 1.0.32 — accepted verified completion-route stable
 
 - Date built: 2026-09-13.
+- Date accepted: 2026-09-13.
 - Development branch: `dev/1.0.32`, from current stable `main` (`b113c5e34158747c2d174a1a30f993e3e12abd4a`; accepted executable ancestor 1.0.30 is `a67355b2cca84954d8b0da06e91516212466969b`).
 - Exact executable/build source: `1c64cff7d9e15c97007b70fd5e4ed9b27d82c93f`.
-- Candidate ref: `candidate/1.0.32` at that exact source. The numbered DLL is frozen to those bytes/source; later workflow/docs commits on `dev/1.0.32` do not change it.
+- Candidate ref: `candidate/1.0.32` at that exact source. The numbered DLL is frozen to those bytes/source; later workflow/docs commits do not change it.
+- Accepted baseline ref: `baseline/1.0.32-accepted` at the exact executable source above.
 - Goal: cover the audited owner-local completion routes missed by accepted 1.0.30 when progression crosses `WaitForFlow`, exact CustomFunction boundaries, `Flow_FireEvent -> CustomEvent`, or a verified mandatory later interaction event.
 - Implementation: `VerifiedCompletionReminderRules` reuses the accepted schema-2 one-shot `TopicRule` and `NavigationReachabilityCache` predicates for `@souls_s_s30_ask`, `@snake_give_key`, `@souls_s_s33_ask`, `@souls_s_s31_ask`, and `@bishop_get_citezen`; unsupported `@souls_s_s33_ask` remains fail-closed. Promoted topics are suppressed from the generic base-marker layer while their visible owner task is evaluated through the verified task mapping.
 - `npc_cultist/snake_trap` uses verified answer `snake_stone_ready`, existing navigation reachability, and authored `GameRes:_rel >= 10` evaluated with game-owned `Player.IsEnough(SmartRes)`.
@@ -248,7 +250,12 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Raw DLL: 79,360 bytes; SHA-256 `0aecfa5178fcbbaef25bd195a9174a16074e0a73f0ca45cae872b781d50ef5c4`.
 - Requested test: remove research probe 0.1.2, install 1.0.32, load the current save where `npc_inquisitor/inquisitor_talk` is Visible, verify a Wrath/Inquisitor marker before interaction, then interact and verify that this task contribution disappears after the mandatory scene unless another independent actionable Inquisitor interaction legitimately remains. Provide the resulting log.
 - Regression controls: schema-2 manifest counts remain 75/6 owner, 8/6/0 cross-owner, 55/54/1 one-shot, navigation 210/270/151/0; no gameplay FlowCanvas parse; existing one-shot and nested-dialogue behavior unchanged.
-- Player result: **functionally validated**. The Inquisitor/Wrath marker was present before the mandatory interaction. After talking to the Inquisitor, the automatic scene completed `npc_inquisitor/inquisitor_talk`; that marker contribution disappeared as intended. The scene then exposed the next Inquisitor work, and after the player satisfied one of those resource prerequisites by producing firewood, an Inquisitor marker appeared again for the newly actionable follow-up.
+- Player result: **accepted**. The Inquisitor/Wrath marker was present before the mandatory interaction. After talking to the Inquisitor, the automatic scene completed `npc_inquisitor/inquisitor_talk`; that marker contribution disappeared as intended. The scene then exposed the next Inquisitor work, and after the player satisfied one of those resource prerequisites by producing firewood, an Inquisitor marker appeared again for the newly actionable follow-up.
 - Supplied runtime log confirms `Day Wheel Quest Markers 1.0.32` loaded normally, deserialized the existing schema-2 manifest in **10.80 ms**, logged `FlowCanvas graph parse skipped`, restored the exact canonical counts 75/6 owner, 8/6/0 cross-owner, 55/54/1 one-shot and 210/270/151/0 navigation, and reached `Ready`. The game log directly records `inquisitor_talk -> Complete` followed by `inquisitor_burn -> Visible`; no Day Wheel warning/error is present.
 - Follow-on gate control: the completed mandatory-stage marker did not remain stuck on. A later marker appeared only after the player made the next Inquisitor interaction actionable by satisfying its resource condition, demonstrating that the verified 1.0.32 supplement hands subsequent stages back to the existing prerequisite-aware task system rather than broadly treating visible Inquisitor tasks as actionable.
-- Status: **tested / functionally validated / awaiting explicit acceptance / do not merge to `main` or publish**.
+- Acceptance: user explicitly said `фиксируем` on 2026-09-13 after the Inquisitor lifecycle and successor-prerequisite test passed.
+- GitHub Release publication: workflow run `34759088450`, job `103728562417`, success.
+- Release: `v1.0.32`, release ID `387904193`, target commit `1c64cff7d9e15c97007b70fd5e4ed9b27d82c93f`.
+- Published asset: `Day.Wheel.Quest.Markers.1.0.32.dll`, asset ID `561239167`, 79,360 bytes.
+- Published asset digest: `sha256:0aecfa5178fcbbaef25bd195a9174a16074e0a73f0ca45cae872b781d50ef5c4`, exactly matching the accepted DLL.
+- Status: **stable / released**.
