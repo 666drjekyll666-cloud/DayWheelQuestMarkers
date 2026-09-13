@@ -279,3 +279,23 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Requested test: install 1.0.33 over 1.0.32 without deleting `rules-1.407.bin`, load the preserved save before `astrologer_2a_1b_6c`, and verify an Astrologer/Sloth-day base marker is present. Then open `Мне нужна ваша помощь -> Мне нужно открыть Портал` and confirm `Так что там насчет Портала?` is still available. Select that final portal reply; after the dialogue/quest transition the portal contribution must disappear on the next refresh unless another independent actionable Astrologer interaction legitimately keeps the same day marked. Provide the resulting log.
 - Player result: pending.
 - Status: **candidate / awaiting player validation / do not merge to `main` or publish**.
+
+## 1.0.34 — Snake faith-persuasion candidate
+
+- Date built: 2026-09-13.
+- Development branch: `dev/1.0.34`, from the unaccepted 1.0.33 candidate line so the Astrologer fix remains included.
+- Exact executable/build source: `ceb154e85542cafa921ded02bed945242e108b0d`.
+- Candidate ref: `candidate/1.0.34` at that exact source. Later workflow/docs bookkeeping does not alter the numbered DLL bytes.
+- Goal: fix the confirmed Snake false negative where `snake_1a` (“Попытаться убедить”) is currently reachable, the player has the authored 5 Faith prerequisite, but 1.0.33 emits no Snake/Envy-day marker.
+- Runtime evidence: the supplied 1.0.33 log shows the current Snake interaction rendering `snake_1a` alongside `@snake_give_key` and `Leave`; the user reports that 5 Faith is currently present while the Snake day remains unmarked.
+- Structural evidence: the GK 1.407 Snake graph binds exact `Flow_SmartRes` `Item:faith=5` through `Flow_Answer` to the root `snake_1a` slot. Historical runtime evidence also shows `snake_1a` can remain rendered while unpickable when its gate is not satisfied, and a later progressed save records `snake_1a` in the phrase blacklist.
+- Diagnosis: `snake_1a` is a plain non-`@` authored answer, so the generic persisted-`@` one-shot census intentionally does not classify it. The existing owner-task completion census also does not provide a usable current-stage route for this early interaction.
+- Implementation: add exactly one supplemental `npc_cultist / snake_1a` route. It requires `snake_1a` not to be blacklisted, requires existing persisted navigation reachability for that exact answer, and evaluates the authored `Item:faith=5` prerequisite through game-owned `SmartRes` plus `Player.IsEnough`. Unknown/broken runtime state fails closed. No generic non-`@`, Faith, or Snake-dialogue classifier is introduced.
+- Persistent manifest schema/parser/counts remain unchanged; existing `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin` remains valid and must not be deleted/regenerated for this test.
+- CI: run `34782821747`, job `103792805018`, success on `windows-latest`; Release build succeeded with **0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-1.0.34` (`10324838632`), archive digest `sha256:8d285d993428ec016a3def3ce97a7bd1dd39290d0abec1b4d1ed96b1979277e7`.
+- Raw DLL: 80,384 bytes; SHA-256 `574d860977247086717a91836f32dde17fed03a623f3af3fbefc922503fb8dab`.
+- Build workflow was restored to manual-only immediately after candidate production; the restoration commit does not alter the frozen executable source or bytes.
+- Requested test: install 1.0.34 over 1.0.33 without deleting `rules-1.407.bin`, load the current preserved state before selecting `snake_1a`, and verify a base marker appears on Snake/Envy day with 5 Faith available. Open Snake and confirm `Попытаться убедить` is still available, then select it. After the interaction, the `snake_1a` contribution must disappear on the next refresh; the day may remain marked only if another independently actionable Snake interaction legitimately contributes a marker. Provide the resulting log.
+- Player result: pending.
+- Status: **candidate / awaiting player validation / do not merge to `main` or publish**.
