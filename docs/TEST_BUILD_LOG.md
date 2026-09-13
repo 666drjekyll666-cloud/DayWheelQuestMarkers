@@ -113,7 +113,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Date built: 2026-09-12.
 - Development branch: `dev/1.0.25`.
 - Exact executable/build source: `736b09179dc81b0587690cfda584a0fdf11a8cfd`.
-- Candidate ref: `candidate/1.0.25` at the exact build source above.
+- Candidate ref: `candidate/1.0.25` at the exact executable source above.
 - Goal: decouple static graph-rule discovery from the current save's initially known NPC set so later NPC discoveries can use cheap runtime rebinding instead of reparsing all weekday graphs.
 - CI: run `34708821462`, job `103593698227`, success.
 - Artifact: `DayWheelQuestMarkers-1.0.25` (`10301969224`), archive digest `sha256:c63d837a0810dff1bfb1819437b528c860852311b542ab4e054d989473c086e9`.
@@ -258,4 +258,30 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Release: `v1.0.32`, release ID `387904193`, target commit `1c64cff7d9e15c97007b70fd5e4ed9b27d82c93f`.
 - Published asset: `Day.Wheel.Quest.Markers.1.0.32.dll`, asset ID `561239167`, 79,360 bytes.
 - Published asset digest: `sha256:0aecfa5178fcbbaef25bd195a9174a16074e0a73f0ca45cae872b781d50ef5c4`, exactly matching the accepted DLL.
+- Status: **stable / released**.
+
+## 1.0.35 — accepted generalized exact-self-consuming stable
+
+- Date built: 2026-09-14 local / 2026-09-13 UTC.
+- Date accepted: 2026-09-14 local.
+- Development branch: `dev/1.0.35`, started directly from accepted 1.0.32 `main`; tactical 1.0.33/1.0.34 runtime lines are superseded rather than merged into this source.
+- Exact executable/build source: `5e8305ea6c2515dd0694343a07eb70e403ad0528`.
+- Candidate ref: `candidate/1.0.35` at the exact executable source above.
+- Accepted baseline ref: `baseline/1.0.35-accepted` at the exact executable source above.
+- Goal: replace separate hard-coded Astrologer/Snake non-`@` fixes with the structural rule proven by the complete six-weekday-NPC non-`@` answer audit.
+- Research evidence: all six graphs contain 77 unique non-`@` answer IDs and exactly 19 exact-self-blacklisting candidates; among those 19 there are 0 reversible candidates and 0 utility-like `Leave`/`Back`/`Trade` candidates. Both known false negatives, Astrologer `astrologer_2a_1b_6c` and Snake `snake_1a`, are in this class.
+- Runtime implementation: new loading-derived/persisted `NonAtSelfConsumingRuleCache`; candidates require selected answer X -> blacklist exact X, supported final AnswerData gates, and existing root-to-answer navigation reachability. Reverse tracing supports numbered WaitForFlow inputs and exact CustomFunction Call/Event UID jumps. Answers already owned by the accepted task-completion census are excluded from the generic supplement.
+- Integrity guard: supplement bootstrap must reproduce the verified GK 1.407 universe 6 graphs / 77 unique non-`@` / 19 exact-self / 0 reversible / 0 utility; mismatch fails closed.
+- Cache: `BepInEx/cache/DayWheelQuestMarkers/non-at-self-consuming-1.407.bin`. Existing schema-2 `rules-1.407.bin` remains valid and does not need deletion. No gameplay FlowCanvas traversal was introduced.
+- CI: run `34784684310`, job `103797890060`, success; Release build **0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-1.0.35` (`10325673885`), archive digest `sha256:508b338e2b3f6296f0ee5aef89ce62c4cd4562fb873eb0a1ae2ed8eb979618bf`.
+- Raw DLL: 98,816 bytes; SHA-256 `a7752d2058d4728db054adc049f650cad037cede41166b6c4c7329f4ea169879`.
+- Requested test: remove the non-`@` research probe, install 1.0.35, keep existing `rules-1.407.bin`, load the preserved Snake state, verify a Snake marker while `snake_1a` / “Попытаться убедить” is available with 5 Faith, consume the interaction, and verify that its marker contribution disappears. Also watch for implausible extra weekday markers.
+- Player result: **accepted**. Snake had the expected marker before the 5-Faith persuasion interaction and that contribution disappeared after the interaction completed. Ms. Charm simultaneously had a marker for her own 5-Faith-gated interaction; after the five Faith were spent on Snake, Charmel's marker disappeared because her authored gate was no longer satisfied. This confirms both exact self-consumption lifecycle and live SmartRes gate reevaluation.
+- Acceptance: user explicitly said `Можно в мейн. Можно фиксировать релизить.` on 2026-09-14.
+- GitHub Release publication: workflow run `34788469188`, success.
+- Release: `v1.0.35`, release ID `388061761`, target exact runtime source `5e8305ea6c2515dd0694343a07eb70e403ad0528`.
+- Published asset: `Day.Wheel.Quest.Markers.1.0.35.dll`, asset ID `562084252`, 98,816 bytes.
+- Published asset digest: `sha256:a7752d2058d4728db054adc049f650cad037cede41166b6c4c7329f4ea169879`, exactly matching the accepted DLL.
+- Follow-up architecture audit: stable behavior is retained; `research/unified-interaction-architecture` documents the evidence-backed recommendation to consolidate overlapping graph parsers/caches in a future candidate without reintroducing the rejected universal provenance parser.
 - Status: **stable / released**.
