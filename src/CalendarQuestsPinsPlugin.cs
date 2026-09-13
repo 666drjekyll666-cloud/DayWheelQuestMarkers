@@ -10,7 +10,7 @@ namespace CalendarQuestsPins
     {
         public const string PluginGuid = "nikich.gyk.calendarquestspins";
         public const string PluginName = "Day Wheel Quest Markers";
-        public const string PluginVersion = "1.0.30";
+        public const string PluginVersion = "1.0.32";
 
         private const float TickSeconds = 1f;
         private const float StructureCheckSeconds = 30f;
@@ -34,6 +34,7 @@ namespace CalendarQuestsPins
         private PersistentRuleManifest _manifest;
         private CalendarMarkers _markers;
         private LoadingCachePrewarmGate _prewarmGate;
+        private VerifiedCompletionReminderRules _verifiedCompletionRules;
 
         private void Awake()
         {
@@ -43,6 +44,7 @@ namespace CalendarQuestsPins
             _manifest = new PersistentRuleManifest(_rules, _reachability);
             _markers = new CalendarMarkers();
             _prewarmGate = new LoadingCachePrewarmGate();
+            _verifiedCompletionRules = new VerifiedCompletionReminderRules();
             for (var i = 0; i < _currentSinMarkers.Length; i++)
                 _currentSinMarkers[i] = new List<MarkerStyle>(4);
             _nextTick = Time.realtimeSinceStartup + 0.5f;
@@ -63,6 +65,7 @@ namespace CalendarQuestsPins
             if (_markers != null) _markers.Dispose();
             if (_rules != null) _rules.Clear();
             if (_reachability != null) _reachability.Clear();
+            if (_verifiedCompletionRules != null) _verifiedCompletionRules.Clear();
         }
 
         private bool TryPrewarmDuringLoading()
@@ -196,13 +199,17 @@ namespace CalendarQuestsPins
                         {
                             string taskId;
                             if (!WeekdayInteractionRuleCache.IsVisibleTask(task, out taskId)) continue;
-                            if (!_reachability.IsOwnerTaskActionable(target, taskId, unlocked, blacklisted)) continue;
+                            var actionable = _reachability.IsOwnerTaskActionable(target, taskId, unlocked, blacklisted) ||
+                                             _verifiedCompletionRules.IsOwnerTaskActionable(target, taskId, unlocked, blacklisted,
+                                                 _reachability, _mainGame);
+                            if (!actionable) continue;
                             AddMarker(sinTypeValue, GetMarkerStyle(taskId));
                         }
                     }
                     for (var i = 0; i < target.Topics.Count; i++)
                     {
                         var topic = target.Topics[i];
+                        if (topic == null || VerifiedCompletionReminderRules.IsPromotedCompletionTopic(target.NpcId, topic.AnswerId)) continue;
                         if (!_reachability.IsTopicActionable(target, topic, unlocked, blacklisted)) continue;
                         AddMarker(sinTypeValue, MarkerStyle.Base);
                     }
@@ -308,6 +315,7 @@ namespace CalendarQuestsPins
         {
             if (_rules != null) _rules.Clear();
             if (_reachability != null) _reachability.Clear();
+            if (_verifiedCompletionRules != null) _verifiedCompletionRules.Clear();
             _cacheReady = false;
             _waitingForPeriodicNpc = false;
             _currentKnownNpcFingerprint = 0UL;
