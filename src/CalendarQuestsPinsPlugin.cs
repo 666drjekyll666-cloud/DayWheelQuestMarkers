@@ -11,7 +11,7 @@ namespace CalendarQuestsPins
     {
         public const string PluginGuid = "nikich.gyk.calendarquestspins";
         public const string PluginName = "Day Wheel Quest Markers";
-        public const string PluginVersion = "1.0.33";
+        public const string PluginVersion = "1.0.34";
 
         private const float TickSeconds = 1f;
         private const float StructureCheckSeconds = 30f;
@@ -215,6 +215,9 @@ namespace CalendarQuestsPins
                         AddMarker(sinTypeValue, MarkerStyle.Base);
                     }
                     if (IsVerifiedAstrologerPortalInteractionActionable(target, unlocked, blacklisted))
+                        AddMarker(sinTypeValue, MarkerStyle.Base);
+                    if (_verifiedCompletionRules.IsVerifiedSnakeFaithInteractionActionable(
+                            target, unlocked, blacklisted, _reachability, _mainGame))
                         AddMarker(sinTypeValue, MarkerStyle.Base);
                 }
 
