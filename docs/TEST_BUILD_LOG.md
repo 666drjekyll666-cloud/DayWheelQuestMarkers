@@ -16,7 +16,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Development branch: `dev/1.0.21`.
 - Exact executable/build source: `7638343438dad6cdf522e37595f3fb21b442193a`.
 - Candidate ref: `candidate/1.0.21` at the same commit.
-- Accepted baseline ref: `baseline/1.0.21-accepted` at the same commit.
+- Accepted baseline ref: `baseline/1.0.21-accepted` at the same exact executable source.
 - Runtime logic base: accepted 1.0.17 reminder/actionability logic, with the public marker-resource implementation used by 1.0.21.
 - Source audit: `QuestRuleCache.cs`, `CrossOwnerRuleCache.cs`, `SessionCacheRebinder.cs`, `LoadingCachePrewarmGate.cs`, `VerifiedBridgeReminderRules.cs`, and `ReflectionUtil.cs` are byte-identical to the accepted 1.0.17 blobs.
 - CI: run `34639351706`, job `103394957694`, success, 0 warnings / 0 errors.
@@ -128,7 +128,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Date built: 2026-09-12.
 - Development branch: `dev/1.0.26`.
 - Exact executable/build source: `b9e698fc6eeeea46cf20e3b51eb1e737cb35b01a`.
-- Candidate ref: `candidate/1.0.26` at the exact build source above.
+- Candidate ref: `candidate/1.0.26` at the exact executable source above.
 - Goal: remove synchronous FlowCanvas structural parsing from gameplay, especially the measured fresh-game first-weekday-NPC hitch, while preserving the accepted 1.0.24 reminder/actionability semantics.
 - Preceding evidence: fresh-game 1.0.25 testing measured a `302.22 ms` runtime structural rebuild at the first Bishop introduction. Later `known_npc` additions used cheap rebinding and did not require graph parsing, confirming that live membership can be separated from static structure. Source review also found the intended 1.0.25 prewarm gate had the wrong `game_starting` polarity.
 - Runtime architecture: `PersistentRuleManifest` persists only pure structural rule data to `DayWheelQuestMarkers.rules.1.407.bin`, versioned for GK 1.407. The first cache miss bootstraps the accepted parser only in the verified loading-screen window (`game_started=false`, `game_starting=false`) and persists the result. Future launches deserialize the compact manifest and re-create only live SmartRes/WGO/player/KnownNpc bindings. Gameplay is not permitted to invoke the graph parser; if the manifest cannot be restored there, reminders fail closed for the affected session rather than paying a synchronous parse hitch.
@@ -188,7 +188,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Date built: 2026-09-12.
 - Development branch: `dev/1.0.29`.
 - Exact executable/build source: `b5b09311bf60552ea411028c8d5068fc9609eeb4`.
-- Candidate ref: `candidate/1.0.29` at the exact build source above.
+- Candidate ref: `candidate/1.0.29` at the exact executable source above.
 - Goal: remove the two false Charmel/Lust-day markers observed while both visible top-level dialogue choices are locked.
 - Evidence: runtime log shows `actress_2a_2` and `actress_2b` are both rendered but unpickable in the reported state. Static persisted-topic evidence identifies exactly two self-consuming nested topics, `@actress_2b_1a` and `@actress_2b_1b`, behind parent answer `actress_2b`; both have no own `AnswerData` gate and both blacklist `actress_2b` when consumed. The existing generic one-shot classifier therefore evaluated the children in isolation and missed parent-menu reachability.
 - Runtime change: add a narrow verified supplemental reachability gate for those two exact Charmel child topics. They contribute reminders only while parent `actress_2b` is not blacklisted and the game's own `Player.IsEnough(SmartRes)` accepts the authored relation prerequisite `_rel >= 10` linked to `npc_actress`. All other topic/task logic is unchanged and unknown state fails closed.
@@ -207,8 +207,8 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Date accepted: 2026-09-13.
 - Development branch: `dev/1.0.30`.
 - Exact executable/build source: `a67355b2cca84954d8b0da06e91516212466969b`.
-- Candidate ref: `candidate/1.0.30` at the exact build source above.
-- Accepted baseline ref: `baseline/1.0.30-accepted` at the same exact build source.
+- Candidate ref: `candidate/1.0.30` at the exact executable source above.
+- Accepted baseline ref: `baseline/1.0.30-accepted` at the same exact executable source.
 - Goal: replace the 1.0.29 Charmel-specific guard with a general, loading-derived root-to-answer reachability contract shared by owner-local tasks, cross-owner tasks, and one-shot dialogue reminders.
 - Evidence: `docs/NESTED_DIALOGUE_REACHABILITY_AUDIT.md` proves the model defect for Charmel `actress_2b -> @actress_2b_1a/@actress_2b_1b` and task-linked Merchant families `@merchant_business -> @merchant_marketing_done/@merchant_sales_done` plus `@merchant_2e -> @merchant_2e_1f`; Bishop `about_cathedral` is the verified unconditional-parent control.
 - Runtime architecture: new `NavigationReachabilityCache` derives root-to-final-answer navigation paths only during loading/bootstrap. Each cached path stores only required ancestor phrase predicates and supported ancestor `AnswerData` price/lock gates; conditions within one path are AND, alternative authored paths are OR. Unconditional plain ancestors compile away. Unknown/unsupported ancestry fails closed. Normal gameplay evaluates only compact cached phrase/SmartRes predicates; there is no FlowCanvas/navigation graph traversal in gameplay.
@@ -299,3 +299,19 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Requested test: install 1.0.34 over 1.0.33 without deleting `rules-1.407.bin`, load the current preserved state before selecting `snake_1a`, and verify a base marker appears on Snake/Envy day with 5 Faith available. Open Snake and confirm `Попытаться убедить` is still available, then select it. After the interaction, the `snake_1a` contribution must disappear on the next refresh; the day may remain marked only if another independently actionable Snake interaction legitimately contributes a marker. Provide the resulting log.
 - Player result: pending.
 - Status: **candidate / awaiting player validation / do not merge to `main` or publish**.
+
+## Diagnostic 0.1.0 — non-`@` answer universe audit probe
+
+- Date built: 2026-09-13.
+- Research branch: `research/non-at-answer-universe`.
+- Exact executable/build source: `30809e5305fe86dbaab38ee8b4071119b678561d`.
+- Frozen ref: `frozen/non-at-answer-audit-probe-0.1.0` at that exact source.
+- Purpose: census all six weekday-NPC graphs for exact self-blacklisting authored answers whose IDs do not begin with `@`, to determine whether the two consecutive 1.0.33/1.0.34 false negatives are one general structural blind spot rather than isolated exceptions.
+- Read-only behavior: no save/task/phrase/resource mutation and no production reminder changes. The probe logs all non-`@` answer counts, exact `answer ID -> blacklist same ID` candidates, authored price/lock gate structure, blacklist-removal/reversibility, utility-like controls, and explicit known controls `astrologer_2a_1b_6c` plus `snake_1a`.
+- CI: run `34783667286`, job `103795127129`, success on `windows-latest`; Release build succeeded with **0 warnings / 0 errors**.
+- Artifact: `DayWheelNonAtAnswerAuditProbe-0.1.0` (`10325573372`), archive digest `sha256:0902d6d05f11365d9876aae7c13374ab6473ac319ea50745d0db56a82032f067`.
+- Raw DLL: 22,016 bytes; SHA-256 `d23327dd8e12baff01bae191fdc5112cadd692eef64499aa68174067c4c77375`.
+- Requested test: keep the current 1.0.34 candidate installed, add this diagnostic DLL alongside it, load the current save once, perform no dialogue/progression action, and provide `LogOutput.log` after `NONAT_AUDIT_END`. The diagnostic GUID is unique and the probe may coexist with the production/test plugin.
+- Acceptance criterion for the research result: both known controls must be resolved by the probe. If either is missed, fix the probe topology before drawing any production conclusion. If the whole census is clean, evaluate replacing the Astrologer/Snake hard-codes with a generalized exact-self-consuming answer rule.
+- Player result: pending.
+- Status: **diagnostic / awaiting runtime census / never merge as production behavior**.
