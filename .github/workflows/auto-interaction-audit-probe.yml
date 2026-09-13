@@ -7,7 +7,7 @@ on:
       - research/auto-interaction-task-audit
     paths:
       - 'AutoInteractionAuditProbe.csproj'
-      - 'src/AutoInteractionAuditProbePluginV2.cs'
+      - 'src/AutoInteractionEventProvenanceProbe.cs'
       - 'src/ReflectionUtil.cs'
       - '.github/workflows/auto-interaction-audit-probe.yml'
       - 'nuget.config'
@@ -42,24 +42,24 @@ jobs:
         id: artifact
         shell: pwsh
         run: |
-          $source = Get-Content 'src/AutoInteractionAuditProbePluginV2.cs' -Raw
+          $source = Get-Content 'src/AutoInteractionEventProvenanceProbe.cs' -Raw
           if ($source -notmatch 'PluginVersion\s*=\s*"([^"]+)"') {
-            throw 'Could not read PluginVersion from refined audit probe source'
+            throw 'Could not read PluginVersion from event provenance audit probe source'
           }
           $version = $Matches[1]
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          $asset = "DayWheelQuestMarkers.AutoInteractionAuditProbe.$version.dll"
+          $asset = "DayWheelQuestMarkers.AutoInteractionEventProvenanceProbe.$version.dll"
           Copy-Item 'bin/AutoInteractionProbe/DayWheelQuestMarkers.AutoInteractionAuditProbe.dll' "dist/$asset"
           $hash = (Get-FileHash "dist/$asset" -Algorithm SHA256).Hash.ToLowerInvariant()
           "version=$version" >> $env:GITHUB_OUTPUT
           "asset=$asset" >> $env:GITHUB_OUTPUT
           "sha256=$hash" >> $env:GITHUB_OUTPUT
-          Write-Host "Auto-interaction audit probe $version SHA-256: $hash"
+          Write-Host "Event provenance audit probe $version SHA-256: $hash"
 
       - name: Upload probe DLL
         uses: actions/upload-artifact@v4
         with:
-          name: AutoInteractionAuditProbe-${{ steps.artifact.outputs.version }}
+          name: AutoInteractionEventProvenanceProbe-${{ steps.artifact.outputs.version }}
           path: dist/${{ steps.artifact.outputs.asset }}
           if-no-files-found: error
           retention-days: 7
