@@ -10,10 +10,10 @@ Read the global engineering contract in `666drjekyll666-cloud/DevRules` before s
 - Game: Graveyard Keeper 1.407
 - Stable BepInEx GUID: `nikich.gyk.calendarquestspins`
 - Legacy source namespace `CalendarQuestsPins` is intentionally retained; do not change the GUID or namespace merely for cosmetic normalization.
-- Current accepted stable public baseline: **1.0.30**.
-- Exact accepted runtime source: `a67355b2cca84954d8b0da06e91516212466969b`.
-- Accepted baseline ref: `baseline/1.0.30-accepted`.
-- Accepted DLL SHA-256: `c08d84a601f923ac2b7a3b5a83ee07d4f56c4a2ef7ba54dffc6d1632fb59cef9`.
+- Current accepted stable public baseline: **1.0.32**.
+- Exact accepted runtime source: `1c64cff7d9e15c97007b70fd5e4ed9b27d82c93f`.
+- Accepted baseline ref: `baseline/1.0.32-accepted`.
+- Accepted DLL SHA-256: `0aecfa5178fcbbaef25bd195a9174a16074e0a73f0ca45cae872b781d50ef5c4`.
 
 ## Product rule
 
@@ -32,7 +32,7 @@ Do not treat arbitrary visible menu options as reminders. Repeatable utility/men
 
 Unknown or unsupported structures fail closed. False positives remain undesirable, but the old rule that required every reminder to prove downstream quest progression is retired: it incorrectly hid real one-time conversations such as the portal-item dialogue opened by Snake at the Inquisitor.
 
-## Accepted 1.0.30 runtime architecture
+## Accepted runtime architecture
 
 Production uses a persistent structural manifest plus cheap live bindings:
 
@@ -48,13 +48,23 @@ Production uses a persistent structural manifest plus cheap live bindings:
 - native marker sprites remain game-owned and are cached through bounded lookup;
 - known-NPC changes use cheap rebinding; the steady one-second and 30-second validation paths must remain allocation-light and must not rebuild dictionaries/signatures without a real state change.
 
-Verified 1.0.30 runtime evidence:
+Accepted 1.0.32 adds the narrow `VerifiedCompletionReminderRules` supplement for completion routes that the schema-2 owner classifier cannot represent directly:
 
-- first schema-2 bootstrap completed behind the loading screen in **557.88 ms**;
-- a subsequent full restart loaded the persistent manifest in **10.29 ms** and logged `FlowCanvas graph parse skipped`;
-- canonical final-rule counts remained owner 75/6, cross-owner 8/6/0, one-shot 55/54/1;
-- navigation counts were 210 answers, 270 paths, 151 predicates, 0 unsupported paths;
-- the reported Charmel false-positive state (`actress_2b` blocked by relation) produced no two false Lust-day markers;
+- verified promoted task/topic pairs reuse existing persisted one-shot and navigation predicates rather than duplicating their authored gates;
+- `npc_cultist/snake_trap` uses the exact `snake_stone_ready` route and game-owned `_rel >= 10` SmartRes check;
+- `npc_inquisitor/inquisitor_talk` and `npc_cultist/snake_back` are exact mandatory interaction-event mappings only;
+- promoted topics are suppressed from the generic one-shot loop while their visible owner task is evaluated, preventing duplicate generic/task markers;
+- unsupported `@souls_s_s33_ask` remains fail-closed;
+- there is no broad `CustomEvent` or generic `Visible task` classifier.
+
+Verified runtime evidence:
+
+- first schema-2 bootstrap completed behind the loading screen in **557.88 ms** under 1.0.30;
+- later launches load the same schema-2 persistent manifest with FlowCanvas graph parsing skipped; the accepted 1.0.32 test loaded it in **10.80 ms**;
+- canonical final-rule counts remain owner 75/6, cross-owner 8/6/0, one-shot 55/54/1;
+- navigation counts remain 210 answers, 270 paths, 151 predicates, 0 unsupported paths;
+- the reported Charmel false-positive state (`actress_2b` blocked by relation) produces no two false Lust-day markers;
+- 1.0.32 runtime testing proved the Inquisitor mandatory stage marker appears before `inquisitor_talk`, disappears when the automatic scene completes it, and subsequent ordinary prerequisite-aware reminders continue to work;
 - the earlier roughly 30-second rhythmic Day Wheel hitch was removed by the accepted allocation-free steady-state path; remaining sparse hitches occur at the control game/modpack baseline and are not attributed to Day Wheel without new evidence.
 
 The rejected universal provenance parser remains rejected. Production derives only verified local reminder structure/navigation from the six weekday-NPC graphs; it does not walk arbitrary external dependency/provenance chains.
@@ -97,7 +107,7 @@ Steady-state runtime should be effectively negligible relative to the game:
 - known-NPC count/fingerprint checks remain allocation-light;
 - use the existing slow structural-staleness cadence rather than broad recurring validation.
 
-Do not optimize speculative problems. The accepted performance line is evidence-driven: 1.0.25 exposed a 302.22 ms first-NPC runtime rebuild; 1.0.26 moved graph work behind loading and persisted it; 1.0.27 moved the cache to BepInEx; 1.0.28 removed recurring allocation pressure that correlated with the old ~30-second rhythmic hitch; 1.0.30 preserves that steady-state architecture while adding persisted navigation reachability.
+Do not optimize speculative problems. The accepted performance line is evidence-driven: 1.0.25 exposed a 302.22 ms first-NPC runtime rebuild; 1.0.26 moved graph work behind loading and persisted it; 1.0.27 moved the cache to BepInEx; 1.0.28 removed recurring allocation pressure that correlated with the old ~30-second rhythmic hitch; 1.0.30 added persisted navigation reachability; 1.0.32 preserves that architecture while adding only narrow verified runtime predicates.
 
 ## Repository workflow
 
