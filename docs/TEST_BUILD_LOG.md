@@ -243,6 +243,38 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Artifact: `AutoInteractionAuditProbe-0.1.0` (`10315994217`), archive digest `sha256:0dcd1b503ee20079e811b37399b518efa34e5771fb549861321c912118880167`.
 - Raw DLL: 22,016 bytes.
 - Raw DLL SHA-256: `03161fd1f06c47b3c00f6cfac53d9fa9b70ffb49abd1b2a57b0eca78bdf83588`.
-- Requested test: install beside the accepted production mod, load any developed normal save, wait until gameplay is fully ready, then provide the resulting log. No NPC interaction is required; the probe audits serialized graph topology once and disables itself.
+- Requested test: install beside the accepted production mod, load any normal save, wait until gameplay is fully ready, then provide the resulting log. No NPC interaction is required; the probe audits serialized graph topology once and disables itself.
+- Player result: **successful / superseded**. The snapshot found 72 owner-local `Complete` nodes, mapped 64 to ordinary selectable routes and isolated 8 non-selectable/unresolved candidates. This established the finite audit universe and exposed the WaitForFlow/CustomFunction blind spots corrected by 0.1.1.
+- Status: **research only / superseded by 0.1.1 / not production / main unchanged**.
+
+## Auto-interaction audit probe 0.1.1 — refined research diagnostic
+
+- Date built: 2026-09-13.
+- Research branch: `research/auto-interaction-task-audit`.
+- Exact executable/build source: `bd48d3b744013a4137ea3c01dd5a9fd32282ccc4`.
+- Frozen ref: `frozen/auto-interaction-audit-probe-0.1.1` at the exact executable source above.
+- Goal: resolve the two specific topology blind spots from 0.1.0 by treating numbered `Flow_WaitForFlow` inputs as flow edges and traversing exact `CustomFunctionCall._sourceOutputUID -> CustomFunctionEvent._UID` links.
+- Scope: read-only one-shot graph audit; no save/UI/production mutation.
+- CI: run `34755385493`, success.
+- Artifact: `AutoInteractionAuditProbe-0.1.1` (`10317215799`), archive digest `sha256:260d781d0ec26a6d79487ed4d4270d7267216fa7f66429e75131f75d3c1861c8`.
+- Raw DLL: 20,480 bytes.
+- Raw DLL SHA-256: `087f019ac874db9ac41481f3dba76344832783f07a31bbcdf392f37caf5d9e90`.
+- Requested test: replace 0.1.0 with 0.1.1, load a normal gameplay save and provide `LogOutput.log`; no NPC interaction or special quest state is required.
+- Player result: **successful / superseded for remaining event provenance**. Refined census: 72 owner-local Complete nodes, 68 mapped selectable, 4 non-selectable candidates. Astrologer `dlc_souls_s29_1` mapped to `@souls_s_s30_ask`; Snake `dlc_souls_s29_3` to `@souls_s_s33_ask`; Ms. Charm `dlc_souls_s29_2` to `@souls_s_s31_ask`; Bishop `bishop_rcitezen` to `@bishop_get_citezen`. Remaining: verified-positive Inquisitor `inquisitor_talk` plus Snake `snake_key`, `snake_back`, `snake_trap`, whose event trigger provenance is not yet established.
+- Status: **research only / topology audit complete / not production / main unchanged**.
+
+## Auto-interaction event provenance probe 0.1.2 — research diagnostic
+
+- Date built: 2026-09-13.
+- Research branch: `research/auto-interaction-task-audit`.
+- Exact executable/build source: `dd4d26167eb05512e5fa4760d95d4f82607fd080`.
+- Frozen ref: `frozen/auto-interaction-event-provenance-probe-0.1.2` at the exact executable source above.
+- Goal: determine exact sender/reference provenance for the remaining Snake event roots `morgue_quest`, `on_back_to_snake_after_ritual`, and `snake_stone_ready`; controls include `witch_burning_enable` and `inquisitor_after_dark_event`.
+- Scope: bounded read-only one-shot scan of loaded `FlowScriptController` serialized graphs and loaded `TextAsset`s for the exact internal literals. No save/UI/task/NPC/production mutation.
+- CI: run `34756182698`, job `103720820782`, success.
+- Artifact: `AutoInteractionEventProvenanceProbe-0.1.2` (`10317616910`), archive digest `sha256:d82de71ea01fd00e51555aac4a77625c586fd305f082e43c315a88cb0b03d8bc`.
+- Raw DLL: 12,800 bytes.
+- Raw DLL SHA-256: `a53d69db2208c43e3744297db61252662545cd99e6941362c6c3e1a67b3022cd`.
+- Requested test: replace/remove 0.1.1, install 0.1.2 beside accepted production 1.0.30, load any normal gameplay save until the probe prints `AUTO3_END`, then provide `LogOutput.log`. No NPC interaction or special day/task state is required for this first provenance scan.
 - Player result: pending.
-- Status: **research only / not production / main unchanged**.
+- Status: **research only / handed for provenance test / not production / main unchanged**.
