@@ -126,7 +126,14 @@ Controls also include `witch_burning_enable` and `inquisitor_after_dark_event`.
 
 The probe performs one bounded read-only scan of already loaded `FlowScriptController` serialized graphs and loaded `TextAsset`s for those exact internal literals, reports every matching graph/resource context, then disables itself. It does not alter save state, task state, UI, NPC state, or production reminder logic. Its purpose is to determine whether each remaining event is initiated by player arrival/interaction at the weekday NPC/meeting point or by an unrelated automatic/global script.
 
-Exact executable source prepared at `dd4d26167eb05512e5fa4760d95d4f82607fd080` on `research/auto-interaction-task-audit`. CI run `34756182698` was started for this exact source; artifact identity will be recorded after the build gate completes.
+Exact executable/build source: `dd4d26167eb05512e5fa4760d95d4f82607fd080`.
+Frozen ref: `frozen/auto-interaction-event-provenance-probe-0.1.2` at the exact source above.
+CI run `34756182698`, job `103720820782`, success.
+Artifact: `AutoInteractionEventProvenanceProbe-0.1.2` (`10317616910`), archive digest `sha256:d82de71ea01fd00e51555aac4a77625c586fd305f082e43c315a88cb0b03d8bc`.
+Raw DLL: 12,800 bytes.
+Raw DLL SHA-256: `a53d69db2208c43e3744297db61252662545cd99e6941362c6c3e1a67b3022cd`.
+Requested runtime test: remove/replace 0.1.1, install 0.1.2 beside accepted production 1.0.30, load any normal gameplay save until `AUTO3_END`, then provide the log. No NPC interaction or special quest/day state is required for this first provenance scan.
+Player result: pending.
 
 ## Production boundary
 
