@@ -1,10 +1,10 @@
 # Auto-interaction task-route audit — GK 1.407
 
-Status: **research in progress; no production behavior change**.
+Status: **research complete for the current six weekday-NPC owner-local completion universe; no production behavior change**.
 
 ## Question
 
-Audit all six weekday-NPC FlowCanvas graphs for owner-local task stages whose completion is not driven by an ordinary selectable `Flow_MultiAnswer` route, especially the runtime-proven class:
+Audit all six weekday-NPC FlowCanvas graphs for owner-local task stages whose completion is not driven by the ordinary selectable route model, especially the runtime-proven class:
 
 `Visible task -> NPC interaction -> mandatory automatic branch -> Flow_SetTaskState(... Complete)`.
 
@@ -14,16 +14,16 @@ The product rule remains:
 
 A visible task alone is never sufficient. Item/craft/relation/resource/quality prerequisites must be satisfied before a reminder is emitted.
 
-The player clarified an additional product boundary during this audit: a stage can still be reminder-worthy when approaching a weekday NPC or the NPC's relevant meeting point automatically starts the required progression, even if no selectable dialogue answer is involved. Therefore an event/cutscene root is **not** excluded merely because it is a `CustomEvent`; its actual trigger provenance must be established. Unrelated timers, global scripts, or events that do not require the player to come to the weekday NPC/meeting point remain non-reminder routes.
+The player clarified an additional product boundary during this audit: a stage is still reminder-worthy when approaching/interacting with a weekday NPC or the NPC's relevant meeting point automatically starts the required progression, even if no selectable dialogue answer is shown. Therefore an event/cutscene root is not excluded merely because it is a `CustomEvent`; its trigger provenance matters. Unrelated timers/global scripts remain non-reminder routes.
 
-## Accepted starting evidence
+## Accepted starting evidence — Inquisitor `inquisitor_talk`
 
 Runtime testing of `npc_inquisitor / inquisitor_talk` proved:
 
 - task is `Visible` before interaction;
 - interacting with the Inquisitor on Witch Hill starts mandatory scripted dialogue `inquisitor_burn_1` before the ordinary answer menu;
 - that automatic branch sets `inquisitor_talk = Complete`;
-- the successor `inquisitor_burn` becomes `Visible`;
+- successor `inquisitor_burn` becomes `Visible`;
 - no intermediate item/craft/relation prerequisite is required for this stage.
 
 Therefore `inquisitor_talk` is a real false negative in accepted 1.0.30 and is product-eligible for a weekday reminder.
@@ -51,98 +51,118 @@ Per NPC:
 
 Initial eight candidates:
 
-1. `npc_astrologer / dlc_souls_s29_1` — reverse walk stopped at `Flow_WaitForFlow`; numbered WaitForFlow ports were misclassified as value inputs by probe 0.1.0.
-2. `npc_inquisitor / inquisitor_talk` — `CustomFunctionEvent "Next day after witch burning" -> Flow_PlayerEnable -> Flow_SetWGOParam(burning_done) -> Flow_Talk(inquisitor_burn_1) -> Complete`.
-3. `npc_cultist / snake_key` — rooted at `CustomEvent morgue_quest`, then player enable/camera/teleport/scripted talk -> Complete. Event/cutscene progression; trigger provenance was not yet proven.
-4. `npc_cultist / snake_back` — rooted at `CustomEvent on_back_to_snake_after_ritual`, then scripted return/teleport/camera/talk -> Complete. Event-driven continuation; trigger provenance was not yet proven.
-5. `npc_cultist / snake_trap` — rooted at `CustomEvent snake_stone_ready`, followed by a long multi-day scripted sequence including waits, spawned WGOs, movement, camera work and `Flow_CheckKeyQuest` before completion. Trigger provenance was not yet proven.
-6. `npc_cultist / dlc_souls_s29_3` — reverse walk stopped at `Flow_WaitForFlow`; required refined flow-port traversal.
-7. `npc_actress / dlc_souls_s29_2` — reverse walk stopped at `Flow_WaitForFlow`; required refined flow-port traversal.
-8. `npc_bishop / bishop_rcitezen` — completion branch starts at `CustomFunctionEvent bishop_get_citizen`, immediately blacklists `@bishop_get_citezen`, then talks and completes. The old identifier-name resolver could not safely equate the differently spelled names; exact CustomFunction UID linkage was required.
+1. `npc_astrologer / dlc_souls_s29_1` — reverse walk stopped at `Flow_WaitForFlow`.
+2. `npc_inquisitor / inquisitor_talk` — mandatory automatic completion branch.
+3. `npc_cultist / snake_key` — receiver `CustomEvent morgue_quest`.
+4. `npc_cultist / snake_back` — receiver `CustomEvent on_back_to_snake_after_ritual`.
+5. `npc_cultist / snake_trap` — receiver `CustomEvent snake_stone_ready`.
+6. `npc_cultist / dlc_souls_s29_3` — reverse walk stopped at `Flow_WaitForFlow`.
+7. `npc_actress / dlc_souls_s29_2` — reverse walk stopped at `Flow_WaitForFlow`.
+8. `npc_bishop / bishop_rcitezen` — function route required exact UID linkage rather than identifier spelling.
 
-Canonical conclusions after 0.1.0:
-
-- `inquisitor_talk` remained the verified positive automatic-interaction case;
-- three Snake event routes remained semantically unresolved rather than rejected: their downstream cutscenes were known, but whether the player had to come to Snake/a Snake-related meeting point was not yet established;
-- Merchant had no candidate in this structural class;
-- no production classifier may be based on `Visible + missing existing owner rule`;
-- four apparent candidates were parser-topology uncertainties to be resolved by 0.1.1.
+The census established that `Visible + missing existing owner rule` cannot be a production classifier.
 
 ## Probe 0.1.1 — refined topology pass
 
-Goal: resolve only the two proven blind spots in 0.1.0:
+Goal: resolve the two proven topology blind spots in 0.1.0:
 
 - treat numbered `Flow_WaitForFlow` inputs as authored flow edges;
-- traverse exact `CustomFunctionCall._sourceOutputUID -> CustomFunctionEvent._UID` links before deciding that a function-root completion is non-selectable.
-
-This was read-only and one-shot. It did not mutate save/UI state and disabled itself after one graph snapshot.
+- traverse exact `CustomFunctionCall._sourceOutputUID -> CustomFunctionEvent._UID` links.
 
 Frozen source: `frozen/auto-interaction-audit-probe-0.1.1` at `bd48d3b744013a4137ea3c01dd5a9fd32282ccc4`.
-CI run: `34755385493`, success.
-Artifact: `AutoInteractionAuditProbe-0.1.1` (`10317215799`), archive digest `sha256:260d781d0ec26a6d79487ed4d4270d7267216fa7f66429e75131f75d3c1861c8`.
-Raw DLL: 20,480 bytes.
-Raw DLL SHA-256: `087f019ac874db9ac41481f3dba76344832783f07a31bbcdf392f37caf5d9e90`.
+CI run `34755385493`, success.
+Artifact `AutoInteractionAuditProbe-0.1.1` (`10317215799`), archive digest `sha256:260d781d0ec26a6d79487ed4d4270d7267216fa7f66429e75131f75d3c1861c8`.
+Raw DLL: 20,480 bytes; SHA-256 `087f019ac874db9ac41481f3dba76344832783f07a31bbcdf392f37caf5d9e90`.
 
-Player runtime snapshot on 2026-09-13 completed successfully. Refined census:
+Player snapshot on 2026-09-13 produced:
 
 - owner-local `Complete` nodes: **72**;
-- resolved selectable routes: **68**;
-- genuine non-selectable/event-root candidates remaining: **4**.
+- mapped selectable routes: **68**;
+- remaining event/non-selectable roots: **4**.
 
-The four topology false candidates from 0.1.0 resolved as ordinary selectable task routes:
+The four topology false candidates resolved to ordinary selectable task routes:
 
-- Astrologer `dlc_souls_s29_1` -> `@souls_s_s30_ask`;
-- Snake `dlc_souls_s29_3` -> `@souls_s_s33_ask`;
-- Ms. Charm `dlc_souls_s29_2` -> `@souls_s_s31_ask`;
-- Bishop `bishop_rcitezen` -> `@bishop_get_citezen` through exact CustomFunction UID linkage.
+- Astrologer `dlc_souls_s29_1 -> @souls_s_s30_ask`;
+- Snake `dlc_souls_s29_3 -> @souls_s_s33_ask`;
+- Ms. Charm `dlc_souls_s29_2 -> @souls_s_s31_ask`;
+- Bishop `bishop_rcitezen -> @bishop_get_citezen` through exact CustomFunction UID linkage.
 
-Per-NPC final topology counts after 0.1.1:
-
-- Astrologer: 14 / 14 selectable / 0 candidates;
-- Inquisitor: 9 / 8 / 1;
-- Snake: 12 / 9 / 3;
-- Merchant: 14 / 14 / 0;
-- Ms. Charm: 10 / 10 / 0;
-- Bishop: 13 / 13 / 0.
-
-The four remaining routes are:
-
-1. **`npc_inquisitor / inquisitor_talk`** — still non-selectable. Refined UID traversal traces the completion path farther upstream to `CustomEvent` data containing `witch_burning_enable` / `inquisitor_after_dark_event`, then a `CustomFunctionCall` into exact `CustomFunctionEvent` UID `60f07555-17a4-4dd4-9046-83ec64abfc49` (`Next day after witch burning`), followed by the already proven mandatory `inquisitor_burn_1` dialogue and task completion. Existing live interaction evidence remains authoritative: this route is product-eligible.
-2. **`npc_cultist / snake_key`** — root receiver is a `CustomEvent` associated with `morgue_quest`; downstream route teleports/positions the player, talks `snake_give_key_1`, then completes the task. The sender/trigger is not established yet.
-3. **`npc_cultist / snake_back`** — root receiver is a `CustomEvent` associated with `on_back_to_snake_after_ritual`; downstream route teleports the player, moves the camera, plays `snake_sword_13/14/15`, then completes the task. The sender/trigger is not established yet.
-4. **`npc_cultist / snake_trap`** — root receiver is a `CustomEvent` associated with `snake_stone_ready`; downstream route is a long scripted sequence with waits/cutscene operations and a later `Flow_CheckKeyQuest`. The sender/trigger is not established yet.
-
-Therefore the refined structural classifier is complete for ordinary selectable routes, but **`CustomEvent` by itself is not a safe production classifier**. The three Snake cases require exact event provenance before they can be included or excluded under the product rule.
+The four unresolved roots were `inquisitor_talk`, `snake_key`, `snake_back`, and `snake_trap`.
 
 ## Probe 0.1.2 — targeted event-provenance pass
 
-Goal: close only the remaining semantic uncertainty for the three Snake `CustomEvent` routes by locating exact references/senders for:
-
-- `morgue_quest`;
-- `on_back_to_snake_after_ritual`;
-- `snake_stone_ready`.
-
-Controls also include `witch_burning_enable` and `inquisitor_after_dark_event`.
-
-The probe performs one bounded read-only scan of already loaded `FlowScriptController` serialized graphs and loaded `TextAsset`s for those exact internal literals, reports every matching graph/resource context, then disables itself. It does not alter save state, task state, UI, NPC state, or production reminder logic. Its purpose is to determine whether each remaining event is initiated by player arrival/interaction at the weekday NPC/meeting point or by an unrelated automatic/global script.
+Goal: close only the remaining semantic uncertainty for the three Snake event roots by locating exact references/senders for `morgue_quest`, `on_back_to_snake_after_ritual`, and `snake_stone_ready`. Controls included `witch_burning_enable` and `inquisitor_after_dark_event`.
 
 Exact executable/build source: `dd4d26167eb05512e5fa4760d95d4f82607fd080`.
-Frozen ref: `frozen/auto-interaction-event-provenance-probe-0.1.2` at the exact source above.
+Frozen ref: `frozen/auto-interaction-event-provenance-probe-0.1.2`.
 CI run `34756182698`, job `103720820782`, success.
-Artifact: `AutoInteractionEventProvenanceProbe-0.1.2` (`10317616910`), archive digest `sha256:d82de71ea01fd00e51555aac4a77625c586fd305f082e43c315a88cb0b03d8bc`.
-Raw DLL: 12,800 bytes.
-Raw DLL SHA-256: `a53d69db2208c43e3744297db61252662545cd99e6941362c6c3e1a67b3022cd`.
-Requested runtime test: remove/replace 0.1.1, install 0.1.2 beside accepted production 1.0.30, load any normal gameplay save until `AUTO3_END`, then provide the log. No NPC interaction or special quest/day state is required for this first provenance scan.
-Player result: pending.
+Artifact `AutoInteractionEventProvenanceProbe-0.1.2` (`10317616910`), archive digest `sha256:d82de71ea01fd00e51555aac4a77625c586fd305f082e43c315a88cb0b03d8bc`.
+Raw DLL: 12,800 bytes; SHA-256 `a53d69db2208c43e3744297db61252662545cd99e6941362c6c3e1a67b3022cd`.
 
-## Production boundary
+Player runtime snapshot on 2026-09-13 completed successfully (`AUTO3_END`). It scanned 92 loaded controllers / 90 unique serialized graphs and 3,397 loaded `TextAsset`s. The target literals were found only in the relevant weekday-NPC graph; no TextAsset source was found.
 
-Do not implement production behavior until event provenance for the three Snake routes is established. The safe conclusions already available are:
+### `snake_key` — selectable hand-in hidden behind an event hop
 
-- the 68 selectable owner-local completion routes belong to the existing task-linked model;
-- `inquisitor_talk` is a verified positive non-selectable interaction route;
-- three Snake event routes remain open questions and must not be admitted or rejected by event-name/type inference;
-- a broad rule such as `Visible task + CustomEvent completion route` is unsafe;
-- if only isolated verified non-selectable routes remain, a narrow explicit GK 1.407 mapping is preferable to an unproven universal classifier.
+0.1.2 found, in the Snake graph:
 
-Any production representation must still be loading-derived/persisted and gameplay-cheap: cached task/predicate checks only, no FlowCanvas traversal during normal gameplay and no localized/display-text matching.
+- receiver `CustomEvent` node 42 for `morgue_quest`;
+- sender `Flow_FireEvent` node 649 with `event=morgue_quest`;
+- immediately upstream, exact `CustomFunctionEvent` node 645 with UID `ce662331-82b6-480c-a451-f1d08754bb62`.
+
+Existing accepted/static audit evidence independently identifies top-level `@snake_give_key` as `Flow_MultiAnswer` 106 index 3, with authored price `Item:ques_key_cultist = 1`, exact self-consumption, and exactly one CustomFunction jump. The raw Snake graph places the matching `CustomFunctionCall` UID `ce662331-82b6-480c-a451-f1d08754bb62` on that answer branch.
+
+Therefore the actual authored route is:
+
+`@snake_give_key [requires ques_key_cultist x1] -> exact CustomFunction -> Flow_FireEvent(morgue_quest) -> CustomEvent(morgue_quest) -> scripted dialogue -> snake_key Complete`.
+
+Classification: **ordinary selectable task interaction with an event boundary**. It must remain non-actionable until the key requirement passes.
+
+### `snake_trap` — selectable answer hidden behind an event hop
+
+0.1.2 found:
+
+- `Flow_MultiAnswer` node 1520 with answers `snake_stone_ready` and `Leave`;
+- the selected `snake_stone_ready` branch reaches `Flow_FireEvent` node 1527 with `event=snake_stone_ready`;
+- receiver `CustomEvent` node 1541 starts the long scripted completion scene.
+
+Earlier graph evidence around this answer includes authored `Flow_Answer` node 1532 and `SmartRes GameRes:_rel = 10` node 1538. Production must preserve that authored gate rather than treating the task as unconditionally actionable.
+
+Classification: **ordinary selectable task interaction with an event boundary**. The old reverse walker missed only the `Flow_FireEvent -> CustomEvent` topology edge.
+
+### `snake_back` — required later interaction event
+
+0.1.2 found:
+
+- `Flow_AddInteractionEvent` node 1280 with `Event=on_back_to_snake_after_ritual` on the Snake graph;
+- receiver `CustomEvent` node 1346 starts the scripted return/camera/dialogue branch that completes `snake_back`.
+
+Existing authored evidence establishes the predecessor hand-in:
+
+- top-level `@snake_sword` is gated by `Item:sword_damask_gem = 1`;
+- consuming that route completes `snake_sword` and makes `snake_back = Visible`;
+- the same authored continuation installs `on_back_to_snake_after_ritual` as an interaction event.
+
+Therefore `snake_back` must **not** be reminded before the sword hand-in. Once `snake_back` is Visible and the authored interaction-event stage has been installed, the required next interaction with Snake is product-eligible even though it bypasses the ordinary menu.
+
+Classification: **verified later NPC-interaction stage**, distinct from ordinary selectable answers.
+
+### Inquisitor controls
+
+0.1.2 also found `Flow_AddInteractionEvent` references for `inquisitor_after_dark_event` plus its matching receiver, consistent with the already accepted live `inquisitor_talk` evidence. That control supports the semantic distinction between an interaction-installed event and an arbitrary/global CustomEvent.
+
+## Final census and production design boundary
+
+The original 72 owner-local Complete nodes are now fully classified for the current six weekday-NPC graphs:
+
+- **70** resolve to ordinary selectable task interactions when loading-time topology includes the proven edges for numbered `Flow_WaitForFlow`, exact CustomFunction UID jumps, and exact same-graph `Flow_FireEvent(event X) -> CustomEvent(eventName X)` transitions;
+- **2** are genuine mandatory interaction-event stages requiring no selectable answer at the completion interaction: `npc_inquisitor / inquisitor_talk` and `npc_cultist / snake_back`.
+
+Production conclusions:
+
+1. Add the exact same-graph `Flow_FireEvent(event X) -> CustomEvent(eventName X)` relation to loading-time structural traversal. This is sufficient to recover `snake_key` and `snake_trap` as ordinary task-linked routes while preserving their authored answer gates.
+2. Do **not** classify arbitrary `CustomEvent` roots, and do not use `Visible + no owner rule`.
+3. `Flow_AddInteractionEvent` is a different semantic boundary: it schedules behavior for a later interaction rather than forming an immediate flow edge. The audit proves two product-positive completion stages in this class (`inquisitor_talk`, `snake_back`), but does not justify admitting every interaction event universally without an exact task/stage provenance relation.
+4. A narrow, reviewable GK 1.407 representation for the two verified interaction-event task states is acceptable if a general loading-derived provenance classifier cannot be made equally strict and cheap.
+5. All structural work remains loading/bootstrap-only and persists in the compact manifest. Gameplay evaluates cached task/phrase/gate predicates only; no FlowCanvas traversal, localized-text matching, or broad scanning is allowed during normal play.
+
+Research classification is complete. Production 1.0.30 and `main` were not modified by probes 0.1.0-0.1.2. A production implementation should start from current accepted state on the next available development version only after the normal development branch/version check.
