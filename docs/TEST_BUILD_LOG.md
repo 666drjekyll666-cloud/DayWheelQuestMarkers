@@ -97,7 +97,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Artifact: `DayWheelQuestMarkers-1.0.24` (`10294740350`), archive digest `sha256:c05a205daaff183062522ed29e2b8aad7a295bf8a1fbc0945ba6d27c7c55c6cf`.
 - Raw DLL: 43,008 bytes.
 - Raw DLL SHA-256: `05aecb65054ba4890a7ffb043ead2fb4996512d911d63bb24a338e99c039971c`.
-- Build workflow was returned to manual-only after candidate production; later workflow/docs bookkeeping does not alter the frozen candidate bytes/source.
+- Build workflow was returned to manual-only after producing the candidate; that bookkeeping does not alter the frozen candidate bytes/source.
 - Player regression result: **accepted**. The user loaded the pre-conversation save where all three portal-item reminders were still pending; all three markers appeared. After selecting Inquisitor `@inquisitor_magic_item` / Eternal Ember, the Inquisitor marker disappeared as expected.
 - Supplied runtime log confirms `Day Wheel Quest Markers 1.0.24` loaded normally and reached `Ready`. Prewarm completed in **308.07 ms** with `owner supported=75`, `cross-owner tasks=8`, `one-shot topics=55`; steady-state summary reports owner supported=75, owner unsupported=6, cross-owner supported=6, cross-owner unsupported=0, one-shot supported=54, one-shot unsupported=1. No Day Wheel Quest Markers error/warning appears in the supplied log.
 - Performance result: **308.07 ms** versus accepted 1.0.23's **782.89 ms**, a reduction of **474.82 ms / about 60.6%** for the loading-prewarm work on the developed regression save. The unified implementation is also substantially faster than the recorded 1.0.22 507.82-525.35 ms loads while covering the broader accepted one-shot behavior.
@@ -197,7 +197,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Artifact: `DayWheelQuestMarkers-1.0.29` (`10304453035`), archive digest `sha256:2e9c4602373f9c3ddcb61c10ad17eef92e99d89f384c17f264110b75421c733c`.
 - Raw DLL: 58,880 bytes.
 - Raw DLL SHA-256: `0d447eaf442b7838584960ad6b0e2e80e54b81381dbc9fc67f36c716ea631a88`.
-- Build workflow was restored to manual-only after candidate production; later workflow/docs bookkeeping does not alter the frozen candidate runtime source or bytes.
+- Build workflow was restored to manual-only after candidate production; later workflow/docs bookkeeping does not alter the frozen candidate bytes/source.
 - Requested test: at the early Charmel state with 0/5 Faith and relation below 10, neither nested `actress_2b` child may produce a Lust-day marker. If convenient, after relation reaches 10 while the parent remains unconsumed, the two child one-shots may both legitimately produce reminders; after consuming either child, the parent is blacklisted and the sibling must no longer remain as a reachable reminder. Independent Charmel interactions may still contribute their own markers.
 - Status: **superseded architecturally by 1.0.30 before player acceptance**. The tactical Charmel-only gate remains useful evidence, but the general nested-dialogue audit proved the same missing parent-reachability condition exists in task-linked Merchant routes. Stable remains 1.0.24.
 
@@ -220,7 +220,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Artifact: `DayWheelQuestMarkers-1.0.30` (`10305172405`), archive digest `sha256:cf7ecd4b5b6841ac85acb2de0daa34f81ce638845555cee8bf8560adb7ab616d`.
 - Raw DLL: 76,288 bytes.
 - Raw DLL SHA-256: `c08d84a601f923ac2b7a3b5a83ee07d4f56c4a2ef7ba54dffc6d1632fb59cef9`.
-- First player launch: schema-2 bootstrap completed behind loading in **557.88 ms**. The mod reached `Loading manifest ready`/`Ready` with final-rule counts 75/6, 8/6/0, 55/54/1 and navigation counts **210 answers / 270 paths / 151 predicates / 0 unsupported paths**; no Day Wheel warning/error was present.
+- First player launch: schema-2 bootstrap completed behind the loading screen in **557.88 ms**. The mod reached `Loading manifest ready`/`Ready` with final-rule counts 75/6, 8/6/0, 55/54/1 and navigation counts **210 answers / 270 paths / 151 predicates / 0 unsupported paths**; no Day Wheel warning/error was present.
 - Second full restart: the manifest loaded behind loading in **10.29 ms** and logged `FlowCanvas graph parse skipped`; the same canonical rule/navigation counts were restored and no runtime structural rebuild occurred.
 - Functional result: **accepted**. In the originally reported Charmel state with relation below 10, the two false Lust-day markers are gone, confirming the generic parent-chain reachability behavior on the real game state.
 - Performance result: the old roughly 30-second rhythmic Day Wheel hitch remains gone. The user observed about three sparse ~0.5 s hitches over roughly 15 minutes; the runtime log separately contains Unity `UnloadUnusedAssets` operations around 0.7 s with roughly 934k loaded objects, so these remaining stalls are not attributed to Day Wheel.
@@ -259,3 +259,23 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Published asset: `Day.Wheel.Quest.Markers.1.0.32.dll`, asset ID `561239167`, 79,360 bytes.
 - Published asset digest: `sha256:0aecfa5178fcbbaef25bd195a9174a16074e0a73f0ca45cae872b781d50ef5c4`, exactly matching the accepted DLL.
 - Status: **stable / released**.
+
+## 1.0.33 — Astrologer portal progression candidate
+
+- Date built: 2026-09-13.
+- Development branch: `dev/1.0.33`, from accepted 1.0.32 `main`.
+- Exact executable/build source: `596bd78c35190614ee2278efa76083b3ca593ccc`.
+- Candidate ref: `candidate/1.0.33` at that exact source. Later workflow/docs bookkeeping does not alter the numbered DLL bytes.
+- Goal: fix the confirmed false negative where the current user save can reach Astrologer `astrologer_2a -> @astrologer_2a_1b_1 -> astrologer_2a_1b_6c` (“portal”) while no Astrologer weekday marker is shown.
+- Runtime evidence: the current save visibly/pickably exposes `@astrologer_2a_1b_1`, then renders final answers `astrologer_2a_1b_6a`, `6b`, and `6c`; the user backed out without consuming `6c`, preserving a direct regression state. Accepted 1.0.32 showed no marker in that state.
+- Structural evidence: `@astrologer_2a_1b_1` is a non-self-consuming menu boundary, so the generic persisted-`@` one-shot classifier correctly excludes the parent. The progression-bearing final answer `astrologer_2a_1b_6c` is non-`@`, so it is outside the generic one-shot census even though the game's own progression logic uses its blacklist state.
+- Verified game behavior: once `astrologer_2a_1b_6c` has been consumed/blacklisted, the Astrologer progression path grants `quest_key_astrologer`, makes `npc_astrologer/astrologer_diary` Visible, and unlocks `@snake_give_key` plus `@astrologer_diary`.
+- Implementation: add exactly one supplemental Astrologer route. It requires `@astrologer_2a_1b_1` to be unlocked and not blacklisted, requires `astrologer_2a_1b_6c` not to be blacklisted, and reuses the existing persisted `NavigationReachabilityCache.IsNavigationReachable` path for the final answer. It emits one base marker. No generic non-`@` dialogue classifier is introduced.
+- Persistent manifest schema and canonical rule/navigation census are unchanged; the existing `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin` remains valid and should not be deleted or regenerated for this test.
+- CI: run `34761917786`, job `103736141361`, success on `windows-latest`; Release build succeeded with **0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-1.0.33` (`10319037376`), archive digest `sha256:41c9bab6d89e891a9825946e7c7fd71d15a8a275a772cbbb28a69ec33ed7271d`.
+- Raw DLL: 79,872 bytes; SHA-256 `8cb278fd2f5af0430706a0939eb6b324e8ce0783e1f1c08287d8b5068205ce87`.
+- Build workflow was restored to manual-only immediately after candidate production; the restoration commit does not alter the frozen executable source or bytes.
+- Requested test: install 1.0.33 over 1.0.32 without deleting `rules-1.407.bin`, load the preserved save before `astrologer_2a_1b_6c`, and verify an Astrologer/Sloth-day base marker is present. Then open `Мне нужна ваша помощь -> Мне нужно открыть Портал` and confirm `Так что там насчет Портала?` is still available. Select that final portal reply; after the dialogue/quest transition the portal contribution must disappear on the next refresh unless another independent actionable Astrologer interaction legitimately keeps the same day marked. Provide the resulting log.
+- Player result: pending.
+- Status: **candidate / awaiting player validation / do not merge to `main` or publish**.
