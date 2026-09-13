@@ -1,9 +1,6 @@
 name: Build Day Wheel Quest Markers
 
 on:
-  push:
-    branches:
-      - dev/1.0.35
   workflow_dispatch:
 
 permissions:
