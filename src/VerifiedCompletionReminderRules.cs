@@ -5,11 +5,11 @@ using System.Reflection;
 namespace CalendarQuestsPins
 {
     /// <summary>
-    /// Narrow GK 1.407 supplement for owner-local completion routes proven by the
-    /// auto-interaction audit but not represented as owner rules in the accepted
-    /// schema-2 manifest. Most promoted answers reuse the existing persisted one-shot
-    /// and navigation predicates; only the verified Snake stone-ready relation gate
-    /// needs a tiny game-owned SmartRes evaluation here.
+    /// Narrow GK 1.407 supplement for verified interaction/completion routes that are
+    /// not represented by normal owner rules in the accepted schema-2 manifest.
+    /// Persisted topic/navigation predicates are reused where possible; the exact
+    /// Snake relation/faith requirements delegate readiness to game-owned SmartRes
+    /// plus Player.IsEnough.
     /// </summary>
     internal sealed class VerifiedCompletionReminderRules
     {
@@ -33,6 +33,8 @@ namespace CalendarQuestsPins
         private MethodInfo _smartResFactory;
         private object _snakeRelationSmartRes;
         private object _snakeRelationLinkedWgo;
+        private object _snakeFaithSmartRes;
+        private object _snakeFaithLinkedWgo;
         private object _boundPlayer;
         private MethodInfo _isEnough;
         private readonly object[] _isEnoughArgs = new object[1];
@@ -80,6 +82,18 @@ namespace CalendarQuestsPins
             return false;
         }
 
+        internal bool IsVerifiedSnakeFaithInteractionActionable(WeekdayInteractionRuleCache.TargetRules target,
+            object unlockedPhrases, object blacklistedPhrases, NavigationReachabilityCache reachability, object mainGame)
+        {
+            if (target == null || reachability == null ||
+                !string.Equals(target.NpcId, "npc_cultist", StringComparison.Ordinal)) return false;
+
+            const string answerId = "snake_1a";
+            if (ContainsString(blacklistedPhrases, answerId)) return false;
+            if (!reachability.IsNavigationReachable(target.NpcId, answerId, unlockedPhrases, blacklistedPhrases)) return false;
+            return IsSnakeFaithEnough(target.WorldObject, mainGame);
+        }
+
         internal static bool IsPromotedCompletionTopic(string npcId, string answerId)
         {
             if (string.IsNullOrEmpty(npcId) || string.IsNullOrEmpty(answerId)) return false;
@@ -96,6 +110,8 @@ namespace CalendarQuestsPins
         {
             _snakeRelationSmartRes = null;
             _snakeRelationLinkedWgo = null;
+            _snakeFaithSmartRes = null;
+            _snakeFaithLinkedWgo = null;
             _boundPlayer = null;
             _isEnough = null;
             _isEnoughArgs[0] = null;
@@ -121,10 +137,27 @@ namespace CalendarQuestsPins
                 _snakeRelationSmartRes = CreateSmartRes("GameRes", "_rel", 10f, linkedWgo);
                 _snakeRelationLinkedWgo = linkedWgo;
             }
-            if (_snakeRelationSmartRes == null || _isEnough == null || _boundPlayer == null) return false;
+            return IsEnough(_snakeRelationSmartRes);
+        }
+
+        private bool IsSnakeFaithEnough(object linkedWgo, object mainGame)
+        {
+            if (linkedWgo == null || mainGame == null || !ReflectionUtil.IsUnityAlive(linkedWgo)) return false;
+            if (!BindPlayer(mainGame)) return false;
+            if (_snakeFaithSmartRes == null || !ReferenceEquals(_snakeFaithLinkedWgo, linkedWgo))
+            {
+                _snakeFaithSmartRes = CreateSmartRes("Item", "faith", 5f, linkedWgo);
+                _snakeFaithLinkedWgo = linkedWgo;
+            }
+            return IsEnough(_snakeFaithSmartRes);
+        }
+
+        private bool IsEnough(object smartRes)
+        {
+            if (smartRes == null || _isEnough == null || _boundPlayer == null) return false;
             try
             {
-                _isEnoughArgs[0] = _snakeRelationSmartRes;
+                _isEnoughArgs[0] = smartRes;
                 var result = _isEnough.Invoke(_boundPlayer, _isEnoughArgs);
                 return result is bool && (bool)result;
             }
