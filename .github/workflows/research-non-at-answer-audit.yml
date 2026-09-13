@@ -1,0 +1,51 @@
+name: Build non-@ answer universe audit probe
+
+on:
+  push:
+    branches:
+      - research/non-at-answer-universe
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: non-at-answer-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore research/NonAtAnswerAuditProbe/NonAtAnswerAuditProbe.csproj --configfile nuget.config
+
+      - name: Build Release probe
+        run: dotnet build research/NonAtAnswerAuditProbe/NonAtAnswerAuditProbe.csproj -c Release --no-restore
+
+      - name: Stage artifact
+        id: artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $asset = 'DayWheelQuestMarkers-non-at-answer-audit-probe-0.1.0.dll'
+          Copy-Item 'research/NonAtAnswerAuditProbe/bin/Release/DayWheelNonAtAnswerAuditProbe.dll' "dist/$asset"
+          $hash = (Get-FileHash "dist/$asset" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "sha256=$hash" >> $env:GITHUB_OUTPUT
+          Write-Host "Probe SHA-256: $hash"
+
+      - name: Upload probe
+        uses: actions/upload-artifact@v4
+        with:
+          name: DayWheelNonAtAnswerAuditProbe-0.1.0
+          path: dist/DayWheelQuestMarkers-non-at-answer-audit-probe-0.1.0.dll
+          if-no-files-found: error
+          retention-days: 7
