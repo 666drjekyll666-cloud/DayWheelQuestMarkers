@@ -2,15 +2,6 @@ name: Build inquisitor_talk diagnostic probe
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - research/inquisitor-talk-probe
-    paths:
-      - 'InquisitorTalkProbe.csproj'
-      - 'src/InquisitorTalkProbePlugin.cs'
-      - 'src/ReflectionUtil.cs'
-      - '.github/workflows/inquisitor-talk-probe.yml'
-      - 'nuget.config'
 
 permissions:
   contents: read
