@@ -285,3 +285,28 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Published asset digest: `sha256:a7752d2058d4728db054adc049f650cad037cede41166b6c4c7329f4ea169879`, exactly matching the accepted DLL.
 - Follow-up architecture audit: stable behavior is retained; `research/unified-interaction-architecture` documents the evidence-backed recommendation to consolidate overlapping graph parsers/caches in a future candidate without reintroducing the rejected universal provenance parser.
 - Status: **stable / released**.
+
+## 1.1.0 — unified interaction schema-3 candidate
+
+- Date built: 2026-09-14 local / 2026-09-13 UTC.
+- Development branch: `dev/1.1.0`, from current accepted 1.0.35 `main` (`528426a5a9829b0145fd1c328a906453e4426e2e`).
+- Exact executable/build source: `67e693a63089d473920e5181eec7af75e6f1be75`.
+- Candidate ref: `candidate/1.1.0` at that exact source. The numbered DLL is frozen to those bytes/source; later workflow/docs commits do not alter it.
+- Goal: consolidate the accepted `@` and non-`@` exact-self-consuming reminder classes into one production `TopicRule` representation, one runtime evaluation path, and one persistent manifest without broadening accepted task/event semantics.
+- Final audit conclusion: no fourth reminder semantic class was found. Accepted behavior reduces to task-linked actionable interactions, authored exact-self-consuming conversations, and the two exact verified mandatory interaction-event stages. Navigation/phrase/SmartRes state are actionability predicates rather than separate reminder types.
+- Runtime changes: `NonAtSelfConsumingRuleCache` is removed. New bootstrap-only `UnifiedSelfConsumingCompiler` derives the accepted non-`@` exact-self universe directly into `WeekdayInteractionRuleCache.TopicRule`; runtime evaluates both `@` and non-`@` topics through the same `target.Topics -> NavigationReachabilityCache.IsTopicActionable` path.
+- Persistent cache: `rules-1.407.bin` moves from schema 2 to schema 3 and now stores primary owner/cross rules, unified self-consuming topics, navigation data, and non-`@` integrity census. A 1.0.35 schema-2 file is rejected/rebuilt during the loading window; the old `non-at-self-consuming-1.407.bin` is ignored and does not need manual deletion.
+- Semantic guardrails: accepted owner/cross task classifier, navigation compiler, `VerifiedCompletionReminderRules`, authoritative owner-local zone-quality semantics, UI/marker rendering, and refresh cadence are unchanged. Stronger numbered-WaitForFlow/exact-CustomFunction reverse tracing remains limited to the proven non-`@` exact-self discovery path.
+- Static parity guards: owner 75/6; cross-owner 8/6/0; legacy `@` self-consuming universe remains 55/54/1 after subtracting admitted non-`@` rules; non-`@` census must remain six graphs / 77 unique IDs / 19 exact-self / 0 reversible / 0 utility, with admitted topics + completion-excluded exact-self answers totaling 19.
+- Engineering evidence: `docs/UNIFIED_INTERACTION_1.1.0.md`.
+- Source comparison versus stable 1.0.35 candidate: removes 1,073-line `NonAtSelfConsumingRuleCache.cs`, adds 734-line bootstrap-only compiler, simplifies plugin runtime by 36 net lines, and leaves accepted navigation/event/UI source unchanged.
+- CI: run `34789944561`, job `103812189255`, success on `windows-latest`; Release build **0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-1.1.0` (`10328230822`), archive digest `sha256:7d7854d837cd44aef2f4704bda135ced7f682b8b3050d77fd7b15e607a53e488`.
+- Raw DLL: **92,672 bytes**; SHA-256 `29d6118fdd1c981c947836181c486fbac52caa39c72b6cce9d3694af85401ab9`.
+- Size comparison: 6,144 bytes (~6.2%) smaller than accepted 1.0.35. This is treated as evidence of reduced compiled duplication, not as a claimed gameplay-performance win.
+- Build workflow restored to manual-only after candidate production at dev commit `66d2d4f84b1ffd95a01f63910d48bc4847fd3588`; no second hosted build was run.
+- Requested test, launch 1: replace 1.0.35 with 1.1.0 and **do not delete either cache file**. Existing schema-2 `rules-1.407.bin` should rebuild to schema 3 behind loading; old non-`@` cache is ignored. Verify no implausible marker changes and send the runtime log. If naturally available, exercise ordinary task-gated, `@` one-shot, and non-`@` exact-self interactions; do not roll back or modify a save solely for coverage.
+- Requested test, launch 2: restart without touching cache and send/confirm the second log. Schema-3 manifest should deserialize directly with `FlowCanvas graph parse skipped`, restoring identical rule/census/navigation counts.
+- Primary acceptance gate: successful two-launch schema-3 lifecycle plus normal marker behavior. Any bootstrap failure must be diagnosed from the exact failed answer/contract; do not weaken parity checks broadly.
+- Player result: **awaiting validation**.
+- Status: **candidate / not accepted / do not merge or publish**. Stable remains 1.0.35.
