@@ -1,0 +1,65 @@
+name: Build inquisitor_talk diagnostic probe
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/inquisitor-talk-probe
+    paths:
+      - 'InquisitorTalkProbe.csproj'
+      - 'src/InquisitorTalkProbePlugin.cs'
+      - 'src/ReflectionUtil.cs'
+      - '.github/workflows/inquisitor-talk-probe.yml'
+      - 'nuget.config'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: inquisitor-talk-probe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore InquisitorTalkProbe.csproj --configfile nuget.config
+
+      - name: Build probe DLL
+        run: dotnet build InquisitorTalkProbe.csproj -c Release --no-restore
+
+      - name: Stage artifact
+        id: artifact
+        shell: pwsh
+        run: |
+          $source = Get-Content 'src/InquisitorTalkProbePlugin.cs' -Raw
+          if ($source -notmatch 'PluginVersion\s*=\s*"([^"]+)"') {
+            throw 'Could not read PluginVersion from src/InquisitorTalkProbePlugin.cs'
+          }
+          $version = $Matches[1]
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $asset = "DayWheelQuestMarkers.InquisitorTalkProbe.$version.dll"
+          Copy-Item 'bin/Probe/DayWheelQuestMarkers.InquisitorTalkProbe.dll' "dist/$asset"
+          $hash = (Get-FileHash "dist/$asset" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "asset=$asset" >> $env:GITHUB_OUTPUT
+          "sha256=$hash" >> $env:GITHUB_OUTPUT
+          Write-Host "Inquisitor talk probe $version SHA-256: $hash"
+
+      - name: Upload probe DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: InquisitorTalkProbe-${{ steps.artifact.outputs.version }}
+          path: dist/${{ steps.artifact.outputs.asset }}
+          if-no-files-found: error
+          retention-days: 7
