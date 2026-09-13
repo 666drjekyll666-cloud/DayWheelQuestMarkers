@@ -54,39 +54,52 @@ Verified direct `Flow_Answer` price/lock requirements are evaluated by Graveyard
 
 If a route uses an unsupported answer/gate shape, no reminder is emitted.
 
-## Verified persistent one-shot dialogue semantics
+## Verified persistent exact-self-consuming dialogue semantics
 
-Graveyard Keeper has authored dialogue nodes that persistently consume a topic by adding its exact phrase ID to `GameSave.black_list_of_phrases`:
+Graveyard Keeper has authored dialogue nodes that persistently consume an answer by adding its exact answer/phrase ID to `GameSave.black_list_of_phrases`:
 
 - `FlowCanvas.Nodes.Flow_BlackListPhrase` calls `GameSave.AddPhraseToBlackList(phrase)`;
 - `FlowCanvas.Nodes.Flow_AddPhraseToBlacklist` calls the same method when its authored `remove` input is false; when `remove` is true it removes the phrase from the blacklist instead.
 
-Raw GK 1.407 weekday-NPC graphs use persisted `@...` topic IDs in `Flow_MultiAnswer`. The authored-universe audit established a clean structural distinction relevant to the mod:
+The `@` prefix is an identifier convention used by many persisted topics, but accepted 1.0.35 evidence proves it is **not** the semantic boundary for a one-time authored interaction.
 
-- one-time conversations such as `@inquisitor_magic_item` directly blacklist their own exact phrase after selection;
-- repeatable utility choices such as Trade / Leave / Back do not self-blacklist;
-- submenu/container headers such as `@snake_about_nacklase` do not self-blacklist, while the actual one-time child topics inside that submenu do.
+The full read-only GK 1.407 audit of all six weekday-NPC graphs established:
 
-Runtime evidence from the 1.0.22 player test confirmed `@inquisitor_magic_item` was visibly rendered and selectable by the Inquisitor while the old task/progression-only classifier emitted no marker. The earlier static universe audit had already classified that exact topic as supported, externally unlocked, self-consuming, and opening `@inquisitor_magic_100`; it was rejected only by the now-retired requirement that the source side also prove a task/progression dependency.
+- 243 authored MultiAnswer occurrences;
+- 91 non-`@` occurrences;
+- 77 unique non-`@` answer IDs;
+- exactly 19 non-`@` candidates whose selected branch blacklists that exact same answer ID;
+- 0 reversible candidates among those 19;
+- 0 utility-like `Leave` / `Back` / `Trade` candidates among those 19;
+- both previously observed false negatives, Astrologer `astrologer_2a_1b_6c` and Snake `snake_1a`, belong to that exact-self-consuming class.
 
-This establishes a broader valid reminder source:
+The accepted structural distinction is therefore:
 
-`currently reachable + exact authored self-consuming @topic + supported/satisfied answer gates -> weekday marker`
+- one-time conversations may use either `@...` or non-`@` answer IDs and consume their own exact ID;
+- repeatable utility choices such as Trade / Leave / Back do not self-consume;
+- submenu/container headers that do not consume themselves are not reminder interactions merely because their menu is visible.
 
-The one-shot rule intentionally does **not** require a journal task mutation or downstream quest effect. The unique authored conversation itself is reminder-worthy.
+Runtime evidence from earlier accepted releases established the same lifecycle for `@` topics such as `@inquisitor_magic_item`. Accepted 1.0.35 player evidence establishes it for non-`@` answers: Snake `snake_1a` produced a marker while its 5-Faith gate was satisfied, then disappeared after the player selected the interaction and the answer was consumed. In the same state Ms. Charm had another 5-Faith-gated interaction; spending the five Faith on Snake made that gate unsatisfied and her marker disappeared as well.
+
+This establishes the general reminder source:
+
+`currently reachable + exact authored self-consuming answer + supported/satisfied answer gates -> weekday marker`
+
+The rule intentionally does **not** require a journal task mutation or downstream quest effect. A unique authored conversation itself can be reminder-worthy.
 
 Production guardrails for this rule:
 
-1. the answer ID must be an authored persisted `@...` topic on one of the six weekday-NPC graphs;
-2. its own authored route must add that same exact ID to the phrase blacklist;
+1. the answer must be authored on one of the six weekday-NPC graphs;
+2. its own authored route must add the exact same answer ID to the phrase blacklist;
 3. `Flow_AddPhraseToBlacklist` nodes with `remove=true` are not consumption evidence;
-4. the phrase must currently be unlocked and not blacklisted;
-5. any supported authored final-answer `Flow_Answer` price/lock gates must pass `Player.IsEnough`;
-6. every required ancestor menu/answer on at least one authored root-to-answer path must also currently be reachable;
-7. direct task-completion answers remain handled by the task-linked rule set rather than being double-counted by the generic one-shot layer;
-8. previously verified bridge/intermediate topics use this same exact self-consuming structure and no longer require separate hard-coded manifests.
+4. the answer must not already be blacklisted; `@...` topics additionally require their authored unlocked-phrase state;
+5. supported authored final-answer `Flow_Answer` price/lock gates must pass game-owned sufficiency checks;
+6. every required ancestor menu/answer on at least one authored root-to-answer path must currently be reachable;
+7. answers already owned by task-completion rules remain handled by the task-linked rule set rather than being double-counted by the generic exact-self-consuming layer;
+8. unsupported or ambiguous topology/gates fail closed;
+9. no translated/display text is used for classification.
 
-No translated/display text is used for this classification.
+Accepted 1.0.35 implements non-`@` candidates through a loading-derived supplemental cache at `BepInEx/cache/DayWheelQuestMarkers/non-at-self-consuming-1.407.bin`; this is an implementation boundary, not a separate product semantic. The accepted schema-2 primary manifest remains `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin`.
 
 ## Verified root-to-answer navigation reachability
 
@@ -106,7 +119,7 @@ Accepted navigation contract:
 - alternative authored paths are OR;
 - unconditional plain ancestors are omitted from persisted predicates;
 - unsupported or ambiguous navigation ancestry fails closed;
-- gameplay evaluates only the compact persisted predicates and never traverses FlowCanvas/navigation graphs.
+- gameplay evaluates only compact persisted predicates and never traverses FlowCanvas/navigation graphs.
 
 First accepted schema-2 bootstrap produced: **210 answers, 270 paths, 151 predicates, 0 unsupported paths**. The verified contract checks for the known Charmel/Merchant chains and control cases passed before the manifest was accepted.
 
@@ -123,7 +136,19 @@ Owner-local task reminder:
 
 Cross-owner task reminder is allowed only when a weekday NPC graph explicitly completes a task stored under another NPC and the same actionability/navigation gates pass.
 
-These task-linked rules remain necessary because not every actionable quest interaction is represented by the generic one-shot condition.
+These task-linked rules remain necessary because not every actionable quest interaction is represented by generic exact self-consumption.
+
+## Verified completion-route supplements
+
+The accepted direct owner-task classifier does not represent every verified completion topology. Accepted 1.0.32 therefore retains a narrow supplement:
+
+- promoted task/topic pairs reuse existing persisted exact-self-consuming topic/navigation predicates;
+- `npc_cultist/snake_trap` uses the verified `snake_stone_ready` answer plus `_rel >= 10` through game-owned SmartRes sufficiency;
+- `npc_inquisitor/inquisitor_talk` and `npc_cultist/snake_back` are exact mandatory interaction-event stages whose visible task is the verified actionability boundary;
+- unsupported `@souls_s_s33_ask` remains fail-closed;
+- there is no broad `Visible task`, `CustomEvent`, or `AddInteractionEvent` classifier.
+
+Research after accepted 1.0.35 shows that several answer-backed supplemental routes are candidates for future consolidation into a common graph compiler, but the two mandatory event-only stages remain a genuinely distinct evidence type unless a broader event contract is separately proved.
 
 ## Verified bridge / intermediate topics
 
@@ -133,7 +158,7 @@ Prior research established narrow objective stages that the direct task-completi
 - Astrologer -> Snake instrument bridge: `@snake_instrument` -> `@snake_instrument_ready`, continuation relation gate 40;
 - six verified 1.0.22 intermediate families covering `astrologer_daghter`, `bishop_invitation_2`, `inquisitor_guards`, `merchant_support`, `snake_help`, and `actress_necklace` stages.
 
-Static persisted-topic evidence confirms these reminder-bearing stage topics are exact self-consuming authored topics. Production derives them through the same generic one-shot classifier instead of maintaining parallel `VerifiedBridgeReminderRules` / `VerifiedIntermediateReminderRules` manifests.
+Static persisted-topic evidence confirms these reminder-bearing stage topics are exact self-consuming authored topics. Production derives them through the generic one-shot classifier instead of maintaining parallel `VerifiedBridgeReminderRules` / `VerifiedIntermediateReminderRules` manifests.
 
 ## Authoritative zone-quality mirrors
 
@@ -141,29 +166,31 @@ GK 1.407 graphs can mirror live `WorldZone.GetTotalQuality()` into a player `Gam
 
 Production may derive an authoritative mirror only when that exact graph edge is unambiguous. For such an owner-local requirement it compares the live `WorldZone.GetTotalQuality()` against the authored requirement value instead of trusting the stale mirrored player parameter. Ambiguous or unresolved mirrors fail closed.
 
-Cross-owner and generic one-shot routes retain their accepted SmartRes/`Player.IsEnough` semantics unless separate evidence establishes that authoritative zone substitution is required there.
+Cross-owner and generic exact-self-consuming routes retain their accepted SmartRes/`Player.IsEnough` semantics unless separate evidence establishes that authoritative zone substitution is required there.
 
 ## Accepted persistent loading/performance contract
 
-Accepted 1.0.30 architecture:
+Accepted runtime architecture through 1.0.35:
 
 - per frame: timer comparison only until one-second refresh is due;
-- persistent manifest path: `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin`;
-- when the manifest is missing/incompatible, the six weekday-NPC graphs are parsed only in the verified loading window and the compact structural/navigation manifest is persisted;
-- later full launches deserialize the manifest and recreate only live runtime bindings; normal gameplay is not allowed to invoke the graph parser;
-- once per second: evaluate cached task/topic state, phrase state, cached navigation predicates, game-owned gate predicates, and live HUD semantics;
+- primary persistent manifest path: `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin`;
+- accepted 1.0.35 non-`@` supplemental cache path: `BepInEx/cache/DayWheelQuestMarkers/non-at-self-consuming-1.407.bin`;
+- when a structural cache is missing/incompatible, required graph parsing occurs only in the verified loading window;
+- later full launches deserialize compact cached data and recreate only live runtime bindings; normal gameplay is not allowed to invoke the graph parser;
+- once per second: evaluate cached task/interaction state, phrase state, cached navigation predicates, game-owned gate predicates, and live HUD semantics;
 - approximately every 30 seconds: perform allocation-light runtime/known-NPC validation through cached references and a `ulong` fingerprint rather than list/sort/string construction;
-- real known-NPC membership changes use cheap rebinding from the manifest, with no graph parse;
+- real known-NPC membership changes use cheap rebinding from the primary manifest, with no graph parse;
 - no background worker and no save mutation.
 
 Accepted player evidence:
 
 - first 1.0.30 schema-2 bootstrap behind loading: **557.88 ms**;
-- first bootstrap summary: owner 75/6, cross-owner 8/6/0, one-shot 55/54/1, navigation 210/270/151/0;
+- first bootstrap summary: owner 75/6, cross-owner 8/6/0, persisted `@` one-shot 55/54/1, navigation 210/270/151/0;
 - subsequent full restart: persistent manifest loaded behind loading in **10.29 ms** and logged `FlowCanvas graph parse skipped`;
-- the same canonical final-rule/navigation counts were restored on the second launch;
+- accepted 1.0.32 current-save manifest load: **10.80 ms** with the same canonical primary counts;
 - the original early Charmel state with relation below 10 showed no two false Lust-day markers;
-- no Day Wheel runtime structural rebuild or repeated graph parse was present in the accepted second-run log.
+- accepted 1.0.35 player test validated a non-`@` exact-self-consuming Snake reminder and live 5-Faith gate invalidation for Ms. Charm;
+- no accepted architecture permits gameplay-time FlowCanvas graph traversal.
 
 Performance lineage:
 
@@ -171,8 +198,16 @@ Performance lineage:
 - 1.0.26 moved structural parsing behind loading and persisted it;
 - 1.0.27 moved the cache under BepInEx;
 - 1.0.28 removed recurring steady-state allocations and the previous roughly 30-second rhythmic freeze pattern disappeared in player testing;
-- 1.0.30 preserves that steady-state architecture while adding persisted navigation reachability.
+- 1.0.30 added persisted navigation reachability while preserving the allocation-light steady state;
+- 1.0.32 added narrow verified completion-route predicates without changing the primary manifest;
+- 1.0.35 adds the audited non-`@` exact-self-consuming structural class as a separate loading-derived/persisted supplement.
 
-The remaining sparse hitches in the accepted 1.0.30 session are not attributed to Day Wheel: the same modpack/control work already established a comparable baseline without Day Wheel, and the 1.0.30 log contains separate Unity `UnloadUnusedAssets` operations around 0.7 s with roughly 934k loaded objects.
+The remaining sparse hitches are not attributed to Day Wheel: the same modpack/control work established a comparable baseline without Day Wheel, and accepted logs contain separate Unity `UnloadUnusedAssets` operations around 0.7 s with roughly 934k loaded objects.
 
 The rejected universal provenance-parser experiment pushed loading work toward roughly 1.8 seconds and is not an accepted architecture. Do not reintroduce arbitrary external dependency/provenance traversal into production.
+
+## Architecture follow-up after 1.0.35
+
+The accepted semantic model is now more unified than the implementation. `WeekdayInteractionRuleCache`, `NavigationReachabilityCache`, and `NonAtSelfConsumingRuleCache` independently parse overlapping representations of the same six serialized graphs, while `PersistentRuleManifest` reaches private `WeekdayInteractionRuleCache` internals through reflection and multiple classes own SmartRes/player binding logic.
+
+Research conclusion is recorded in `docs/UNIFIED_INTERACTION_ARCHITECTURE_AUDIT.md` on `research/unified-interaction-architecture`: a future refactor should use one bounded six-NPC graph index, modular evidence-specific derivation passes, one shared requirement/runtime evaluator, one compiled interaction representation, and one persisted manifest. This is a consolidation of already verified local evidence, **not** a universal quest/provenance parser.
