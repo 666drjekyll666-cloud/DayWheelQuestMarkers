@@ -1,9 +1,6 @@
 name: Build non-@ answer universe audit probe
 
 on:
-  push:
-    branches:
-      - research/non-at-answer-universe
   workflow_dispatch:
 
 permissions:
