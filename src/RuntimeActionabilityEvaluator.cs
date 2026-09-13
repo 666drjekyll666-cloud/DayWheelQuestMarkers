@@ -19,6 +19,7 @@ namespace CalendarQuestsPins
         private readonly FieldInfo _playerIsEnoughField;
         private readonly MethodInfo _ruleIsEnough;
         private readonly object[] _ruleIsEnoughArgs = new object[1];
+        private readonly object[] _playerIsEnoughArgs = new object[1];
 
         private object _boundPlayer;
         private MethodInfo _boundPlayerIsEnough;
@@ -161,7 +162,7 @@ namespace CalendarQuestsPins
             if (requirement == null) return false;
 
             // Authoritative live-zone mirrors are rare and preserve the accepted 1.0.30 implementation.
-            // Ordinary SmartRes gates use the direct compiled player invoker below.
+            // Ordinary SmartRes gates use the direct compiled player invoker when Mono permits it.
             if (!string.IsNullOrEmpty(requirement.AuthoritativeZoneId))
             {
                 if (_ruleIsEnough == null) return false;
@@ -175,10 +176,22 @@ namespace CalendarQuestsPins
             }
 
             if (requirement.SmartRes == null) return false;
-            if (_playerIsEnoughInvoker == null || _boundPlayer == null) RefreshRuntimeBindings();
-            if (_playerIsEnoughInvoker == null || _boundPlayer == null) return false;
+            if (_boundPlayer == null || _boundPlayerIsEnough == null) RefreshRuntimeBindings();
+            if (_boundPlayer == null || _boundPlayerIsEnough == null) return false;
 
-            try { return _playerIsEnoughInvoker(_boundPlayer, requirement.SmartRes); }
+            if (_playerIsEnoughInvoker != null)
+            {
+                try { return _playerIsEnoughInvoker(_boundPlayer, requirement.SmartRes); }
+                catch { }
+            }
+
+            // Safe Mono fallback: retain MethodInfo semantics but reuse the argument array.
+            try
+            {
+                _playerIsEnoughArgs[0] = requirement.SmartRes;
+                var result = _boundPlayerIsEnough.Invoke(_boundPlayer, _playerIsEnoughArgs);
+                return result is bool && (bool)result;
+            }
             catch { return false; }
         }
 
