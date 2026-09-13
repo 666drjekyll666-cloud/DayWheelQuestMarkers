@@ -4,7 +4,7 @@
     <LangVersion>7.3</LangVersion>
     <AssemblyName>DayWheelQuestMarkers.AutoInteractionAuditProbe</AssemblyName>
     <RootNamespace>CalendarQuestsPins</RootNamespace>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Optimize>true</Optimize>
     <DebugType>none</DebugType>
@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="src\AutoInteractionAuditProbePlugin.cs" />
+    <Compile Include="src\AutoInteractionAuditProbePluginV2.cs" />
     <Compile Include="src\ReflectionUtil.cs" />
   </ItemGroup>
 
