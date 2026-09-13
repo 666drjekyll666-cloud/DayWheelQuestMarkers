@@ -10,7 +10,7 @@ namespace CalendarQuestsPins
     {
         public const string PluginGuid = "nikich.gyk.calendarquestspins";
         public const string PluginName = "Day Wheel Quest Markers";
-        public const string PluginVersion = "1.0.32";
+        public const string PluginVersion = "1.0.35";
 
         private const float TickSeconds = 1f;
         private const float StructureCheckSeconds = 30f;
@@ -32,6 +32,7 @@ namespace CalendarQuestsPins
         private WeekdayInteractionRuleCache _rules;
         private NavigationReachabilityCache _reachability;
         private PersistentRuleManifest _manifest;
+        private NonAtSelfConsumingRuleCache _nonAtRules;
         private CalendarMarkers _markers;
         private LoadingCachePrewarmGate _prewarmGate;
         private VerifiedCompletionReminderRules _verifiedCompletionRules;
@@ -42,6 +43,7 @@ namespace CalendarQuestsPins
             _rules = new WeekdayInteractionRuleCache();
             _reachability = new NavigationReachabilityCache(_rules);
             _manifest = new PersistentRuleManifest(_rules, _reachability);
+            _nonAtRules = new NonAtSelfConsumingRuleCache();
             _markers = new CalendarMarkers();
             _prewarmGate = new LoadingCachePrewarmGate();
             _verifiedCompletionRules = new VerifiedCompletionReminderRules();
@@ -65,6 +67,7 @@ namespace CalendarQuestsPins
             if (_markers != null) _markers.Dispose();
             if (_rules != null) _rules.Clear();
             if (_reachability != null) _reachability.Clear();
+            if (_nonAtRules != null) _nonAtRules.Clear();
             if (_verifiedCompletionRules != null) _verifiedCompletionRules.Clear();
         }
 
@@ -109,6 +112,29 @@ namespace CalendarQuestsPins
                 _prewarmedDuringLoading = false;
                 Logger.LogWarning("Loading-screen rule manifest could not bind to the loaded runtime.");
                 return true;
+            }
+
+            double nonAtLoadMs;
+            string nonAtLoadFailure;
+            var nonAtLoaded = _nonAtRules.TryLoad(_mainGame, out nonAtLoadMs, out nonAtLoadFailure);
+            double nonAtBootstrapMs = 0;
+            string nonAtBootstrapNote = null;
+            if (!nonAtLoaded && !_nonAtRules.TryBootstrapAndPersist(_mainGame, out nonAtBootstrapMs, out nonAtBootstrapNote))
+            {
+                _nonAtRules.Clear();
+                Logger.LogWarning("Generalized non-@ self-consuming reminder cache unavailable. Cache load: " +
+                                  (nonAtLoadFailure ?? "<none>") + "; bootstrap: " +
+                                  (nonAtBootstrapNote ?? "<none>") + ". Supplemental reminders fail closed for this session.");
+            }
+            else if (nonAtLoaded)
+            {
+                Logger.LogInfo("Generalized non-@ self-consuming cache loaded behind loading screen in " +
+                               nonAtLoadMs.ToString("F2") + " ms; graph parse skipped.");
+            }
+            else
+            {
+                Logger.LogInfo("Generalized non-@ self-consuming cache bootstrapped behind loading screen in " +
+                               nonAtBootstrapMs.ToString("F2") + " ms. " + (nonAtBootstrapNote ?? string.Empty));
             }
 
             _save = candidateSave;
@@ -213,6 +239,9 @@ namespace CalendarQuestsPins
                         if (!_reachability.IsTopicActionable(target, topic, unlocked, blacklisted)) continue;
                         AddMarker(sinTypeValue, MarkerStyle.Base);
                     }
+
+                    var nonAtCount = _nonAtRules.CountActionable(target.NpcId, unlocked, blacklisted, _reachability, _mainGame);
+                    for (var i = 0; i < nonAtCount; i++) AddMarker(sinTypeValue, MarkerStyle.Base);
                 }
 
                 for (var i = 0; i < target.CrossTasks.Count; i++)
@@ -250,6 +279,16 @@ namespace CalendarQuestsPins
             ulong fingerprint;
             bool hasPeriodicNpc;
             if (!_manifest.Bind(_save, _mainGame, out fingerprint, out hasPeriodicNpc)) return false;
+
+            double nonAtLoadMs;
+            string nonAtFailure;
+            if (!_nonAtRules.TryLoad(_mainGame, out nonAtLoadMs, out nonAtFailure))
+            {
+                _nonAtRules.Clear();
+                Logger.LogWarning("Generalized non-@ self-consuming cache unavailable during gameplay (" + reason + "): " +
+                                  (nonAtFailure ?? "<unknown>") + ". No graph parser will run in gameplay.");
+            }
+
             _cacheReady = true;
             _runtimeRestoreAttemptedSave = null;
             ApplyKnownNpcState(fingerprint, hasPeriodicNpc, false);
@@ -315,6 +354,7 @@ namespace CalendarQuestsPins
         {
             if (_rules != null) _rules.Clear();
             if (_reachability != null) _reachability.Clear();
+            if (_nonAtRules != null) _nonAtRules.Clear();
             if (_verifiedCompletionRules != null) _verifiedCompletionRules.Clear();
             _cacheReady = false;
             _waitingForPeriodicNpc = false;
@@ -377,6 +417,10 @@ namespace CalendarQuestsPins
                            ", one-shot topics=" + _rules.OneShotTopicCount +
                            ", one-shot supported=" + _rules.OneShotSupportedRuleCount +
                            ", one-shot unsupported=" + _rules.OneShotUnsupportedRuleCount +
+                           ", non-@ exact-self=" + (_nonAtRules != null ? _nonAtRules.RuleCount : 0) +
+                           ", non-@ supported=" + (_nonAtRules != null ? _nonAtRules.SupportedVariantCount : 0) +
+                           ", non-@ unsupported=" + (_nonAtRules != null ? _nonAtRules.UnsupportedVariantCount : 0) +
+                           ", non-@ completion-excluded=" + (_nonAtRules != null ? _nonAtRules.CompletionExcludedCount : 0) +
                            ", reachability answers=" + _manifest.NavigationAnswerCount +
                            ", paths=" + _manifest.NavigationPathCount +
                            ", predicates=" + _manifest.NavigationPredicateCount +
