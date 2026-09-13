@@ -56,3 +56,21 @@ Probe project: `research/NonAtAnswerAuditProbe`.
 Probe identity: `Day Wheel Quest Markers - non-@ answer universe audit`, version `0.1.0`.
 
 The probe is read-only and performs one bounded census after the game/save and six weekday NPC graphs are available. It does not mutate save, task, phrase, resource, or production reminder state.
+
+### Frozen build identity
+
+- Exact executable/build source: `30809e5305fe86dbaab38ee8b4071119b678561d`.
+- Frozen ref: `frozen/non-at-answer-audit-probe-0.1.0` at the exact build source.
+- CI run: `34783667286`.
+- CI job: `103795127129`, success; Release build **0 warnings / 0 errors**.
+- Artifact: `DayWheelNonAtAnswerAuditProbe-0.1.0` (`10325573372`).
+- Artifact ZIP digest: `sha256:0902d6d05f11365d9876aae7c13374ab6473ac319ea50745d0db56a82032f067`.
+- Raw DLL: 22,016 bytes.
+- Raw DLL SHA-256: `d23327dd8e12baff01bae191fdc5112cadd692eef64499aa68174067c4c77375`.
+- The research workflow was returned to manual-only immediately after the successful build; later docs/workflow bookkeeping does not alter the frozen probe bytes/source.
+
+### Requested runtime evidence
+
+Install the probe alongside the current production/test Day Wheel DLL. Its BepInEx GUID is unique, so it does not replace or patch the production plugin. Load the current save once; no dialogue choice or progression action is required. After the probe logs `NONAT_AUDIT_END`, provide the resulting `LogOutput.log`.
+
+The runtime result is accepted for analysis only if both known controls are resolved by the probe (`astrologer_2a_1b_6c` and `snake_1a`). If either control is missed, the probe topology must be corrected before any production conclusion is drawn.
