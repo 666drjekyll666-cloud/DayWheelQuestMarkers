@@ -7,7 +7,7 @@ on:
       - research/auto-interaction-task-audit
     paths:
       - 'AutoInteractionAuditProbe.csproj'
-      - 'src/AutoInteractionAuditProbePlugin.cs'
+      - 'src/AutoInteractionAuditProbePluginV2.cs'
       - 'src/ReflectionUtil.cs'
       - '.github/workflows/auto-interaction-audit-probe.yml'
       - 'nuget.config'
@@ -42,9 +42,9 @@ jobs:
         id: artifact
         shell: pwsh
         run: |
-          $source = Get-Content 'src/AutoInteractionAuditProbePlugin.cs' -Raw
+          $source = Get-Content 'src/AutoInteractionAuditProbePluginV2.cs' -Raw
           if ($source -notmatch 'PluginVersion\s*=\s*"([^"]+)"') {
-            throw 'Could not read PluginVersion from src/AutoInteractionAuditProbePlugin.cs'
+            throw 'Could not read PluginVersion from refined audit probe source'
           }
           $version = $Matches[1]
           New-Item -ItemType Directory -Force -Path dist | Out-Null
