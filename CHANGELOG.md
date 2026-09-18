@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.3
+
+- Consolidates the previously separate non-`@` exact-self-consuming dialogue supplement into the same persistent interaction manifest used by the rest of the reminder system.
+- Fixes duplicate weekday markers when a one-time follow-up choice is reachable only after completing an already-reminded task interaction; those choices are now treated as part of the same NPC visit.
+- Fixes the 1.1.0 schema-3 bootstrap regression where an internal exact-self answer with no independent interaction-root path could invalidate the entire manifest.
+- Upgrades the persistent cache to schema 4. Existing cache files are rebuilt automatically during loading; no manual cache deletion is required.
+- Keeps gameplay-time FlowCanvas parsing disabled. Verified schema-4 reload completed in 10.42 ms with graph parsing skipped.
+- Verified in-game on the Astrologer diary sequence: one marker appears for the diary hand-in instead of three; after completing it, the marker count continues to follow the actually executable next interaction and its live item gate.
+
 ## 1.0.35
 
 - Generalizes authored one-time dialogue reminders beyond the `@` identifier convention: a non-`@` answer may now produce a reminder when its own authored branch persistently blacklists that exact answer ID.
