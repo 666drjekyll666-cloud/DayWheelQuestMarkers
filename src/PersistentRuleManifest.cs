@@ -138,7 +138,7 @@ namespace CalendarQuestsPins
                     if (!string.Equals(reader.ReadString(), Magic, StringComparison.Ordinal))
                     { failure = "manifest magic mismatch"; return false; }
                     if (reader.ReadInt32() != SchemaVersion)
-                    { failure = "manifest schema mismatch; schema 3 rebuild required"; return false; }
+                    { failure = "manifest schema mismatch; schema 4 rebuild required"; return false; }
                     if (!string.Equals(reader.ReadString(), VerifiedGameVersion, StringComparison.Ordinal))
                     { failure = "manifest game version mismatch"; return false; }
                     var gameVersion = ReadGameVersion(save);
@@ -463,7 +463,7 @@ namespace CalendarQuestsPins
             }
             catch (Exception ex)
             {
-                failure = "could not persist schema-3 manifest: " + ex.GetType().Name + ": " + ex.Message;
+                failure = "could not persist schema-4 manifest: " + ex.GetType().Name + ": " + ex.Message;
                 try { if (File.Exists(_path + ".tmp")) File.Delete(_path + ".tmp"); } catch { }
                 return false;
             }
