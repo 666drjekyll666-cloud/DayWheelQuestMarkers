@@ -83,7 +83,7 @@ Runtime evidence from earlier accepted releases established the same lifecycle f
 
 This establishes the general reminder source:
 
-`currently reachable + exact authored self-consuming answer + supported/satisfied answer gates -> weekday marker`
+`currently reachable independent interaction + exact authored self-consuming answer + supported/satisfied answer gates -> weekday marker`
 
 The rule intentionally does **not** require a journal task mutation or downstream quest effect. A unique authored conversation itself can be reminder-worthy.
 
@@ -96,10 +96,11 @@ Production guardrails for this rule:
 5. supported authored final-answer `Flow_Answer` price/lock gates must pass game-owned sufficiency checks;
 6. every required ancestor menu/answer on at least one authored root-to-answer path must currently be reachable;
 7. answers already owned by task-completion rules remain handled by the task-linked rule set rather than being double-counted by the generic exact-self-consuming layer;
-8. unsupported or ambiguous topology/gates fail closed;
-9. no translated/display text is used for classification.
+8. a generic exact-self answer must have at least one authored root-to-answer path that does not first pass through an already task-owned answer; downstream choices that exist only inside the same interaction chain are part of that visit, not separate reminders;
+9. unsupported or ambiguous topology/gates fail closed;
+10. no translated/display text is used for classification.
 
-Accepted 1.0.35 implements non-`@` candidates through a loading-derived supplemental cache at `BepInEx/cache/DayWheelQuestMarkers/non-at-self-consuming-1.407.bin`; this is an implementation boundary, not a separate product semantic. The accepted schema-2 primary manifest remains `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin`.
+Accepted 1.1.3 compiles both persisted `@` topics and the audited non-`@` exact-self class into one schema-4 persistent manifest at `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin`. The old 1.0.35 `non-at-self-consuming-1.407.bin` file is no longer read by production and can remain harmlessly on disk.
 
 ## Verified root-to-answer navigation reachability
 
@@ -118,6 +119,7 @@ Accepted navigation contract:
 - within one path, required ancestor phrase predicates and supported ancestor `AnswerData` price/lock gates are AND conditions;
 - alternative authored paths are OR;
 - unconditional plain ancestors are omitted from persisted predicates;
+- for generic non-`@` exact-self candidates, at least one path must contain no task-owned answer ancestor; otherwise the answer is a same-visit continuation rather than an independent reminder;
 - unsupported or ambiguous navigation ancestry fails closed;
 - gameplay evaluates only compact persisted predicates and never traverses FlowCanvas/navigation graphs.
 
@@ -170,44 +172,52 @@ Cross-owner and generic exact-self-consuming routes retain their accepted SmartR
 
 ## Accepted persistent loading/performance contract
 
-Accepted runtime architecture through 1.0.35:
+Accepted runtime architecture as of 1.1.3:
 
-- per frame: timer comparison only until one-second refresh is due;
-- primary persistent manifest path: `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin`;
-- accepted 1.0.35 non-`@` supplemental cache path: `BepInEx/cache/DayWheelQuestMarkers/non-at-self-consuming-1.407.bin`;
-- when a structural cache is missing/incompatible, required graph parsing occurs only in the verified loading window;
+- per frame: timer comparison only until the one-second refresh is due;
+- one schema-4 manifest path: `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin`;
+- schema 4 stores accepted owner/cross task rules, unified self-consuming topics, and compact navigation predicates;
+- `UnifiedSelfConsumingCompiler` exists only for loading/bootstrap derivation; there is no separate gameplay non-`@` cache path;
+- the legacy 1.0.35 `non-at-self-consuming-1.407.bin` is ignored;
+- when schema 4 is missing/incompatible, required graph parsing occurs only in the verified loading window;
 - later full launches deserialize compact cached data and recreate only live runtime bindings; normal gameplay is not allowed to invoke the graph parser;
 - once per second: evaluate cached task/interaction state, phrase state, cached navigation predicates, game-owned gate predicates, and live HUD semantics;
 - approximately every 30 seconds: perform allocation-light runtime/known-NPC validation through cached references and a `ulong` fingerprint rather than list/sort/string construction;
-- real known-NPC membership changes use cheap rebinding from the primary manifest, with no graph parse;
+- real known-NPC membership changes use cheap rebinding from the manifest, with no graph parse;
 - no background worker and no save mutation.
 
-Accepted player evidence:
+Accepted 1.1.3 runtime evidence:
 
-- first 1.0.30 schema-2 bootstrap behind loading: **557.88 ms**;
-- first bootstrap summary: owner 75/6, cross-owner 8/6/0, persisted `@` one-shot 55/54/1, navigation 210/270/151/0;
-- subsequent full restart: persistent manifest loaded behind loading in **10.29 ms** and logged `FlowCanvas graph parse skipped`;
-- accepted 1.0.32 current-save manifest load: **10.80 ms** with the same canonical primary counts;
-- the original early Charmel state with relation below 10 showed no two false Lust-day markers;
-- accepted 1.0.35 player test validated a non-`@` exact-self-consuming Snake reminder and live 5-Faith gate invalidation for Ms. Charm;
-- no accepted architecture permits gameplay-time FlowCanvas graph traversal.
+- schema-3 -> schema-4 rebuild behind loading: **900.79 ms**;
+- first accepted schema-4 summary: owner 75/6, cross-owner 8/6/0, unified self-consuming 61/60/1, non-`@` universe 77 / exact-self 19 / admitted 6, navigation 210/270/151/0;
+- full restart with cache untouched: schema-4 manifest loaded in **10.42 ms** and explicitly logged `FlowCanvas graph parse skipped`;
+- the pre-diary Astrologer state showed exactly one marker instead of the earlier three; `astrologer_diary_9a/9b` are verified same-visit continuations and no longer contribute independent reminders;
+- after diary completion, the player observed one marker for the actually executable Acid hand-in while Restoration Tools were absent, confirming live item gating remains authoritative;
+- `fh=True` in dialogue logging is not sufficient by itself to prove an interaction is executable under all live resource gates; acceptance uses the actual production gate evaluation and player-observed executable state.
 
-Performance lineage:
+Historical performance lineage:
 
 - 1.0.25 exposed a measured **302.22 ms** first-weekday-NPC runtime structural rebuild;
 - 1.0.26 moved structural parsing behind loading and persisted it;
 - 1.0.27 moved the cache under BepInEx;
 - 1.0.28 removed recurring steady-state allocations and the previous roughly 30-second rhythmic freeze pattern disappeared in player testing;
 - 1.0.30 added persisted navigation reachability while preserving the allocation-light steady state;
-- 1.0.32 added narrow verified completion-route predicates without changing the primary manifest;
-- 1.0.35 adds the audited non-`@` exact-self-consuming structural class as a separate loading-derived/persisted supplement.
+- 1.0.32 added narrow verified completion-route predicates;
+- 1.0.35 added the audited non-`@` exact-self-consuming structural class as a separate supplement;
+- 1.1.3 consolidated that supplement into schema 4 and added independent-path deduplication without adding gameplay graph traversal.
 
 The remaining sparse hitches are not attributed to Day Wheel: the same modpack/control work established a comparable baseline without Day Wheel, and accepted logs contain separate Unity `UnloadUnusedAssets` operations around 0.7 s with roughly 934k loaded objects.
 
 The rejected universal provenance-parser experiment pushed loading work toward roughly 1.8 seconds and is not an accepted architecture. Do not reintroduce arbitrary external dependency/provenance traversal into production.
 
-## Architecture follow-up after 1.0.35
+## Accepted architecture consolidation in 1.1.3
 
-The accepted semantic model is now more unified than the implementation. `WeekdayInteractionRuleCache`, `NavigationReachabilityCache`, and `NonAtSelfConsumingRuleCache` independently parse overlapping representations of the same six serialized graphs, while `PersistentRuleManifest` reaches private `WeekdayInteractionRuleCache` internals through reflection and multiple classes own SmartRes/player binding logic.
+The post-1.0.35 audit found that the semantic model was more unified than the implementation. Accepted 1.1.3 performs the narrow safe consolidation that runtime evidence justified:
 
-Research conclusion is recorded in `docs/UNIFIED_INTERACTION_ARCHITECTURE_AUDIT.md` on `research/unified-interaction-architecture`: a future refactor should use one bounded six-NPC graph index, modular evidence-specific derivation passes, one shared requirement/runtime evaluator, one compiled interaction representation, and one persisted manifest. This is a consolidation of already verified local evidence, **not** a universal quest/provenance parser.
+- the separate `NonAtSelfConsumingRuleCache` production layer is removed;
+- audited non-`@` exact-self candidates compile into the same `WeekdayInteractionRuleCache.TopicRule` representation used at runtime;
+- schema 4 persists unified topic/navigation data in one primary manifest;
+- navigation supplies the independent-root-path check that prevents same-visit downstream exact-self answers from becoming extra reminders;
+- the owner/cross task derivation and the two verified mandatory event-only stages remain evidence-specific rather than being generalized into a universal parser.
+
+The broader research recommendation for a single shared parsed graph index remains optional future engineering work. The rejected universal provenance parser remains rejected: production does not traverse arbitrary external quest dependency chains, and accepted 1.1.3 preserves bounded parsing of the six weekday-NPC graphs only.
