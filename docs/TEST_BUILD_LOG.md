@@ -286,6 +286,85 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Follow-up architecture audit: stable behavior is retained; `research/unified-interaction-architecture` documents the evidence-backed recommendation to consolidate overlapping graph parsers/caches in a future candidate without reintroducing the rejected universal provenance parser.
 - Status: **stable / released**.
 
+## 1.1.0 — unified interaction candidate, runtime bootstrap failed
+
+- Date built: 2026-09-14 local / 2026-09-13 UTC.
+- Development branch: `dev/1.1.0`.
+- Exact executable/build source: `67e693a63089d473920e5181eec7af75e6f1be75`.
+- Candidate ref: `candidate/1.1.0` at the exact executable source above.
+- Goal: consolidate the accepted separate non-`@` exact-self cache into the same schema-3 manifest/runtime TopicRule path as persisted `@` one-shots, without broadening task/event semantics.
+- CI: run `34789944561`, job `103812189255`, success; Release build 0 warnings / 0 errors.
+- Artifact: `DayWheelQuestMarkers-1.1.0` (`10328230822`).
+- Raw DLL: 92,672 bytes; SHA-256 `29d6118fdd1c981c947836181c486fbac52caa39c72b6cce9d3694af85401ab9`.
+- Player result: **not accepted / bootstrap regression**. On both supplied launches the schema-2 -> schema-3 rebuild failed before a usable manifest was persisted: `navigation bootstrap failed: no interaction-root navigation path for required answer npc_cultist / snake_back_12a`. Gameplay correctly failed closed, so all Day Wheel markers were absent, including the currently available Astrologer diary hand-in.
+- Root cause: the unified compiler injected every admitted non-`@` exact-self candidate into production `Topics` before navigation required-answer validation. `snake_back_12a` is exact-self-blacklisting but is not independently reachable from the interaction root; accepted 1.0.35 would simply reject such a candidate at runtime navigation evaluation. 1.1.0 incorrectly elevated that candidate-level fail-closed result into a global manifest-bootstrap failure.
+- Additional player report carried forward: on stable 1.0.35 the current pre-diary Astrologer state displayed three markers even though the player observed only the diary hand-in as a meaningful interaction. The supplied 1.1.0 log confirms the Astrologer menu contains `@astrologer_diary` plus a rendered `@refugees_s_ev_7_1_1`, trade and leave; the exact source of the three 1.0.35 marker contributions remains unproven and must not be guessed.
+- Superseded by 1.1.1. Stable remains 1.0.35.
+
+## 1.1.1 — root-aware unified interaction candidate
+
+- Date built: 2026-09-19 local / 2026-09-18 UTC.
+- Development branch: `dev/1.1.1`, started from current stable `main` 1.0.35 and reapplied the reviewed unified architecture with the 1.1.0 runtime finding corrected.
+- Exact executable/build source: `6ec1077560311e608fde8667a99df82fbca6112d`.
+- Candidate ref: `candidate/1.1.1` at the exact executable/build source above.
+- Goal: preserve the 1.1 unified exact-self representation while restoring the accepted product contract that root-unreachable exact-self answers fail closed individually rather than invalidating the whole manifest.
+- Runtime change: build and validate the accepted interaction-root navigation index first, then compile non-`@` exact-self candidates. A candidate is admitted to production `Topics` only if `NavigationReachabilityCache.HasInteractionRootPath(npcId, answerId)` is true. Completion-owned candidates remain separately excluded. The 19-candidate integrity census now partitions into admitted + completion-excluded + navigation-excluded; it still requires 6 graphs / 77 unique non-`@` IDs / 19 exact-self / 0 reversible / 0 utility.
+- Manifest remains schema 3 and keeps the same binary layout; navigation-excluded count is reconstructible as `ExactSelf - CompletionExcluded - AdmittedTopics`. No gameplay graph traversal is added.
+- CI: run `35401247903`, job `105781395380`, success; Release build **0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-1.1.1` (`10570606342`), archive digest `sha256:0afb46fa81d72de81b659a3c037a208d717c31fe8e8f8cdc21d9ae12fd79f541`.
+- Raw DLL: **92,672 bytes**; SHA-256 `f6b55b2b172675af07a890034ccf160350e1a90966a96ff5948d64f71d9e94f6`. Local extraction/hash matches CI.
+- Workflow was returned to manual-only immediately after the candidate build; later docs/workflow bookkeeping does not change the frozen candidate source or bytes.
+- Requested test: install 1.1.1 over 1.1.0 without deleting either cache file; load the preserved pre-diary Astrologer save. First prove schema-3 bootstrap succeeds without the `snake_back_12a` failure, then report the Astrologer marker count before consuming `@astrologer_diary`. If the count is not exactly one, preserve the state and return the log for a narrow contributor diagnostic. If the first launch is sane, fully restart once and verify schema-3 loads with FlowCanvas graph parsing skipped and the same marker state.
+- Player result: initial schema-3 bootstrap fix passed, but the preserved Astrologer pre-diary state still showed three markers; **not accepted**. See the runtime-result update below.
+- Status: **superseded by the diagnostic/fix line / not accepted**.
+
+
+### 1.1.1 runtime result update — Astrologer contributor defect remains
+
+- Player first-launch result: schema-3 bootstrap **succeeded**; the previous 1.1.0 fatal `npc_cultist / snake_back_12a` bootstrap regression is closed.
+- Runtime counts from the supplied log: owner 75/6; cross 8/6/0; unified self-consuming 63/62/1; non-`@` universe 77; exact-self 19; admitted 8; completion-excluded 9; navigation 210/270/151/0. Therefore the remaining two exact-self candidates are root-unreachable and were excluded rather than aborting bootstrap.
+- Astrologer still displayed **three markers** in the preserved pre-diary state, so 1.1.1 is **not accepted**.
+- Live dialogue evidence in the same run: `@astrologer_diary` (“Отдать Дневник”) is rendered and pickable (`fh=True`); `@refugees_s_ev_7_1_1` (“О вампирах”) is rendered but not pickable (`fh=False`); trade and leave are also rendered. The production log does not identify which task/topic/cross rules contributed the three markers, so root cause remains open pending the read-only contributor probe below.
+
+### Research diagnostic — Astrologer marker contributors probe 0.1.1
+
+- Purpose: identify every production rule that contributes a marker to `npc_astrologer` in the preserved three-marker state without modifying save, phrase, quest, resource, navigation, or UI state.
+- Research branch: `research/astrologer-marker-contributors`.
+- Exact executable/build source: `6e882dfd74d77532e7df14490ef08ab39b01014d`.
+- Frozen ref: `frozen/astrologer-marker-contributors-probe-0.1.1`.
+- Probe GUID: `nikich.gyk.daywheel.astrologer-marker-contributors`; coexists with production 1.1.1.
+- Runtime timing: waits for Day Wheel cache readiness, then for `MainGame.game_started == true`, then another 1.25 seconds so the production gameplay marker tick has occurred before comparing contributor count with the actual Astrologer marker list.
+- Output markers: `ASTRO_MARKER_BEGIN`, `ASTRO_OWNER`, `ASTRO_TOPIC`, `ASTRO_CROSS`, `ASTRO_CONTRIB`, `ASTRO_MARKER_SUMMARY`, `ASTRO_MARKER_END`.
+- CI: run `35402618539`, job `105785587399`, success; Release build **0 warnings / 0 errors**.
+- Artifact: `DayWheelAstrologerMarkerContributorsProbe-0.1.1` (`10570998561`), archive digest `sha256:127db8de1d37d1e2d4e2c8c067677004ac46313f58bbe7593a1c9b5c6ebed228`.
+- Raw DLL: **14,848 bytes**; SHA-256 `bcd2cf5b5a4d3414a59eb97a739a123d130933ff671b32cacc14c6601262daab`; local extraction matches CI.
+- Requested test: keep production 1.1.1 installed and the pre-diary save unchanged; add this probe DLL beside it, launch that save once, do not hand over the diary, wait until normal gameplay appears, then exit after the log contains `ASTRO_MARKER_END` and return `LogOutput.log`.
+- Result: **abandoned before contributor output**. The save-load hang described below occurred before any `ASTRO_MARKER_*` diagnostic line was emitted; causality was not attributed to the sidecar, but the method was retired as unnecessary risk.
+
+
+### Research diagnostic follow-up — sidecar 0.1.1 abandoned after load hang
+
+- Player result: after adding the standalone `Day Wheel Quest Markers - Astrologer marker contributors 0.1.1` beside production 1.1.1, the selected save did not finish loading.
+- Log evidence: the sidecar itself loaded, but no `ASTRO_MARKER_BEGIN`, `ASTRO_CONTRIB`, or `ASTRO_MARKER_END` line was ever emitted. The log ended during the ordinary save-restore path after `PrepareScene` / `RescanGDPoints` / other mods' restore work, before Day Wheel's schema-3 load/ready stage.
+- Interpretation: the log does **not** prove the sidecar caused the hang, because its contributor dump never executed; however the new hang coincided with installing it and the method is unnecessary risk. The sidecar diagnostic is therefore abandoned and must be removed before further testing.
+- No production conclusion is drawn from this failed diagnostic run.
+
+### 1.1.2 — integrated Astrologer contributor diagnostic
+
+- Status: **research-only diagnostic / not a release candidate / do not merge or release**.
+- Basis: exact frozen 1.1.1 candidate source `6ec1077560311e608fde8667a99df82fbca6112d`.
+- Research branch: `research/astrologer-marker-contributors-integrated`.
+- Exact executable/build source: `aa32f1ccb8a02a916d4f66129c80491824c23d59`.
+- Frozen ref: `frozen/astrologer-marker-contributors-integrated-1.1.2`.
+- Runtime behavior: production decision logic is unchanged. The first normal gameplay marker pass additionally logs `ASTRO_MARKER_BEGIN`, one `ASTRO_CONTRIB` line at each existing owner/topic/cross `AddMarker` call for `npc_astrologer`, then `ASTRO_MARKER_SUMMARY visualCount=... contributorCount=...` and `ASTRO_MARKER_END`. No separate plugin, polling loop, Harmony hook, save mutation, graph parse, or extra gameplay traversal is added.
+- Source delta from candidate 1.1.1: version metadata plus 43 diagnostic lines around existing marker contribution sites; no rule classifier/gate/navigation behavior change.
+- CI: run `35403153882`, job `105787227643`, success; Release build **0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-1.1.2` (`10570424599`), archive digest `sha256:550384c7e52eaaedf8c9cf77b34e0159004b9de49310839a7bcafa9b631ac9e8`.
+- Raw DLL: **93,696 bytes**; SHA-256 `a874810dd119e2011a5087e9d1773845b2f600eaab548a537cc089b7596b6c81`; local extraction/hash matches CI.
+- Workflow restored to manual-only after the frozen build.
+- Requested test: remove the abandoned sidecar diagnostic DLL; replace production 1.1.1 with this single 1.1.2 research DLL; do not delete caches and do not hand over the diary. Load the same preserved save once, wait until normal gameplay appears and the log contains `ASTRO_MARKER_END`, then return `LogOutput.log`. The contributor lines should identify the exact sources of the three Astrologer markers.
+- Result: **successful diagnostic**. The player run completed and the integrated production-path logging identified exactly three Astrologer contributors in the preserved state: owner task `astrologer_diary`, generic topic `astrologer_diary_9a`, and generic topic `astrologer_diary_9b`; visualCount=3 / contributorCount=3. This proved the duplicate-marker root cause and directly informed 1.1.3.
+
 ## 1.1.3 — task-bound downstream dedup candidate
 
 - Date built: 2026-09-19 local / 2026-09-18 UTC.
