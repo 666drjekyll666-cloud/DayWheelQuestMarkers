@@ -285,3 +285,23 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Published asset digest: `sha256:a7752d2058d4728db054adc049f650cad037cede41166b6c4c7329f4ea169879`, exactly matching the accepted DLL.
 - Follow-up architecture audit: stable behavior is retained; `research/unified-interaction-architecture` documents the evidence-backed recommendation to consolidate overlapping graph parsers/caches in a future candidate without reintroducing the rejected universal provenance parser.
 - Status: **stable / released**.
+
+## 1.1.3 — task-bound downstream dedup candidate
+
+- Date built: 2026-09-19 local / 2026-09-18 UTC.
+- Development branch: `dev/1.1.3`, started from current accepted `main` 1.0.35 and reapplied the reviewed unified 1.1 architecture with both 1.1.0/1.1.1 regressions corrected.
+- Exact executable/build source: `438558980ae5fbf62cac361b14f9aaaf8d292099`.
+- Candidate ref: `candidate/1.1.3` at the exact executable/build source above.
+- Triggering runtime evidence from integrated diagnostic 1.1.2: the preserved pre-diary Astrologer state produced exactly three contributors: owner task `astrologer_diary`, generic topic `astrologer_diary_9a`, generic topic `astrologer_diary_9b`. The live root menu exposed only `@astrologer_diary` as the relevant pickable interaction.
+- Existing static evidence already proves `@astrologer_diary` is a `TASK+MENU_BOUNDARY`: it directly completes `npc_astrologer/astrologer_diary` and its direct next menu contains `astrologer_diary_9a` / `astrologer_diary_9b`. Therefore the three markers represented one visit, not three independent visits.
+- Root cause: the generalized non-`@` exact-self layer treated a descendant exact-self answer as independent whenever root navigation could eventually reach it. That was too broad when every path first consumes/executes an already task-owned answer. The old completion-overlap pass only excluded a candidate when the candidate itself was task-owned; it did not suppress downstream same-visit continuation answers.
+- Fix: build the existing task-completion answer set, union it with the actual accepted production owner/cross rule answer IDs, and admit a generic non-`@` exact-self candidate only if `NavigationReachabilityCache` has at least one interaction-root path whose recorded ancestors contain no task-owned answer. Ordinary submenu ancestors remain valid. Unsupported/unknown cases still fail closed.
+- Persistent cache schema: **4**. Existing schema-3 `rules-1.407.bin` is intentionally rejected and rebuilt behind loading; the user does not delete cache files manually. Schema 4 is required because schema 3 may already persist the erroneous downstream generic topics.
+- No gameplay FlowCanvas traversal and no new recurring scan/allocation path are added; the independence check is bootstrap-only.
+- CI: run `35403868241`, job `105789438856`, success; Release build **0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-1.1.3` (`10571433560`), archive digest `sha256:8231ec2ac752d314a635095dc0a335b67d4fd7397148ec7b5960976872233375`.
+- Raw DLL: **93,696 bytes**; SHA-256 `4cd4c67063deb672de32d1d88bb578fdcf5800dc4012ce397b5ceac13735030a`; local extraction/hash matches CI.
+- Build workflow restored to manual-only after freezing the candidate; later docs/workflow commits do not change candidate source or bytes.
+- Requested test: remove any prior research sidecar DLL, install only 1.1.3, leave all `.bin` caches in place, and load the preserved save before handing the diary to the Astrologer. First launch must reject schema 3 and bootstrap schema 4 successfully. The Astrologer must show exactly **one** marker while `@astrologer_diary` is pickable. Return the log before handing over the diary. If this passes, fully restart once on the same state to prove schema-4 direct load / FlowCanvas graph parse skipped; then the diary can be handed in to verify the single reminder closes naturally.
+- Player result: **pending**.
+- Status: **candidate / awaiting runtime validation / do not merge or release**. Stable remains 1.0.35.
