@@ -2,9 +2,6 @@ name: Build Astrologer marker contributor probe
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - research/astrologer-marker-contributors
 
 permissions:
   contents: read
