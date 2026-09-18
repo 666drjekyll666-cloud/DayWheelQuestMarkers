@@ -10,7 +10,7 @@ namespace CalendarQuestsPins
     {
         public const string PluginGuid = "nikich.gyk.calendarquestspins";
         public const string PluginName = "Day Wheel Quest Markers";
-        public const string PluginVersion = "1.1.1";
+        public const string PluginVersion = "1.1.2";
 
         private const float TickSeconds = 1f;
         private const float StructureCheckSeconds = 30f;
@@ -26,6 +26,7 @@ namespace CalendarQuestsPins
         private bool _waitingForPeriodicNpc;
         private bool _loggedReady;
         private bool _prewarmedDuringLoading;
+        private bool _astrologerContributorDumped;
         private ulong _currentKnownNpcFingerprint;
 
         private readonly List<MarkerStyle>[] _currentSinMarkers = new List<MarkerStyle>[7];
@@ -185,10 +186,15 @@ namespace CalendarQuestsPins
             ReflectionUtil.TryRead(_save, "black_list_of_phrases", out blacklisted);
             ClearMarkerSets();
 
+            var traceAstrologer = !_astrologerContributorDumped;
+            var astrologerContributors = 0;
+            if (traceAstrologer) Logger.LogInfo("ASTRO_MARKER_BEGIN");
+
             foreach (var target in _rules.AllTargets)
             {
                 var sinTypeValue = GetSinTypeValue(target.NpcId);
                 if (sinTypeValue <= 0 || sinTypeValue >= _currentSinMarkers.Length) continue;
+                var traceTarget = traceAstrologer && string.Equals(target.NpcId, "npc_astrologer", StringComparison.Ordinal);
 
                 if (target.KnownNpc != null)
                 {
@@ -199,11 +205,20 @@ namespace CalendarQuestsPins
                         {
                             string taskId;
                             if (!WeekdayInteractionRuleCache.IsVisibleTask(task, out taskId)) continue;
-                            var actionable = _reachability.IsOwnerTaskActionable(target, taskId, unlocked, blacklisted) ||
-                                             _verifiedCompletionRules.IsOwnerTaskActionable(target, taskId, unlocked, blacklisted,
-                                                 _reachability, _mainGame);
-                            if (!actionable) continue;
-                            AddMarker(sinTypeValue, GetMarkerStyle(taskId));
+                            var navigationActionable = _reachability.IsOwnerTaskActionable(target, taskId, unlocked, blacklisted);
+                            var verifiedActionable = _verifiedCompletionRules.IsOwnerTaskActionable(target, taskId, unlocked, blacklisted,
+                                _reachability, _mainGame);
+                            if (!navigationActionable && !verifiedActionable) continue;
+                            var style = GetMarkerStyle(taskId);
+                            AddMarker(sinTypeValue, style);
+                            if (traceTarget)
+                            {
+                                astrologerContributors++;
+                                Logger.LogInfo("ASTRO_CONTRIB kind=owner task=" + taskId +
+                                               " navigation=" + navigationActionable +
+                                               " verified=" + verifiedActionable +
+                                               " style=" + style);
+                            }
                         }
                     }
 
@@ -213,6 +228,11 @@ namespace CalendarQuestsPins
                         if (topic == null || VerifiedCompletionReminderRules.IsPromotedCompletionTopic(target.NpcId, topic.AnswerId)) continue;
                         if (!_reachability.IsTopicActionable(target, topic, unlocked, blacklisted)) continue;
                         AddMarker(sinTypeValue, MarkerStyle.Base);
+                        if (traceTarget)
+                        {
+                            astrologerContributors++;
+                            Logger.LogInfo("ASTRO_CONTRIB kind=topic answer=" + topic.AnswerId + " style=" + MarkerStyle.Base);
+                        }
                     }
                 }
 
@@ -221,8 +241,24 @@ namespace CalendarQuestsPins
                     var task = target.CrossTasks[i];
                     if (!_rules.IsCrossTaskVisible(task)) continue;
                     if (!_reachability.IsCrossTaskActionable(target, task, unlocked, blacklisted)) continue;
-                    AddMarker(sinTypeValue, GetMarkerStyle(task.TaskId));
+                    var style = GetMarkerStyle(task.TaskId);
+                    AddMarker(sinTypeValue, style);
+                    if (traceTarget)
+                    {
+                        astrologerContributors++;
+                        Logger.LogInfo("ASTRO_CONTRIB kind=cross owner=" + task.OwnerNpcId +
+                                       " task=" + task.TaskId +
+                                       " style=" + style);
+                    }
                 }
+            }
+
+            if (traceAstrologer)
+            {
+                Logger.LogInfo("ASTRO_MARKER_SUMMARY visualCount=" + _currentSinMarkers[1].Count +
+                               " contributorCount=" + astrologerContributors);
+                Logger.LogInfo("ASTRO_MARKER_END");
+                _astrologerContributorDumped = true;
             }
 
             if (!HasAnyMarkers())
