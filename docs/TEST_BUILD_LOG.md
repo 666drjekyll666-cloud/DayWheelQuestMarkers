@@ -390,4 +390,8 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Acceptance: **explicitly accepted by the player on 2026-09-19**: `Подтверждаю. фиксируем, сливаем в main, обновляем всю документацию корректно.`
 - Accepted baseline ref: `baseline/1.1.3-accepted` -> exact tested runtime source `438558980ae5fbf62cac361b14f9aaaf8d292099`.
 - Stable-promotion authorization covers `main` plus GitHub Release publication of the exact tested DLL; no rebuild is permitted.
-- Status: **accepted / stable promotion in progress**.
+- GitHub Release publication: workflow run `35405244486`, job `105793551724`, success.
+- Release: `v1.1.3`, release ID `391838646`, target exact runtime source `438558980ae5fbf62cac361b14f9aaaf8d292099`.
+- Published asset: `Day.Wheel.Quest.Markers.1.1.3.dll`, asset ID `573652802`, **93,696 bytes**.
+- Published asset digest: `sha256:4cd4c67063deb672de32d1d88bb578fdcf5800dc4012ce397b5ceac13735030a`, exactly matching the accepted/tested DLL and CI artifact.
+- Status: **stable / released**.
