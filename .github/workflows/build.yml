@@ -2,9 +2,6 @@ name: Build Day Wheel Quest Markers
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - research/astrologer-marker-contributors-integrated
 
 permissions:
   contents: read
