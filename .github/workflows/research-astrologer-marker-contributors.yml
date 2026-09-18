@@ -2,6 +2,9 @@ name: Build Astrologer marker contributor probe
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - research/astrologer-marker-contributors
 
 permissions:
   contents: read
@@ -33,14 +36,14 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item 'research/AstrologerMarkerContributorsProbe/bin/Release/DayWheelAstrologerMarkerContributorsProbe.dll' 'dist/DayWheelQuestMarkers-astrologer-marker-contributors-probe-0.1.0.dll'
-          $hash = (Get-FileHash 'dist/DayWheelQuestMarkers-astrologer-marker-contributors-probe-0.1.0.dll' -Algorithm SHA256).Hash.ToLowerInvariant()
+          Copy-Item 'research/AstrologerMarkerContributorsProbe/bin/Release/DayWheelAstrologerMarkerContributorsProbe.dll' 'dist/DayWheelQuestMarkers-astrologer-marker-contributors-probe-0.1.1.dll'
+          $hash = (Get-FileHash 'dist/DayWheelQuestMarkers-astrologer-marker-contributors-probe-0.1.1.dll' -Algorithm SHA256).Hash.ToLowerInvariant()
           Write-Host "Astrologer marker contributor probe SHA-256: $hash"
 
       - name: Upload probe DLL
         uses: actions/upload-artifact@v4
         with:
-          name: DayWheelAstrologerMarkerContributorsProbe-0.1.0
-          path: dist/DayWheelQuestMarkers-astrologer-marker-contributors-probe-0.1.0.dll
+          name: DayWheelAstrologerMarkerContributorsProbe-0.1.1
+          path: dist/DayWheelQuestMarkers-astrologer-marker-contributors-probe-0.1.1.dll
           if-no-files-found: error
           retention-days: 7
