@@ -12,24 +12,24 @@ using UnityEngine;
 namespace CalendarQuestsPins
 {
     /// <summary>
-    /// Schema-2 persistent manifest. It stores the accepted structural reminder rules plus compact
-    /// root-to-answer navigation predicates derived from the same six Graveyard Keeper 1.407 graphs.
-    /// Graph parsing remains loading-screen/bootstrap-only.
+    /// Schema-4 persistent manifest. It stores the accepted structural reminder rules, the unified
+    /// exact-self-consuming dialogue rules, and compact root-to-answer navigation predicates derived
+    /// from the same six Graveyard Keeper 1.407 graphs. Graph parsing remains loading-screen-only.
     /// </summary>
     internal sealed class PersistentRuleManifest
     {
         internal const string VerifiedGameVersion = "1.407";
         private const string Magic = "DWQM_RULE_MANIFEST";
-        private const int SchemaVersion = 2;
+        private const int SchemaVersion = 4;
 
         private const int ExpectedOwnerSupported = 75;
         private const int ExpectedOwnerUnsupported = 6;
         private const int ExpectedCrossTasks = 8;
         private const int ExpectedCrossSupported = 6;
         private const int ExpectedCrossUnsupported = 0;
-        private const int ExpectedTopics = 55;
-        private const int ExpectedTopicSupported = 54;
-        private const int ExpectedTopicUnsupported = 1;
+        private const int ExpectedAtTopics = 55;
+        private const int ExpectedAtTopicSupported = 54;
+        private const int ExpectedAtTopicUnsupported = 1;
 
         private static readonly string[] NpcIds =
         {
@@ -42,6 +42,7 @@ namespace CalendarQuestsPins
 
         private readonly WeekdayInteractionRuleCache _cache;
         private readonly NavigationReachabilityCache _navigation;
+        private readonly UnifiedSelfConsumingCompiler _selfConsumingCompiler = new UnifiedSelfConsumingCompiler();
         private readonly Type _cacheType = typeof(WeekdayInteractionRuleCache);
         private readonly Type _controllerType = ReflectionUtil.FindType("FlowCanvas.FlowScriptController");
         private readonly Type _worldMapType = ReflectionUtil.FindType("WorldMap");
@@ -62,12 +63,20 @@ namespace CalendarQuestsPins
         private readonly MethodInfo _worldObjectGetter;
         private readonly string _path;
         private int _boundKnownNpcCount;
+        private UnifiedSelfConsumingCompiler.Stats _nonAtStats = new UnifiedSelfConsumingCompiler.Stats();
 
         internal string ManifestPath { get { return _path; } }
         internal int NavigationAnswerCount { get { return _navigation.AnswerCount; } }
         internal int NavigationPathCount { get { return _navigation.PathCount; } }
         internal int NavigationPredicateCount { get { return _navigation.PredicateCount; } }
         internal int NavigationUnsupportedPathCount { get { return _navigation.UnsupportedPathCount; } }
+        internal int NonAtUniqueCount { get { return _nonAtStats == null ? 0 : _nonAtStats.NonAtUnique; } }
+        internal int NonAtExactSelfCount { get { return _nonAtStats == null ? 0 : _nonAtStats.ExactSelf; } }
+        internal int NonAtTopicCount { get { return _nonAtStats == null ? 0 : _nonAtStats.AdmittedTopics; } }
+        internal int NonAtSupportedVariantCount { get { return _nonAtStats == null ? 0 : _nonAtStats.SupportedVariants; } }
+        internal int NonAtUnsupportedVariantCount { get { return _nonAtStats == null ? 0 : _nonAtStats.UnsupportedVariants; } }
+        internal int NonAtCompletionExcludedCount { get { return _nonAtStats == null ? 0 : _nonAtStats.CompletionExcluded; } }
+        internal int NonAtNavigationExcludedCount { get { return _nonAtStats == null ? 0 : _nonAtStats.NavigationExcluded; } }
 
         internal PersistentRuleManifest(WeekdayInteractionRuleCache cache, NavigationReachabilityCache navigation)
         {
@@ -129,7 +138,7 @@ namespace CalendarQuestsPins
                     if (!string.Equals(reader.ReadString(), Magic, StringComparison.Ordinal))
                     { failure = "manifest magic mismatch"; return false; }
                     if (reader.ReadInt32() != SchemaVersion)
-                    { failure = "manifest schema mismatch; schema 2 rebuild required"; return false; }
+                    { failure = "manifest schema mismatch; schema 3 rebuild required"; return false; }
                     if (!string.Equals(reader.ReadString(), VerifiedGameVersion, StringComparison.Ordinal))
                     { failure = "manifest game version mismatch"; return false; }
                     var gameVersion = ReadGameVersion(save);
@@ -192,7 +201,12 @@ namespace CalendarQuestsPins
 
                     if (!_navigation.Read(reader, worldObjects, out failure)) return false;
                     var counts = ReadCounts(reader);
-                    if (!CountsAreCanonical(counts)) { failure = "manifest canonical-count check failed"; return false; }
+                    _nonAtStats = ReadNonAtStats(reader);
+                    if (!CountsAreCanonical(counts, _nonAtStats))
+                    {
+                        failure = "manifest canonical-count check failed: " + CountsToString(counts, _nonAtStats);
+                        return false;
+                    }
                     ApplyCounts(counts);
                     if (stream.Position != stream.Length) { failure = "manifest has trailing data"; return false; }
                 }
@@ -258,8 +272,15 @@ namespace CalendarQuestsPins
                     var target = new WeekdayInteractionRuleCache.TargetRules { NpcId = npcId, KnownNpc = knownNpc, WorldObject = wgo };
                     _parseGraph.Invoke(_cache, new object[] { target, graphs[npcId], knownNpcMap });
                     targets.Add(target);
+                }
+
+                // Build the interaction-root navigation index against the already accepted owner/cross/@ rule set first.
+                // Non-@ exact-self candidates are admitted only when this index proves a real root-to-answer path.
+                for (var i = 0; i < NpcIds.Length; i++)
+                {
+                    var target = targets[i];
                     string navigationFailure;
-                    if (!_navigation.BuildTarget(npcId, graphs[npcId], wgo, target, out navigationFailure))
+                    if (!_navigation.BuildTarget(target.NpcId, graphs[target.NpcId], target.WorldObject, target, out navigationFailure))
                     {
                         failure = "navigation bootstrap failed: " + navigationFailure;
                         ClearCaches();
@@ -275,13 +296,24 @@ namespace CalendarQuestsPins
                     return false;
                 }
 
-                var counts = CaptureCounts();
-                if (!CountsAreCanonical(counts))
+                string selfFailure;
+                UnifiedSelfConsumingCompiler.Stats selfStats;
+                if (!_selfConsumingCompiler.Compile(targets, graphs, _cache, _navigation, out selfStats, out selfFailure))
                 {
-                    failure = "bootstrap produced non-canonical rule counts: " + CountsToString(counts);
+                    failure = "unified self-consuming bootstrap failed: " + (selfFailure ?? "<unknown>");
                     ClearCaches();
                     return false;
                 }
+                _nonAtStats = selfStats;
+
+                var counts = CaptureCounts();
+                if (!CountsAreCanonical(counts, _nonAtStats))
+                {
+                    failure = "bootstrap produced non-canonical rule counts: " + CountsToString(counts, _nonAtStats);
+                    ClearCaches();
+                    return false;
+                }
+                ApplyCounts(counts);
 
                 ulong ignoredFingerprint;
                 bool ignoredPeriodic;
@@ -421,6 +453,7 @@ namespace CalendarQuestsPins
                     }
                     _navigation.Write(writer);
                     WriteCounts(writer, CaptureCounts());
+                    WriteNonAtStats(writer, _nonAtStats);
                     writer.Flush();
                     stream.Flush(true);
                 }
@@ -430,7 +463,7 @@ namespace CalendarQuestsPins
             }
             catch (Exception ex)
             {
-                failure = "could not persist schema-2 manifest: " + ex.GetType().Name + ": " + ex.Message;
+                failure = "could not persist schema-3 manifest: " + ex.GetType().Name + ": " + ex.Message;
                 try { if (File.Exists(_path + ".tmp")) File.Delete(_path + ".tmp"); } catch { }
                 return false;
             }
@@ -583,6 +616,30 @@ namespace CalendarQuestsPins
 
         private Counts CaptureCounts()
         {
+            var topics = 0;
+            var supported = 0;
+            var unsupported = 0;
+            var targets = GetTargets();
+            if (targets != null)
+            {
+                for (var t = 0; t < targets.Count; t++)
+                {
+                    var target = targets[t];
+                    if (target == null) continue;
+                    topics += target.Topics.Count;
+                    for (var p = 0; p < target.Topics.Count; p++)
+                    {
+                        var topic = target.Topics[p];
+                        if (topic == null) continue;
+                        for (var v = 0; v < topic.Variants.Count; v++)
+                        {
+                            var variant = topic.Variants[v];
+                            if (variant != null && variant.Unsupported) unsupported++; else supported++;
+                        }
+                    }
+                }
+            }
+
             return new Counts
             {
                 OwnerSupported = _cache.OwnerSupportedRuleCount,
@@ -590,9 +647,9 @@ namespace CalendarQuestsPins
                 CrossTasks = _cache.CrossTaskCount,
                 CrossSupported = _cache.CrossSupportedRuleCount,
                 CrossUnsupported = _cache.CrossUnsupportedRuleCount,
-                Topics = _cache.OneShotTopicCount,
-                TopicSupported = _cache.OneShotSupportedRuleCount,
-                TopicUnsupported = _cache.OneShotUnsupportedRuleCount
+                Topics = topics,
+                TopicSupported = supported,
+                TopicUnsupported = unsupported
             };
         }
 
@@ -623,6 +680,40 @@ namespace CalendarQuestsPins
             };
         }
 
+        private static void WriteNonAtStats(BinaryWriter writer, UnifiedSelfConsumingCompiler.Stats stats)
+        {
+            if (stats == null) stats = new UnifiedSelfConsumingCompiler.Stats();
+            writer.Write(stats.GraphCount);
+            writer.Write(stats.NonAtUnique);
+            writer.Write(stats.ExactSelf);
+            writer.Write(stats.Reversible);
+            writer.Write(stats.Utility);
+            writer.Write(stats.CompletionExcluded);
+            writer.Write(stats.AdmittedTopics);
+            writer.Write(stats.SupportedVariants);
+            writer.Write(stats.UnsupportedVariants);
+        }
+
+        private static UnifiedSelfConsumingCompiler.Stats ReadNonAtStats(BinaryReader reader)
+        {
+            var stats = new UnifiedSelfConsumingCompiler.Stats
+            {
+                GraphCount = reader.ReadInt32(),
+                NonAtUnique = reader.ReadInt32(),
+                ExactSelf = reader.ReadInt32(),
+                Reversible = reader.ReadInt32(),
+                Utility = reader.ReadInt32(),
+                CompletionExcluded = reader.ReadInt32(),
+                AdmittedTopics = reader.ReadInt32(),
+                SupportedVariants = reader.ReadInt32(),
+                UnsupportedVariants = reader.ReadInt32()
+            };
+            // Schema 3 already stores enough information to reconstruct the fail-closed
+            // root-unreachable subset without changing the binary layout.
+            stats.NavigationExcluded = Math.Max(0, stats.ExactSelf - stats.CompletionExcluded - stats.AdmittedTopics);
+            return stats;
+        }
+
         private void ApplyCounts(Counts counts)
         {
             SetAutoPropertyBackingField("OwnerSupportedRuleCount", counts.OwnerSupported);
@@ -641,26 +732,34 @@ namespace CalendarQuestsPins
             if (field != null) field.SetValue(_cache, value);
         }
 
-        private static bool CountsAreCanonical(Counts counts)
+        private static bool CountsAreCanonical(Counts counts, UnifiedSelfConsumingCompiler.Stats stats)
         {
-            return counts != null && counts.OwnerSupported == ExpectedOwnerSupported && counts.OwnerUnsupported == ExpectedOwnerUnsupported &&
+            string ignored;
+            if (counts == null || !UnifiedSelfConsumingCompiler.Validate(stats, out ignored)) return false;
+            return counts.OwnerSupported == ExpectedOwnerSupported && counts.OwnerUnsupported == ExpectedOwnerUnsupported &&
                    counts.CrossTasks == ExpectedCrossTasks && counts.CrossSupported == ExpectedCrossSupported &&
-                   counts.CrossUnsupported == ExpectedCrossUnsupported && counts.Topics == ExpectedTopics &&
-                   counts.TopicSupported == ExpectedTopicSupported && counts.TopicUnsupported == ExpectedTopicUnsupported;
+                   counts.CrossUnsupported == ExpectedCrossUnsupported &&
+                   counts.Topics - stats.AdmittedTopics == ExpectedAtTopics &&
+                   counts.TopicSupported - stats.SupportedVariants == ExpectedAtTopicSupported &&
+                   counts.TopicUnsupported - stats.UnsupportedVariants == ExpectedAtTopicUnsupported;
         }
 
-        private static string CountsToString(Counts counts)
+        private static string CountsToString(Counts counts, UnifiedSelfConsumingCompiler.Stats stats)
         {
             if (counts == null) return "<null>";
             return "owner=" + counts.OwnerSupported + "/" + counts.OwnerUnsupported +
                    ", cross=" + counts.CrossTasks + "/" + counts.CrossSupported + "/" + counts.CrossUnsupported +
-                   ", topics=" + counts.Topics + "/" + counts.TopicSupported + "/" + counts.TopicUnsupported;
+                   ", self-consuming=" + counts.Topics + "/" + counts.TopicSupported + "/" + counts.TopicUnsupported +
+                   ", nonAt=" + (stats == null ? "<null>" :
+                       stats.AdmittedTopics + "/" + stats.SupportedVariants + "/" + stats.UnsupportedVariants +
+                       ", raw=" + stats.ExactSelf + ", excluded=" + stats.CompletionExcluded);
         }
 
         private void ClearCaches()
         {
             _cache.Clear();
             _navigation.Clear();
+            _nonAtStats = new UnifiedSelfConsumingCompiler.Stats();
         }
 
         private static Dictionary<string, object> ReadKnownNpcs(object save, out int count)
