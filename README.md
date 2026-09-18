@@ -12,7 +12,7 @@ Stable builds are available from [GitHub Releases](https://github.com/666drjekyl
 
 A day is not marked merely because an unfinished quest belongs to an NPC. A marker appears only when the current state actually allows a relevant weekday-NPC interaction.
 
-This includes both actionable quest steps and authored one-time dialogue topics that are currently available. Missing items, crafting steps, insufficient quality or relationship requirements, exploration steps, and other unmet prerequisites do not create reminders. Repeatable utility/menu choices such as Trade, Leave, Back, or non-consuming submenu headers are not treated as reminders.
+This includes both actionable quest steps and authored one-time dialogue topics that are currently available. Missing items, crafting steps, insufficient quality or relationship requirements, exploration steps, and other unmet prerequisites do not create reminders. Repeatable utility/menu choices such as Trade, Leave, Back, or non-consuming submenu headers are not treated as reminders. Follow-up choices that are reachable only after completing an already-reminded interaction are treated as part of the same NPC visit rather than as extra reminders.
 
 Unsupported structures fail closed rather than producing a misleading marker.
 
@@ -23,7 +23,7 @@ Unsupported structures fail closed rather than producing a misleading marker.
 - Detects currently available authored one-time weekday-NPC conversations without requiring them to complete a visible journal task.
 - Covers verified intermediate and bridge progression cases that are not represented by a simple owner-local task-completion route.
 - Preserves the game's quest-marker categories and colors where the interaction has a known task category.
-- Shows separate markers for multiple simultaneous actionable interactions on the same weekday.
+- Shows separate markers for multiple simultaneous independent actionable interactions on the same weekday, without double-counting follow-up choices from the same NPC visit.
 - Follows the wheel as weekday symbols rotate.
 - Survives normal HUD/menu hide and recreation without duplicating markers.
 - Keeps expensive quest/dialogue graph setup out of normal gameplay updates.
