@@ -109,6 +109,45 @@ namespace CalendarQuestsPins
             return count == 6;
         }
 
+        internal bool HasInteractionRootPath(string npcId, string answerId)
+        {
+            if (string.IsNullOrEmpty(npcId) || string.IsNullOrEmpty(answerId)) return false;
+            TargetNavigation target;
+            if (!_targets.TryGetValue(npcId, out target) || target == null) return false;
+            List<NavigationPath> paths;
+            return target.PathsByAnswer.TryGetValue(answerId, out paths) && paths != null && paths.Count > 0;
+        }
+
+        internal bool HasInteractionRootPathWithoutAncestors(string npcId, string answerId,
+            HashSet<string> blockedAncestorAnswerIds)
+        {
+            if (string.IsNullOrEmpty(npcId) || string.IsNullOrEmpty(answerId)) return false;
+            TargetNavigation target;
+            if (!_targets.TryGetValue(npcId, out target) || target == null) return false;
+            List<NavigationPath> paths;
+            if (!target.PathsByAnswer.TryGetValue(answerId, out paths) || paths == null || paths.Count == 0) return false;
+            if (blockedAncestorAnswerIds == null || blockedAncestorAnswerIds.Count == 0) return true;
+
+            for (var i = 0; i < paths.Count; i++)
+            {
+                var path = paths[i];
+                if (path == null) continue;
+                var blocked = false;
+                for (var a = 0; a < path.Ancestors.Count; a++)
+                {
+                    var ancestor = path.Ancestors[a];
+                    if (ancestor != null && !string.IsNullOrEmpty(ancestor.AnswerId) &&
+                        blockedAncestorAnswerIds.Contains(ancestor.AnswerId))
+                    {
+                        blocked = true;
+                        break;
+                    }
+                }
+                if (!blocked) return true;
+            }
+            return false;
+        }
+
         internal bool IsOwnerTaskActionable(WeekdayInteractionRuleCache.TargetRules target, string taskId,
             object unlockedPhrases, object blacklistedPhrases)
         {
