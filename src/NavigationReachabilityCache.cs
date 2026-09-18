@@ -109,6 +109,15 @@ namespace CalendarQuestsPins
             return count == 6;
         }
 
+        internal bool HasInteractionRootPath(string npcId, string answerId)
+        {
+            if (string.IsNullOrEmpty(npcId) || string.IsNullOrEmpty(answerId)) return false;
+            TargetNavigation target;
+            if (!_targets.TryGetValue(npcId, out target) || target == null) return false;
+            List<NavigationPath> paths;
+            return target.PathsByAnswer.TryGetValue(answerId, out paths) && paths != null && paths.Count > 0;
+        }
+
         internal bool IsOwnerTaskActionable(WeekdayInteractionRuleCache.TargetRules target, string taskId,
             object unlockedPhrases, object blacklistedPhrases)
         {
