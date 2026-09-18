@@ -13,12 +13,13 @@ namespace DayWheelAstrologerMarkerContributorsProbe
     {
         private const string PluginGuid = "nikich.gyk.daywheel.astrologer-marker-contributors";
         private const string PluginName = "Day Wheel Quest Markers - Astrologer marker contributors";
-        private const string PluginVersion = "0.1.0";
+        private const string PluginVersion = "0.1.1";
         private const string TargetPluginGuid = "nikich.gyk.calendarquestspins";
         private const string TargetNpcId = "npc_astrologer";
 
         private bool _done;
         private float _nextTry;
+        private float _gameStartedAt = -1f;
 
         private void Awake()
         {
@@ -48,6 +49,19 @@ namespace DayWheelAstrologerMarkerContributorsProbe
                 !ReflectionUtil.TryRead(plugin, "_rules", out rules) || rules == null ||
                 !ReflectionUtil.TryRead(plugin, "_reachability", out reachability) || reachability == null ||
                 !ReflectionUtil.TryRead(plugin, "_verifiedCompletionRules", out verified) || verified == null) return;
+
+            object started;
+            if (!TryReadStatic(mainGame.GetType(), "game_started", out started) || !(started is bool) || !(bool)started)
+            {
+                _gameStartedAt = -1f;
+                return;
+            }
+            if (_gameStartedAt < 0f)
+            {
+                _gameStartedAt = Time.realtimeSinceStartup;
+                return;
+            }
+            if (Time.realtimeSinceStartup - _gameStartedAt < 1.25f) return;
 
             try
             {
@@ -191,6 +205,25 @@ namespace DayWheelAstrologerMarkerContributorsProbe
 
             Logger.LogInfo("ASTRO_MARKER_SUMMARY expectedVisualCount=" + expectedVisual + " contributorCount=" + contributors);
             Logger.LogInfo("ASTRO_MARKER_END");
+        }
+
+        private static bool TryReadStatic(Type type, string name, out object value)
+        {
+            value = null;
+            if (type == null) return false;
+            try
+            {
+                var field = type.GetField(name, ReflectionUtil.AnyStatic);
+                if (field != null) { value = field.GetValue(null); return true; }
+                var prop = type.GetProperty(name, ReflectionUtil.AnyStatic);
+                if (prop != null && prop.GetIndexParameters().Length == 0)
+                {
+                    value = prop.GetValue(null, null);
+                    return true;
+                }
+            }
+            catch { }
+            return false;
         }
 
         private static object FindTarget(object rules, string npcId)
