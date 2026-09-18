@@ -10,7 +10,7 @@ namespace CalendarQuestsPins
     {
         public const string PluginGuid = "nikich.gyk.calendarquestspins";
         public const string PluginName = "Day Wheel Quest Markers";
-        public const string PluginVersion = "1.0.35";
+        public const string PluginVersion = "1.1.1";
 
         private const float TickSeconds = 1f;
         private const float StructureCheckSeconds = 30f;
@@ -32,7 +32,6 @@ namespace CalendarQuestsPins
         private WeekdayInteractionRuleCache _rules;
         private NavigationReachabilityCache _reachability;
         private PersistentRuleManifest _manifest;
-        private NonAtSelfConsumingRuleCache _nonAtRules;
         private CalendarMarkers _markers;
         private LoadingCachePrewarmGate _prewarmGate;
         private VerifiedCompletionReminderRules _verifiedCompletionRules;
@@ -43,7 +42,6 @@ namespace CalendarQuestsPins
             _rules = new WeekdayInteractionRuleCache();
             _reachability = new NavigationReachabilityCache(_rules);
             _manifest = new PersistentRuleManifest(_rules, _reachability);
-            _nonAtRules = new NonAtSelfConsumingRuleCache();
             _markers = new CalendarMarkers();
             _prewarmGate = new LoadingCachePrewarmGate();
             _verifiedCompletionRules = new VerifiedCompletionReminderRules();
@@ -67,7 +65,6 @@ namespace CalendarQuestsPins
             if (_markers != null) _markers.Dispose();
             if (_rules != null) _rules.Clear();
             if (_reachability != null) _reachability.Clear();
-            if (_nonAtRules != null) _nonAtRules.Clear();
             if (_verifiedCompletionRules != null) _verifiedCompletionRules.Clear();
         }
 
@@ -114,29 +111,6 @@ namespace CalendarQuestsPins
                 return true;
             }
 
-            double nonAtLoadMs;
-            string nonAtLoadFailure;
-            var nonAtLoaded = _nonAtRules.TryLoad(_mainGame, out nonAtLoadMs, out nonAtLoadFailure);
-            double nonAtBootstrapMs = 0;
-            string nonAtBootstrapNote = null;
-            if (!nonAtLoaded && !_nonAtRules.TryBootstrapAndPersist(_mainGame, out nonAtBootstrapMs, out nonAtBootstrapNote))
-            {
-                _nonAtRules.Clear();
-                Logger.LogWarning("Generalized non-@ self-consuming reminder cache unavailable. Cache load: " +
-                                  (nonAtLoadFailure ?? "<none>") + "; bootstrap: " +
-                                  (nonAtBootstrapNote ?? "<none>") + ". Supplemental reminders fail closed for this session.");
-            }
-            else if (nonAtLoaded)
-            {
-                Logger.LogInfo("Generalized non-@ self-consuming cache loaded behind loading screen in " +
-                               nonAtLoadMs.ToString("F2") + " ms; graph parse skipped.");
-            }
-            else
-            {
-                Logger.LogInfo("Generalized non-@ self-consuming cache bootstrapped behind loading screen in " +
-                               nonAtBootstrapMs.ToString("F2") + " ms. " + (nonAtBootstrapNote ?? string.Empty));
-            }
-
             _save = candidateSave;
             _runtimeRestoreAttemptedSave = null;
             _cacheReady = true;
@@ -147,11 +121,11 @@ namespace CalendarQuestsPins
             _loggedReady = false;
 
             if (loaded)
-                Logger.LogInfo("Persistent rule manifest loaded behind loading screen in " + loadMs.ToString("F2") +
-                               " ms; FlowCanvas graph parse skipped.");
+                Logger.LogInfo("Persistent schema-3 interaction manifest loaded behind loading screen in " +
+                               loadMs.ToString("F2") + " ms; FlowCanvas graph parse skipped.");
             else
             {
-                Logger.LogInfo("Persistent rule manifest schema 2 bootstrapped behind loading screen in " +
+                Logger.LogInfo("Persistent rule manifest schema 3 bootstrapped behind loading screen in " +
                                bootstrapMs.ToString("F2") + " ms; future loads can skip FlowCanvas graph parsing.");
                 if (!string.IsNullOrEmpty(bootstrapNote)) Logger.LogWarning(bootstrapNote);
             }
@@ -232,6 +206,7 @@ namespace CalendarQuestsPins
                             AddMarker(sinTypeValue, GetMarkerStyle(taskId));
                         }
                     }
+
                     for (var i = 0; i < target.Topics.Count; i++)
                     {
                         var topic = target.Topics[i];
@@ -239,9 +214,6 @@ namespace CalendarQuestsPins
                         if (!_reachability.IsTopicActionable(target, topic, unlocked, blacklisted)) continue;
                         AddMarker(sinTypeValue, MarkerStyle.Base);
                     }
-
-                    var nonAtCount = _nonAtRules.CountActionable(target.NpcId, unlocked, blacklisted, _reachability, _mainGame);
-                    for (var i = 0; i < nonAtCount; i++) AddMarker(sinTypeValue, MarkerStyle.Base);
                 }
 
                 for (var i = 0; i < target.CrossTasks.Count; i++)
@@ -280,19 +252,10 @@ namespace CalendarQuestsPins
             bool hasPeriodicNpc;
             if (!_manifest.Bind(_save, _mainGame, out fingerprint, out hasPeriodicNpc)) return false;
 
-            double nonAtLoadMs;
-            string nonAtFailure;
-            if (!_nonAtRules.TryLoad(_mainGame, out nonAtLoadMs, out nonAtFailure))
-            {
-                _nonAtRules.Clear();
-                Logger.LogWarning("Generalized non-@ self-consuming cache unavailable during gameplay (" + reason + "): " +
-                                  (nonAtFailure ?? "<unknown>") + ". No graph parser will run in gameplay.");
-            }
-
             _cacheReady = true;
             _runtimeRestoreAttemptedSave = null;
             ApplyKnownNpcState(fingerprint, hasPeriodicNpc, false);
-            Logger.LogInfo("Persistent rule manifest restored in " + loadMs.ToString("F2") +
+            Logger.LogInfo("Persistent schema-3 interaction manifest restored in " + loadMs.ToString("F2") +
                            " ms (" + reason + "); graph parse not required.");
             return true;
         }
@@ -354,7 +317,6 @@ namespace CalendarQuestsPins
         {
             if (_rules != null) _rules.Clear();
             if (_reachability != null) _reachability.Clear();
-            if (_nonAtRules != null) _nonAtRules.Clear();
             if (_verifiedCompletionRules != null) _verifiedCompletionRules.Clear();
             _cacheReady = false;
             _waitingForPeriodicNpc = false;
@@ -401,7 +363,7 @@ namespace CalendarQuestsPins
             _loggedReady = true;
             if (_waitingForPeriodicNpc)
             {
-                Logger.LogInfo("Ready. Persistent rule manifest active; no weekday NPC is known yet.");
+                Logger.LogInfo("Ready. Persistent schema-3 interaction manifest active; no weekday NPC is known yet.");
                 return;
             }
             LogManifestSummary("Ready");
@@ -414,13 +376,15 @@ namespace CalendarQuestsPins
                            ", cross-owner tasks=" + _rules.CrossTaskCount +
                            ", cross-owner supported=" + _rules.CrossSupportedRuleCount +
                            ", cross-owner unsupported=" + _rules.CrossUnsupportedRuleCount +
-                           ", one-shot topics=" + _rules.OneShotTopicCount +
-                           ", one-shot supported=" + _rules.OneShotSupportedRuleCount +
-                           ", one-shot unsupported=" + _rules.OneShotUnsupportedRuleCount +
-                           ", non-@ exact-self=" + (_nonAtRules != null ? _nonAtRules.RuleCount : 0) +
-                           ", non-@ supported=" + (_nonAtRules != null ? _nonAtRules.SupportedVariantCount : 0) +
-                           ", non-@ unsupported=" + (_nonAtRules != null ? _nonAtRules.UnsupportedVariantCount : 0) +
-                           ", non-@ completion-excluded=" + (_nonAtRules != null ? _nonAtRules.CompletionExcludedCount : 0) +
+                           ", self-consuming topics=" + _rules.OneShotTopicCount +
+                           ", self-consuming supported=" + _rules.OneShotSupportedRuleCount +
+                           ", self-consuming unsupported=" + _rules.OneShotUnsupportedRuleCount +
+                           ", non-@ universe=" + _manifest.NonAtUniqueCount +
+                           ", non-@ exact-self=" + _manifest.NonAtExactSelfCount +
+                           ", non-@ admitted=" + _manifest.NonAtTopicCount +
+                           ", non-@ supported=" + _manifest.NonAtSupportedVariantCount +
+                           ", non-@ unsupported=" + _manifest.NonAtUnsupportedVariantCount +
+                           ", non-@ completion-excluded=" + _manifest.NonAtCompletionExcludedCount +
                            ", reachability answers=" + _manifest.NavigationAnswerCount +
                            ", paths=" + _manifest.NavigationPathCount +
                            ", predicates=" + _manifest.NavigationPredicateCount +
