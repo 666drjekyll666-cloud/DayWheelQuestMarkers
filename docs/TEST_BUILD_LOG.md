@@ -317,3 +317,26 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Requested test: install 1.1.1 over 1.1.0 without deleting either cache file; load the preserved pre-diary Astrologer save. First prove schema-3 bootstrap succeeds without the `snake_back_12a` failure, then report the Astrologer marker count before consuming `@astrologer_diary`. If the count is not exactly one, preserve the state and return the log for a narrow contributor diagnostic. If the first launch is sane, fully restart once and verify schema-3 loads with FlowCanvas graph parsing skipped and the same marker state.
 - Player result: **pending**.
 - Status: **candidate / awaiting runtime validation / do not merge or release**. Stable remains 1.0.35.
+
+
+### 1.1.1 runtime result update — Astrologer contributor defect remains
+
+- Player first-launch result: schema-3 bootstrap **succeeded**; the previous 1.1.0 fatal `npc_cultist / snake_back_12a` bootstrap regression is closed.
+- Runtime counts from the supplied log: owner 75/6; cross 8/6/0; unified self-consuming 63/62/1; non-`@` universe 77; exact-self 19; admitted 8; completion-excluded 9; navigation 210/270/151/0. Therefore the remaining two exact-self candidates are root-unreachable and were excluded rather than aborting bootstrap.
+- Astrologer still displayed **three markers** in the preserved pre-diary state, so 1.1.1 is **not accepted**.
+- Live dialogue evidence in the same run: `@astrologer_diary` (“Отдать Дневник”) is rendered and pickable (`fh=True`); `@refugees_s_ev_7_1_1` (“О вампирах”) is rendered but not pickable (`fh=False`); trade and leave are also rendered. The production log does not identify which task/topic/cross rules contributed the three markers, so root cause remains open pending the read-only contributor probe below.
+
+### Research diagnostic — Astrologer marker contributors probe 0.1.1
+
+- Purpose: identify every production rule that contributes a marker to `npc_astrologer` in the preserved three-marker state without modifying save, phrase, quest, resource, navigation, or UI state.
+- Research branch: `research/astrologer-marker-contributors`.
+- Exact executable/build source: `6e882dfd74d77532e7df14490ef08ab39b01014d`.
+- Frozen ref: `frozen/astrologer-marker-contributors-probe-0.1.1`.
+- Probe GUID: `nikich.gyk.daywheel.astrologer-marker-contributors`; coexists with production 1.1.1.
+- Runtime timing: waits for Day Wheel cache readiness, then for `MainGame.game_started == true`, then another 1.25 seconds so the production gameplay marker tick has occurred before comparing contributor count with the actual Astrologer marker list.
+- Output markers: `ASTRO_MARKER_BEGIN`, `ASTRO_OWNER`, `ASTRO_TOPIC`, `ASTRO_CROSS`, `ASTRO_CONTRIB`, `ASTRO_MARKER_SUMMARY`, `ASTRO_MARKER_END`.
+- CI: run `35402618539`, job `105785587399`, success; Release build **0 warnings / 0 errors**.
+- Artifact: `DayWheelAstrologerMarkerContributorsProbe-0.1.1` (`10570998561`), archive digest `sha256:127db8de1d37d1e2d4e2c8c067677004ac46313f58bbe7593a1c9b5c6ebed228`.
+- Raw DLL: **14,848 bytes**; SHA-256 `bcd2cf5b5a4d3414a59eb97a739a123d130933ff671b32cacc14c6601262daab`; local extraction matches CI.
+- Requested test: keep production 1.1.1 installed and the pre-diary save unchanged; add this probe DLL beside it, launch that save once, do not hand over the diary, wait until normal gameplay appears, then exit after the log contains `ASTRO_MARKER_END` and return `LogOutput.log`.
+- Result: **pending**.
