@@ -206,7 +206,7 @@ namespace CalendarQuestsPins
 
                     if (!_navigation.Read(reader, worldObjects, out failure)) return false;
                     var counts = ReadCounts(reader);
-                    _lifecycleStats = ReadNonAtStats(reader);
+                    _lifecycleStats = ReadLifecycleStats(reader);
                     if (!CountsAreCanonical(counts, _lifecycleStats))
                     {
                         failure = "manifest canonical-count check failed: " + CountsToString(counts, _lifecycleStats);
@@ -303,7 +303,7 @@ namespace CalendarQuestsPins
 
                 string lifecycleFailure;
                 UnifiedDialogueLifecycleCompiler.Stats lifecycleStats;
-                if (!_selfConsumingCompiler.Compile(targets, graphs, _cache, _navigation, out selfStats, out selfFailure))
+                if (!_lifecycleCompiler.Compile(targets, graphs, _cache, _navigation, out lifecycleStats, out lifecycleFailure))
                 {
                     failure = "unified dialogue lifecycle bootstrap failed: " + (lifecycleFailure ?? "<unknown>");
                     ClearCaches();
@@ -458,7 +458,7 @@ namespace CalendarQuestsPins
                     }
                     _navigation.Write(writer);
                     WriteCounts(writer, CaptureCounts());
-                    WriteNonAtStats(writer, _lifecycleStats);
+                    WriteLifecycleStats(writer, _lifecycleStats);
                     writer.Flush();
                     stream.Flush(true);
                 }
@@ -685,7 +685,7 @@ namespace CalendarQuestsPins
             };
         }
 
-        private static void WriteNonAtStats(BinaryWriter writer, UnifiedDialogueLifecycleCompiler.Stats stats)
+        private static void WriteLifecycleStats(BinaryWriter writer, UnifiedDialogueLifecycleCompiler.Stats stats)
         {
             if (stats == null) stats = new UnifiedDialogueLifecycleCompiler.Stats();
             writer.Write(stats.GraphCount);
@@ -708,7 +708,7 @@ namespace CalendarQuestsPins
             writer.Write(stats.AncestorUnsupportedVariants);
         }
 
-        private static UnifiedDialogueLifecycleCompiler.Stats ReadNonAtStats(BinaryReader reader)
+        private static UnifiedDialogueLifecycleCompiler.Stats ReadLifecycleStats(BinaryReader reader)
         {
             var stats = new UnifiedDialogueLifecycleCompiler.Stats
             {
