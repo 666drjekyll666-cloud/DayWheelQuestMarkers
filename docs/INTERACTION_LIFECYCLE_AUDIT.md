@@ -248,3 +248,56 @@ Acceptance targets in the returned log:
 - no reversible lifecycle owner may be admitted.
 
 Production remains unchanged while this evidence is pending. If the census supports the rule, the generalized runtime replacement belongs to **1.1.6** because 1.1.5 has already been handed out and frozen.
+
+
+## Census result — 2026-09-19
+
+The returned runtime census completed successfully against Graveyard Keeper 1.407 with all six weekday-NPC graphs:
+
+- graphs: **6/6**;
+- authored answer occurrences: **243**;
+- branches with persistent blacklist effects: **161**;
+- path-local self-owned paths: **204**;
+- path-local ancestor-owned paths: **12**;
+- reversible ancestor/self ownership admitted: **0**.
+
+The twelve ancestor-owned paths collapse to exactly six unique lifecycle owners:
+
+| NPC | Lifecycle owner | Path result | Production disposition |
+| --- | --- | --- | --- |
+| Astrologer | `@tr_quest_13_research_1` | child `tr_quest_13_research_2` consumes the parent on the same path | **admit** |
+| Snake | `@snake_1с` | either `snake_1с_4a` or `snake_1с_4b` consumes the parent | **admit** |
+| Merchant | `@merchant_2b` | four progressing child paths consume the parent | **suppress: task-owned** |
+| Merchant | `@merchant_2e_1e` | real path `@merchant_2e -> @merchant_2e_1e -> merchant_2e_1d_4a` consumes the nested parent | **admit** |
+| Merchant | `@merchant_favore_done` | either nested child consumes the parent | **suppress: task-owned** |
+| Bishop | `bishop_2_1a` | either `bishop_2_1a_6a` or `bishop_2_1a_6b` consumes the parent | **admit** |
+
+This resolves the earlier Merchant ambiguity: `@merchant_2e_1e` is not merely blacklisted coincidentally. The production navigation model proves a concrete authored root-to-child path containing that exact parent.
+
+The controls also pass:
+- Snake resolves as an admitted ancestor lifecycle owner.
+- `@merchant_2b` resolves path-locally but is suppressed by existing task ownership.
+- `@merchant_favore_done` independently exercises the same task-owned suppression rule.
+- self-consuming Merchant business children remain self-owned because self consumption wins before ancestor inspection.
+- existing Astrologer diary continuations remain same-visit suppressed.
+- no reversible lifecycle candidate was admitted.
+
+### Final architecture verdict
+
+The audit is now closed.
+
+For GK 1.407, the supported generic selectable-dialogue lifecycle is:
+
+`reachable authored branch -> nearest persistently consumed selectable entry on that same root path -> one reminder interaction`
+
+with these precedence/deduplication rules:
+
+1. exact self-consumption wins;
+2. otherwise nearest persistently consumed selectable ancestor owns the interaction;
+3. task-owned lifecycle owners are suppressed from the generic dialogue layer;
+4. descendants reachable only through a task-owned visit are same-visit continuations, not extra reminders;
+5. phrase state, AnswerData/SmartRes gates, and navigation reachability remain authoritative runtime predicates;
+6. reversible/unsupported structures fail closed;
+7. the two verified mandatory event-only stages remain separate.
+
+The generalized implementation is therefore approved for a **1.1.6 development candidate**. It should replace the exact 1.1.5 Snake fake-coins hard-code with the lifecycle compiler, while preserving 1.1.5 as immutable evidence.
