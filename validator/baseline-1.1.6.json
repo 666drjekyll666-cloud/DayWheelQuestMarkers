@@ -302,6 +302,32 @@
     "no_root_classified": 14,
     "no_root_unknown": 0,
     "no_root_accepted_classification": "EVENT_INVOKED_NON_REMINDER",
-    "coverage_status": "CLOSED_FOR_ACCEPTED_1.1.6_SIX_NPC_GRAPH_UNIVERSE"
+    "coverage_status": "CLOSED_FOR_ACCEPTED_1.1.6_SIX_NPC_GRAPH_UNIVERSE",
+    "no_root_event_roots": [
+      {
+        "npc": "npc_inquisitor",
+        "root_node": "95",
+        "root_event": "first_meet_under_mountains",
+        "answers": 7
+      },
+      {
+        "npc": "npc_inquisitor",
+        "root_node": "343",
+        "root_event": "on_came_to_mountain_for_witch_burning",
+        "answers": 2
+      },
+      {
+        "npc": "npc_inquisitor",
+        "root_node": "1711",
+        "root_event": "inquisitor_after_dark_event",
+        "answers": 3
+      },
+      {
+        "npc": "npc_cultist",
+        "root_node": "318",
+        "root_event": "player_back_to_cultist",
+        "answers": 2
+      }
+    ]
   }
 }
