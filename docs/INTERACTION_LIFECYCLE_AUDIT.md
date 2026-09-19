@@ -56,17 +56,19 @@ The player's 2026-09-19 1.1.5 test confirms the authored lifecycle at runtime: t
 
 Therefore the persistent one-visit identity is the **parent** `@snake_1с`, even though persistence is mutated by a child answer.
 
-### Merchant nested debt conversation
+### Merchant nested debt control
 
-The static strict-chain evidence contains a second structurally important case:
+The static strict-chain evidence contains a second structurally important **candidate**:
 
 - `@merchant_2e_1e` is a submenu entry with no direct task mutation, activation, or blacklist;
-- child `merchant_2e_1d_4a` makes `npc_merchant/merchant_debt` Visible, activates `@merchant_2e_1f`, and blacklists **parent** `@merchant_2e_1e`;
-- sibling `merchant_2e_1d_4b` does not consume the parent and reactivates/returns to it.
+- child `merchant_2e_1d_4a` makes `npc_merchant/merchant_debt` Visible, activates `@merchant_2e_1f`, and blacklists `@merchant_2e_1e`;
+- sibling `merchant_2e_1d_4b` does not consume that phrase.
 
-This proves the Snake topology is not a one-off authoring accident. Graveyard Keeper uses the pattern “enter parent menu -> choose a committing child -> child persistently consumes parent” elsewhere.
+However, an older runtime dialogue log also proves that the same `merchant_2e_1d_4a` answer is reachable through the ordinary `@merchant_2e -> merchant_2e_1d` “ask about seeds” route. Therefore the blacklist effect alone is **not enough** to claim that `@merchant_2e_1e` owns that interaction.
 
-The fact that one sibling is a non-committing/cancel path is also important: a valid one-visit parent need not be consumed by **every** child. What matters is whether an authored progressing branch consumes its owning selectable ancestor.
+This is an important falsification control: ancestor consumption must be evaluated **per concrete authored root-to-answer path**. A blacklisted phrase counts as lifecycle owner only when that selectable phrase is actually an ancestor on the same path that reaches the progressing answer. The existing navigation cache already preserves ordered answer ancestors, so the production model has the right raw information to enforce this.
+
+The Merchant case therefore supports the need for path-sensitive ownership, but remains **unadmitted** until the complete lifecycle census proves a real `@merchant_2e_1e -> ... -> merchant_2e_1d_4a` path.
 
 ### Merchant `@merchant_2b` control
 
@@ -195,8 +197,8 @@ Only after that census passes should the hard-coded Snake special case be remove
 
 ## Current verdict
 
-The architecture is **not** missing an endless list of unrelated quest exceptions. The concrete weakness is narrower and now identifiable: the generic dialogue classifier modeled only **self-consumption**, while the game's shipped graphs also use **ancestor consumption** to represent a one-visit dialogue lifecycle.
+The architecture is **not** best modeled as an endless list of unrelated quest exceptions. The concrete weakness is narrower and now identifiable: the generic dialogue classifier currently recognizes only **self-consumption**, while the Snake runtime proves at least one real **path-local ancestor-consumption** lifecycle.
 
-That is a plausible missing general rule and it already explains more than one authored structure.
+That is now the leading missing general rule. It is not yet promoted as universal until a complete path-sensitive census attempts to falsify it across all six weekday-NPC graphs.
 
 The next step is therefore a bounded static lifecycle census, not another gameplay special case and not a return to the rejected universal provenance parser.
