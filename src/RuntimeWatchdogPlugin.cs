@@ -232,9 +232,15 @@ namespace DayWheelQuestMarkersResearch
                 return false;
             }
 
-            var method = manifest.GetType().GetMethod("IsRuntimeValid",
-                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                null, new[] { _mainGameType }, null);
+            MethodInfo method = null;
+            foreach (var candidate in manifest.GetType().GetMethods(
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (!string.Equals(candidate.Name, "IsRuntimeValid", StringComparison.Ordinal)) continue;
+                if (candidate.GetParameters().Length != 1) continue;
+                method = candidate;
+                break;
+            }
             if (method == null)
             {
                 detail = "PersistentRuleManifest.IsRuntimeValid could not be resolved.";
