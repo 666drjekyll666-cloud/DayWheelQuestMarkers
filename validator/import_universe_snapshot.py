@@ -13,17 +13,37 @@ import sys
 from pathlib import Path
 
 
-def fields_after(line: str, prefix: str) -> dict[str, str] | None:
-    pos = line.find(prefix)
-    if pos < 0:
+def match_fields(line: str, pattern: re.Pattern[str], names: tuple[str, ...]) -> dict[str, str] | None:
+    match = pattern.search(line)
+    if match is None:
         return None
-    result: dict[str, str] = {}
-    for token in line[pos + len(prefix):].strip().split():
-        if "=" not in token:
-            continue
-        key, value = token.split("=", 1)
-        result[key] = value
-    return result
+    return dict(zip(names, match.groups()))
+
+
+TASK_ROUTE_RE = re.compile(
+    r"TASKSNAP_ROUTE npc=(\\S+) task=(.*?) kind=(\\S+) answer=(.*?) completeNode=(\\S+) trace=(.*)$"
+)
+TASK_SUMMARY_RE = re.compile(
+    r"TASKSNAP_SUMMARY ownerComplete=(\\d+) mappedSelectable=(\\d+) candidateNonSelectable=(\\d+)$"
+)
+RAW_ANSWER_RE = re.compile(r"UNIVERSE_ANSWER npc=(\\S+) multi=(\\S+) index=(\\S+) answer=(.*)$")
+RAW_TASK_RE = re.compile(
+    r"UNIVERSE_TASK_STATE npc=(\\S+) node=(\\S+) owner=(.*?) task=(.*?) state=(\\S+)$"
+)
+RAW_CUSTOM_RE = re.compile(r"UNIVERSE_CUSTOM_EVENT npc=(\\S+) node=(\\S+) event=(.*)$")
+RAW_ADD_RE = re.compile(r"UNIVERSE_ADD_INTERACTION npc=(\\S+) node=(\\S+) event=(.*)$")
+RAW_REMOVE_RE = re.compile(r"UNIVERSE_REMOVE_INTERACTION npc=(\\S+) node=(\\S+) event=(.*)$")
+RAW_SUMMARY_RE = re.compile(
+    r"UNIVERSE_RAW_SUMMARY answerOccurrences=(\\d+) taskStates=(\\d+) customEvents=(\\d+) "
+    r"addInteractionEvents=(\\d+) removeInteractionEvents=(\\d+)$"
+)
+NAV_PATH_RE = re.compile(
+    r"NAVSNAP_PATH npc=(\\S+) answer=(.*?) pathIndex=(\\S+) unsupported=(\\S+) ancestors=(.*)$"
+)
+NAV_SUMMARY_RE = re.compile(
+    r"NAVSNAP_SUMMARY answers=(\\d+) paths=(\\d+) predicates=(\\d+) unsupportedPaths=(\\d+) "
+    r"verifiedContracts=(\\S+) verifiedFailure=(.*)$"
+)
 
 
 def main() -> int:
@@ -45,45 +65,71 @@ def main() -> int:
     nav_summary = None
 
     for line in text.splitlines():
-        d = fields_after(line, "TASKSNAP_ROUTE ")
+        d = match_fields(
+            line, TASK_ROUTE_RE, ("npc", "task", "kind", "answer", "completeNode", "trace")
+        )
         if d is not None:
             task_rows.append(d)
             continue
-        d = fields_after(line, "TASKSNAP_SUMMARY ")
-        if d is not None:
-            task_summary = d
+
+        match = TASK_SUMMARY_RE.search(line)
+        if match is not None:
+            task_summary = {
+                "ownerComplete": match.group(1),
+                "mappedSelectable": match.group(2),
+                "candidateNonSelectable": match.group(3),
+            }
             continue
-        d = fields_after(line, "UNIVERSE_ANSWER ")
+
+        d = match_fields(line, RAW_ANSWER_RE, ("npc", "multi", "index", "answer"))
         if d is not None:
             raw_answers.append(d)
             continue
-        d = fields_after(line, "UNIVERSE_TASK_STATE ")
+        d = match_fields(line, RAW_TASK_RE, ("npc", "node", "owner", "task", "state"))
         if d is not None:
             raw_task_states.append(d)
             continue
-        d = fields_after(line, "UNIVERSE_CUSTOM_EVENT ")
+        d = match_fields(line, RAW_CUSTOM_RE, ("npc", "node", "event"))
         if d is not None:
             raw_custom_events.append(d)
             continue
-        d = fields_after(line, "UNIVERSE_ADD_INTERACTION ")
+        d = match_fields(line, RAW_ADD_RE, ("npc", "node", "event"))
         if d is not None:
             raw_add_interactions.append(d)
             continue
-        d = fields_after(line, "UNIVERSE_REMOVE_INTERACTION ")
+        d = match_fields(line, RAW_REMOVE_RE, ("npc", "node", "event"))
         if d is not None:
             raw_remove_interactions.append(d)
             continue
-        d = fields_after(line, "UNIVERSE_RAW_SUMMARY ")
-        if d is not None:
-            raw_summary = d
+
+        match = RAW_SUMMARY_RE.search(line)
+        if match is not None:
+            raw_summary = {
+                "answerOccurrences": match.group(1),
+                "taskStates": match.group(2),
+                "customEvents": match.group(3),
+                "addInteractionEvents": match.group(4),
+                "removeInteractionEvents": match.group(5),
+            }
             continue
-        d = fields_after(line, "NAVSNAP_PATH ")
+
+        d = match_fields(
+            line, NAV_PATH_RE, ("npc", "answer", "pathIndex", "unsupported", "ancestors")
+        )
         if d is not None:
             nav_rows.append(d)
             continue
-        d = fields_after(line, "NAVSNAP_SUMMARY ")
-        if d is not None:
-            nav_summary = d
+
+        match = NAV_SUMMARY_RE.search(line)
+        if match is not None:
+            nav_summary = {
+                "answers": match.group(1),
+                "paths": match.group(2),
+                "predicates": match.group(3),
+                "unsupportedPaths": match.group(4),
+                "verifiedContracts": match.group(5),
+                "verifiedFailure": match.group(6),
+            }
 
     if task_summary is None:
         raise SystemExit("TASKSNAP_SUMMARY not found")
@@ -118,12 +164,27 @@ def main() -> int:
             f"expected {sorted(expected_unresolved)}"
         )
 
-    if raw_summary.get("answerOccurrences") != "243":
-        raise SystemExit(
-            f"unexpected raw answer occurrence count: {raw_summary.get('answerOccurrences')} expected 243"
-        )
+    raw_expected = {
+        "answerOccurrences": "243",
+        "taskStates": "150",
+        "customEvents": "66",
+        "addInteractionEvents": "19",
+        "removeInteractionEvents": "4",
+    }
+    for key, expected in raw_expected.items():
+        actual = raw_summary.get(key)
+        if actual != expected:
+            raise SystemExit(f"unexpected UNIVERSE_RAW_SUMMARY {key}={actual}, expected {expected}")
     if len(raw_answers) != 243:
         raise SystemExit(f"expected 243 UNIVERSE_ANSWER rows, got {len(raw_answers)}")
+    if len(raw_task_states) != 150:
+        raise SystemExit(f"expected 150 UNIVERSE_TASK_STATE rows, got {len(raw_task_states)}")
+    if len(raw_custom_events) != 66:
+        raise SystemExit(f"expected 66 UNIVERSE_CUSTOM_EVENT rows, got {len(raw_custom_events)}")
+    if len(raw_add_interactions) != 19:
+        raise SystemExit(f"expected 19 UNIVERSE_ADD_INTERACTION rows, got {len(raw_add_interactions)}")
+    if len(raw_remove_interactions) != 4:
+        raise SystemExit(f"expected 4 UNIVERSE_REMOVE_INTERACTION rows, got {len(raw_remove_interactions)}")
 
     raw_answer_keys = {(x.get("npc"), x.get("multi"), x.get("index")) for x in raw_answers}
     if len(raw_answer_keys) != 243:
