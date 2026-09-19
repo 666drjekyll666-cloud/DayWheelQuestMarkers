@@ -121,3 +121,32 @@ The raw-vs-navigation comparison leaves **14 unique answer IDs** with no normal 
 - `npc_inquisitor`: `inquisitor_1_7a`, `inquisitor_1_7b`, `inquisitor_1_9a`, `inquisitor_1_9b`, `inquisitor_1_11a`, `inquisitor_1_11b`, `inquisitor_1_11c`, `inquisitor_2_9a`, `inquisitor_2_9b`, `inquisitor_gerry`, `inquisitor_cultists`, `inquisitor_nothing`.
 
 These are not silently classified. Probe 0.1.3 adds bounded upstream/downstream topology evidence for exactly this frontier so each candidate can be reviewed as event/cutscene/non-reminder or promoted if it represents an independently actionable weekday-NPC interaction.
+
+
+## 0.1.3 accepted frontier result
+
+Player runtime log `LogOutput(20260919-153202).log` produced the complete no-root topology pass:
+
+- **14/14** expected candidate occurrences emitted;
+- every candidate has exactly one upstream event-root family;
+- all 14 are event/cutscene-invoked menus rather than fresh weekday-NPC interaction roots;
+- accepted classification: `EVENT_INVOKED_NON_REMINDER`;
+- coverage watchdog: **UNKNOWN = 0** for the accepted six weekday-NPC graph universe.
+
+Evidence groups:
+
+- Inquisitor node 95 / `first_meet_under_mountains`: 7 answers;
+- Inquisitor node 343 / `on_came_to_mountain_for_witch_burning`: 2 answers;
+- Inquisitor node 1711 / `inquisitor_after_dark_event`: 3 answers;
+- Snake node 318 / `player_back_to_cultist`: 2 answers.
+
+Probe 0.1.3 frozen build:
+
+- exact source: `1b4cd32db7574cf4a0a27118bec4aa557a61b627`;
+- frozen ref: `frozen/interaction-universe-snapshot-0.1.3`;
+- workflow run: `35451885905`;
+- build: **success, 0 warnings / 0 errors**;
+- artifact: `InteractionUniverseTaskSnapshot-0.1.3`, ID `10587301518`;
+- raw DLL SHA-256: `6b1850370798ac293059b25c24c3c71d36840d86bd29de5638b0145a7fe78eb0`.
+
+No further player runtime capture is required for this research question. The temporary snapshot DLL should now be removed.
