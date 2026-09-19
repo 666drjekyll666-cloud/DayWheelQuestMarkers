@@ -414,4 +414,22 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Raw DLL: **96,256 bytes**; SHA-256 `207e82e0c8be1f641e975539bd2a0b60ded1b0dd791269c598ac2dfb0cde6565`. Local extraction/hash matches CI.
 - Build workflow was restored to manual-only immediately after this frozen diagnostic build.
 - Requested test: replace stable 1.1.3 with this single 1.1.4 DLL, keep the existing schema-4 cache, load the save/state where Snake currently offers both the counterfeit-coins return and Restoration Tools conversations, wait for normal gameplay, then return `LogOutput.log` after it contains `SNAKE_MARKER_END`. Do not consume either Snake conversation before collecting the log.
+- Player result: **diagnostic passed / root cause established**. The returned log shows both `@snake_1с` and `@snake_instrument` unlocked and not blacklisted, with `npc_actress/actress_money` Visible. `@snake_instrument` is present as an actionable topic contributor, while `@snake_1с` is absent from owner/topic/cross rule contributors; the final Snake count is exactly 1. The live dialogue then renders both conversations simultaneously. This proves the missing second marker is a classifier omission, not UI layout/deduplication or manifest load failure.
+
+
+## 1.1.5 — Snake counterfeit-coins intermediate fix
+
+- Status: **candidate / player validation pending / do not merge or release yet**.
+- Trigger: 1.1.4 proved a false negative when `npc_actress/actress_money` is Visible and both Snake conversations `@snake_1с` (counterfeit coins) and `@snake_instrument` (Restoration Tools chain) are independently actionable, but production emits only the latter marker.
+- Root cause: `@snake_1с` is a top-level persisted submenu parent with authored price `Item:quest_fake_coins = 1`. The parent itself does not self-blacklist; either child `snake_1с_4a` / `snake_1с_4b` blacklists the parent and unlocks `@actress_snake_back`. Therefore the accepted exact-self-consuming topic compiler correctly excludes the parent structurally, but the product model still requires a reminder because this exact visit is an authored intermediate step of visible task `npc_actress/actress_money`.
+- Fix: add one exact GK 1.407 verified cross-owner intermediate rule for `npc_actress/actress_money -> npc_cultist/@snake_1с`. It requires the owner task to be Visible, the exact phrase to be unlocked and not blacklisted, and game-owned `Player.IsEnough(SmartRes)` for `Item:quest_fake_coins x1`.
+- Scope guardrail: no generic submenu-parent classifier, no new provenance parser, no schema change, no graph traversal in gameplay, no diagnostic logging. Existing schema-4 cache remains valid.
+- Branch: `dev/1.1.5`.
+- Exact candidate/build source: `923fa06bcbce43c2498f39d8eaa27c417aa2c7c6`.
+- Frozen candidate ref: `candidate/1.1.5` -> exact build source above.
+- CI: run `35443963061`, job `105899596604`, success; Release build **0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-1.1.5` (`10584327309`), archive digest `sha256:9dddf2a433932b7b3eb569be761b6da4cabd53144deafede971ddee0fb335a2f`.
+- Raw DLL: **94,720 bytes**; SHA-256 `1dcc49cc2f96bc5fe54a922b9b3ce71148c8c9156b974586b3c98d248226f9fa`; local extraction/hash matches CI.
+- Build workflow restored to manual-only on `dev/1.1.5` immediately after freezing `candidate/1.1.5`.
+- Requested test: install only 1.1.5 over the diagnostic build, keep the existing schema-4 cache, load the preserved state where Snake offers both `@snake_1с` and `@snake_instrument`. Before speaking to Snake there must be exactly **two** Snake weekday markers. Then consume the counterfeit-coins Snake interaction (either authored child choice) and exit the dialogue; with the Restoration Tools interaction still available, the Snake marker count must fall naturally from **2 -> 1**.
 - Player result: **pending**.
