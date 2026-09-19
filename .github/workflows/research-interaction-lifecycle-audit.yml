@@ -1,0 +1,51 @@
+name: Build interaction lifecycle audit probe
+
+on:
+  push:
+    branches:
+      - research/interaction-lifecycle-audit
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: interaction-lifecycle-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore research/InteractionLifecycleAuditProbe/InteractionLifecycleAuditProbe.csproj --configfile nuget.config
+
+      - name: Build Release probe
+        run: dotnet build research/InteractionLifecycleAuditProbe/InteractionLifecycleAuditProbe.csproj -c Release --no-restore
+
+      - name: Stage artifact
+        id: artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $asset = 'DayWheelQuestMarkers-interaction-lifecycle-audit-probe-0.1.0.dll'
+          Copy-Item 'research/InteractionLifecycleAuditProbe/bin/Release/DayWheelInteractionLifecycleAudit.dll' "dist/$asset"
+          $hash = (Get-FileHash "dist/$asset" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "sha256=$hash" >> $env:GITHUB_OUTPUT
+          Write-Host "Probe SHA-256: $hash"
+
+      - name: Upload probe
+        uses: actions/upload-artifact@v4
+        with:
+          name: DayWheelInteractionLifecycleAudit-0.1.0
+          path: dist/DayWheelQuestMarkers-interaction-lifecycle-audit-probe-0.1.0.dll
+          if-no-files-found: error
+          retention-days: 7
