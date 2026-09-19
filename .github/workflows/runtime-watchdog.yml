@@ -1,0 +1,44 @@
+name: Build runtime watchdog
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'research/interaction-universe-snapshot'
+    paths:
+      - 'RuntimeWatchdog.csproj'
+      - 'src/RuntimeWatchdogPlugin.cs'
+      - '.github/workflows/runtime-watchdog.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runtime-watchdog-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build Release
+        run: dotnet build RuntimeWatchdog.csproj -c Release --nologo
+      - name: Hash DLL
+        shell: bash
+        run: |
+          sha256sum bin/RuntimeWatchdog/DayWheelQuestMarkers.RuntimeWatchdog.dll
+          stat -c '%s bytes' bin/RuntimeWatchdog/DayWheelQuestMarkers.RuntimeWatchdog.dll
+      - name: Upload DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: DayWheelQuestMarkers-RuntimeWatchdog-0.1.0
+          path: bin/RuntimeWatchdog/DayWheelQuestMarkers.RuntimeWatchdog.dll
+          if-no-files-found: error
+          retention-days: 7
