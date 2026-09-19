@@ -437,7 +437,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 
 ## 1.1.6 — generalized nearest-lifecycle-owner candidate
 
-- Status: **candidate / player validation passed / awaiting explicit stable acceptance / do not merge or release yet**.
+- Status: **accepted stable / release promotion authorized 2026-09-19**.
 - Trigger: the completed 0.1.0 path-sensitive census over all six GK 1.407 weekday-NPC graphs proved that the 1.1.5 Snake case belongs to a finite authored class: a progressing answer may persistently consume its nearest selectable ancestor instead of itself.
 - Census result: 243 authored answer occurrences, 161 branches with blacklist effects, 12 path-local ancestor-consumption paths collapsing to six unique lifecycle owners. Four are independent dialogue owners (`@tr_quest_13_research_1`, `@snake_1с`, `@merchant_2e_1e`, `bishop_2_1a`); two (`@merchant_2b`, `@merchant_favore_done`) are already task-owned and must be suppressed.
 - Production change: replace the exact-self-only bootstrap supplement with `UnifiedDialogueLifecycleCompiler`. Exact self-consumption still wins. Otherwise the compiler inspects the concrete root-to-answer path and assigns the nearest persistently blacklisted selectable ancestor as lifecycle owner. Task-owned, same-visit, reversible, utility-like, unsupported, or already-represented owners fail closed/dedupe.
@@ -462,4 +462,5 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
   - final runtime binding on that same-process reload invalidated the loading-time live object binding once; the guarded fallback re-read the same manifest in **3.21 ms** with **no graph parse**, then reached `Ready`. This is a bounded load-transition fallback, not recurring gameplay work, and does not justify a new runtime version;
   - no Day Wheel Quest Markers error occurred in the supplied logs.
 - Player behavioral result: **passed**. At Snake, the counterfeit-coins + Restoration Tools state produced **2 markers -> 1 marker -> 0 markers** as the two independent interactions were consumed in sequence.
-- Player result: **validation passed; stable promotion still requires explicit acceptance**.
+- Player result: **accepted**. User explicitly confirmed acceptance and requested stable promotion plus documentation cleanup on 2026-09-19.
+- Accepted baseline ref: `baseline/1.1.6-accepted` -> exact tested source `e2ad9c7ef2bbf312ae79f2a2fb3d1bfb7f5cc1c7`.
