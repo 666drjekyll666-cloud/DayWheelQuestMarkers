@@ -68,7 +68,8 @@ namespace DayWheelQuestMarkersResearch
 
             var closureType = FindType("FlowCanvas.Nodes.Flow_MultiAnswer+<>c__DisplayClass1_0");
             var optionType = FindType("MultiAnswerOptionGUI");
-            if (closureType == null || optionType == null)
+            var guiType = FindType("MultiAnswerGUI");
+            if (closureType == null || optionType == null || guiType == null)
             {
                 failure = "Required GK 1.407 dialogue types were not found.";
                 return false;
@@ -78,7 +79,8 @@ namespace DayWheelQuestMarkersResearch
                 "<RegisterPorts>b__0",
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             var optionShow = FindOptionShow(optionType);
-            if (multiCallback == null || optionShow == null)
+            var guiShow = FindRenderedMenuShow(guiType);
+            if (multiCallback == null || optionShow == null || guiShow == null)
             {
                 failure = "Required GK 1.407 live-dialogue methods were not found.";
                 return false;
@@ -91,11 +93,13 @@ namespace DayWheelQuestMarkersResearch
                 _harmony.Patch(
                     multiCallback,
                     prefix: new HarmonyMethod(typeof(LiveDialogueCoverageWatchdog), nameof(MultiPrefix)),
-                    postfix: new HarmonyMethod(typeof(LiveDialogueCoverageWatchdog), nameof(MultiPostfix)),
                     finalizer: new HarmonyMethod(typeof(LiveDialogueCoverageWatchdog), nameof(MultiFinalizer)));
                 _harmony.Patch(
                     optionShow,
                     prefix: new HarmonyMethod(typeof(LiveDialogueCoverageWatchdog), nameof(OptionShowPrefix)));
+                _harmony.Patch(
+                    guiShow,
+                    postfix: new HarmonyMethod(typeof(LiveDialogueCoverageWatchdog), nameof(RenderedMenuPostfix)));
 
                 _owner.LogLiveInfo(
                     "LIVE_WATCHDOG_READY occurrences=" + _byOccurrence.Count +
@@ -253,9 +257,9 @@ namespace DayWheelQuestMarkersResearch
             _active.BeginMulti(__instance);
         }
 
-        private static void MultiPostfix()
+        private static void RenderedMenuPostfix()
         {
-            if (_active == null) return;
+            if (_active == null || _current == null) return;
             _active.EndMulti();
         }
 
@@ -427,6 +431,22 @@ namespace DayWheelQuestMarkersResearch
                     "npc=" + context.Npc + " multi=" + context.Multi +
                     " exception=" + exception.GetType().Name + ".");
             }
+        }
+
+        private static MethodInfo FindRenderedMenuShow(Type guiType)
+        {
+            foreach (var method in guiType.GetMethods(
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (!string.Equals(method.Name, "ShowAnswers", StringComparison.Ordinal)) continue;
+                var parameters = method.GetParameters();
+                if (parameters.Length != 2) continue;
+                if (parameters[0].ParameterType == null ||
+                    parameters[0].ParameterType.Name.IndexOf("List", StringComparison.Ordinal) < 0) continue;
+                if (parameters[1].ParameterType != typeof(bool)) continue;
+                return method;
+            }
+            return null;
         }
 
         private static MethodInfo FindOptionShow(Type optionType)
