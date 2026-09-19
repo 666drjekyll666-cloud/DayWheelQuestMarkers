@@ -118,6 +118,15 @@ namespace CalendarQuestsPins
             return target.PathsByAnswer.TryGetValue(answerId, out paths) && paths != null && paths.Count > 0;
         }
 
+        internal List<NavigationPath> GetPathsForCompilation(string npcId, string answerId)
+        {
+            if (string.IsNullOrEmpty(npcId) || string.IsNullOrEmpty(answerId)) return null;
+            TargetNavigation target;
+            if (!_targets.TryGetValue(npcId, out target) || target == null) return null;
+            List<NavigationPath> paths;
+            return target.PathsByAnswer.TryGetValue(answerId, out paths) ? paths : null;
+        }
+
         internal bool HasInteractionRootPathWithoutAncestors(string npcId, string answerId,
             HashSet<string> blockedAncestorAnswerIds)
         {
