@@ -54,53 +54,77 @@ Verified direct `Flow_Answer` price/lock requirements are evaluated by Graveyard
 
 If a route uses an unsupported answer/gate shape, no reminder is emitted.
 
-## Verified persistent exact-self-consuming dialogue semantics
+## Verified persistent dialogue-lifecycle semantics
 
-Graveyard Keeper has authored dialogue nodes that persistently consume an answer by adding its exact answer/phrase ID to `GameSave.black_list_of_phrases`:
+Graveyard Keeper has authored dialogue branches that persistently consume selectable entries through the phrase blacklist:
 
 - `FlowCanvas.Nodes.Flow_BlackListPhrase` calls `GameSave.AddPhraseToBlackList(phrase)`;
-- `FlowCanvas.Nodes.Flow_AddPhraseToBlacklist` calls the same method when its authored `remove` input is false; when `remove` is true it removes the phrase from the blacklist instead.
+- `FlowCanvas.Nodes.Flow_AddPhraseToBlacklist` does the same when `remove=false`; `remove=true` is reversible behavior and is not accepted as one-shot ownership evidence.
 
-The `@` prefix is an identifier convention used by many persisted topics, but accepted 1.0.35 evidence proves it is **not** the semantic boundary for a one-time authored interaction.
+Earlier accepted versions proved the exact-self case. Accepted 1.1.6 proves the broader authored rule:
 
-The full read-only GK 1.407 audit of all six weekday-NPC graphs established:
+> **A dialogue interaction is owned by the nearest selectable entry on the concrete authored root-to-answer path whose persistent lifetime is consumed by the progressing branch.**
 
-- 243 authored MultiAnswer occurrences;
-- 91 non-`@` occurrences;
+Accepted precedence:
+
+1. If the selected/progressing answer persistently blacklists itself, self wins.
+2. Otherwise inspect selectable ancestors on that same root path nearest-first.
+3. The first persistently blacklisted selectable ancestor is the lifecycle owner.
+4. If no self/ancestor is persistently consumed, the generic dialogue layer emits no interaction.
+5. Alternative children that resolve to the same owner are variants of one interaction.
+6. A lifecycle owner already represented by a task-owned visit is suppressed from the generic layer.
+7. Descendants reachable only through an already task-owned interaction are same-visit continuations, not separate reminders.
+8. Current phrase state, supported AnswerData/SmartRes gates, and navigation reachability remain authoritative.
+9. Reversible, ambiguous, utility-like, unsupported, or root-unreachable structures fail closed.
+10. Display text is irrelevant.
+
+The `@` prefix is only an identifier convention. Accepted 1.0.35 proved non-`@` exact-self interactions; accepted 1.1.6 proves child-consumed parent ownership.
+
+### Complete six-NPC lifecycle census
+
+The read-only GK 1.407 census over all six weekday-NPC graphs established:
+
+- 243 authored answer occurrences;
+- 161 branches with persistent blacklist effects;
+- 204 path-local self-owned paths;
+- 12 path-local ancestor-owned paths;
+- 0 reversible self/ancestor owners admitted.
+
+The 12 ancestor-owned paths collapse to exactly six unique lifecycle owners:
+
+- Astrologer `@tr_quest_13_research_1` — admitted;
+- Snake `@snake_1с` — admitted;
+- Merchant `@merchant_2b` — task-owned, suppressed;
+- Merchant `@merchant_2e_1e` — admitted on a concrete authored path;
+- Merchant `@merchant_favore_done` — task-owned, suppressed;
+- Bishop `bishop_2_1a` — admitted.
+
+Therefore schema 5 expects **6 ancestor-owner candidates / 2 task-owned exclusions / 4 admitted / 4 supported / 0 unsupported**.
+
+### Exact-self/non-`@` retained evidence
+
+The earlier complete non-`@` audit remains valid:
+
 - 77 unique non-`@` answer IDs;
-- exactly 19 non-`@` candidates whose selected branch blacklists that exact same answer ID;
-- 0 reversible candidates among those 19;
-- 0 utility-like `Leave` / `Back` / `Trade` candidates among those 19;
-- both previously observed false negatives, Astrologer `astrologer_2a_1b_6c` and Snake `snake_1a`, belong to that exact-self-consuming class.
+- exactly 19 exact-self-consuming candidates;
+- 0 reversible candidates;
+- 0 utility-like `Leave` / `Back` / `Trade` candidates;
+- 9 task/completion-owned exclusions;
+- 6 admitted independent exact-self topics.
 
-The accepted structural distinction is therefore:
+Exact self-consumption is no longer a separate semantic model; it is the first-precedence case of the general lifecycle-owner rule.
 
-- one-time conversations may use either `@...` or non-`@` answer IDs and consume their own exact ID;
-- repeatable utility choices such as Trade / Leave / Back do not self-consume;
-- submenu/container headers that do not consume themselves are not reminder interactions merely because their menu is visible.
+### Runtime regression proving ancestor ownership
 
-Runtime evidence from earlier accepted releases established the same lifecycle for `@` topics such as `@inquisitor_magic_item`. Accepted 1.0.35 player evidence establishes it for non-`@` answers: Snake `snake_1a` produced a marker while its 5-Faith gate was satisfied, then disappeared after the player selected the interaction and the answer was consumed. In the same state Ms. Charm had another 5-Faith-gated interaction; spending the five Faith on Snake made that gate unsatisfied and her marker disappeared as well.
+The accepted 1.1.6 Snake test provides direct player proof:
 
-This establishes the general reminder source:
+- `@snake_1с` was reachable with its authored fake-coins gate satisfied;
+- Restoration Tools was independently actionable at the same time;
+- the wheel showed **2 markers**;
+- after a child branch consumed parent `@snake_1с`, the wheel showed **1 marker**;
+- after consuming Restoration Tools, the wheel showed **0 markers**.
 
-`currently reachable independent interaction + exact authored self-consuming answer + supported/satisfied answer gates -> weekday marker`
-
-The rule intentionally does **not** require a journal task mutation or downstream quest effect. A unique authored conversation itself can be reminder-worthy.
-
-Production guardrails for this rule:
-
-1. the answer must be authored on one of the six weekday-NPC graphs;
-2. its own authored route must add the exact same answer ID to the phrase blacklist;
-3. `Flow_AddPhraseToBlacklist` nodes with `remove=true` are not consumption evidence;
-4. the answer must not already be blacklisted; `@...` topics additionally require their authored unlocked-phrase state;
-5. supported authored final-answer `Flow_Answer` price/lock gates must pass game-owned sufficiency checks;
-6. every required ancestor menu/answer on at least one authored root-to-answer path must currently be reachable;
-7. answers already owned by task-completion rules remain handled by the task-linked rule set rather than being double-counted by the generic exact-self-consuming layer;
-8. a generic exact-self answer must have at least one authored root-to-answer path that does not first pass through an already task-owned answer; downstream choices that exist only inside the same interaction chain are part of that visit, not separate reminders;
-9. unsupported or ambiguous topology/gates fail closed;
-10. no translated/display text is used for classification.
-
-Accepted 1.1.3 compiles both persisted `@` topics and the audited non-`@` exact-self class into one schema-4 persistent manifest at `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin`. The old 1.0.35 `non-at-self-consuming-1.407.bin` file is no longer read by production and can remain harmlessly on disk.
+The 1.1.5 hard-coded Snake rule is retired. Schema 5 derives `@snake_1с` through the common lifecycle compiler.
 
 ## Verified root-to-answer navigation reachability
 
@@ -162,18 +186,17 @@ Prior research established narrow objective stages that the direct task-completi
 
 Static persisted-topic evidence confirms these reminder-bearing stage topics are exact self-consuming authored topics. Production derives them through the generic one-shot classifier instead of maintaining parallel `VerifiedBridgeReminderRules` / `VerifiedIntermediateReminderRules` manifests.
 
-### Verified Ms. Charm -> Snake counterfeit-coins submenu parent
+### Ms. Charm -> Snake counterfeit-coins evidence
 
-A 2026-09-19 runtime/state capture plus existing GK 1.407 graph audits establish one additional exact intermediate shape that is intentionally **not** generalized into the exact-self topic compiler:
+The 2026-09-19 state capture remains canonical evidence for ancestor consumption:
 
-- Ms. Charm's `@actress_2b_1a` branch makes `npc_actress/actress_money` Visible and unlocks Snake phrase `@snake_1с`;
-- Snake `@snake_1с` is top-level `Flow_MultiAnswer` entry `multi=106 index=2`, with authored price `Item:quest_fake_coins = 1`;
-- the parent is a submenu boundary and does **not** directly blacklist itself;
-- its two authored child answers `snake_1с_4a` and `snake_1с_4b` both blacklist parent `@snake_1с` and unlock `@actress_snake_back`;
-- Ms. Charm `@actress_snake_back` then completes `actress_money` and exposes the next necklace stage;
-- in the captured live state, `actress_money` is Visible, `@snake_1с` is unlocked/not blacklisted, `@snake_instrument` is simultaneously actionable, the game renders both Snake conversations, but accepted 1.1.3 contributes only `@snake_instrument`, producing one marker.
+- Ms. Charm's `@actress_2b_1a` makes `npc_actress/actress_money` Visible and unlocks Snake `@snake_1с`;
+- Snake `@snake_1с` is a top-level item-gated selectable entry requiring `Item:quest_fake_coins = 1`;
+- the parent does not consume itself;
+- both authored children `snake_1с_4a` and `snake_1с_4b` persistently blacklist parent `@snake_1с`;
+- both branches unlock `@actress_snake_back`.
 
-This is a verified **task-linked one-visit submenu parent**. It must not be admitted by a broad "open submenu" heuristic: production handling is allowed only as an exact verified route with the owner task state, exact phrase state, and authored `quest_fake_coins x1` SmartRes gate all satisfied.
+In 1.1.6 this is **not an exact special rule**. The common path-local lifecycle compiler resolves `@snake_1с` as the nearest consumed selectable ancestor and attaches the owner's authored gate/navigation predicates.
 
 ## Authoritative zone-quality mirrors
 
@@ -185,28 +208,28 @@ Cross-owner and generic exact-self-consuming routes retain their accepted SmartR
 
 ## Accepted persistent loading/performance contract
 
-Accepted runtime architecture as of 1.1.3:
+Accepted runtime architecture as of **1.1.6**:
 
 - per frame: timer comparison only until the one-second refresh is due;
-- one schema-4 manifest path: `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin`;
-- schema 4 stores accepted owner/cross task rules, unified self-consuming topics, and compact navigation predicates;
-- `UnifiedSelfConsumingCompiler` exists only for loading/bootstrap derivation; there is no separate gameplay non-`@` cache path;
+- one schema-5 manifest path: `BepInEx/cache/DayWheelQuestMarkers/rules-1.407.bin`;
+- schema 5 stores owner/cross task rules, unified dialogue-lifecycle topics, compact navigation predicates, and lifecycle census integrity counts;
+- `UnifiedDialogueLifecycleCompiler` exists only for loading/bootstrap derivation;
 - the legacy 1.0.35 `non-at-self-consuming-1.407.bin` is ignored;
-- when schema 4 is missing/incompatible, required graph parsing occurs only in the verified loading window;
-- later full launches deserialize compact cached data and recreate only live runtime bindings; normal gameplay is not allowed to invoke the graph parser;
-- once per second: evaluate cached task/interaction state, phrase state, cached navigation predicates, game-owned gate predicates, and live HUD semantics;
-- approximately every 30 seconds: perform allocation-light runtime/known-NPC validation through cached references and a `ulong` fingerprint rather than list/sort/string construction;
-- real known-NPC membership changes use cheap rebinding from the manifest, with no graph parse;
+- when schema 5 is missing/incompatible, graph parsing occurs only during the verified loading window;
+- cached loads deserialize compact data and recreate only live runtime bindings; normal gameplay does not invoke the graph parser;
+- once per second: evaluate cached task/interaction state, phrase state, navigation predicates, game-owned gate predicates, and live HUD semantics;
+- approximately every 30 seconds: perform allocation-light runtime/known-NPC validation through cached references and a `ulong` fingerprint;
+- real known-NPC membership changes use cheap rebinding from the manifest;
 - no background worker and no save mutation.
 
-Accepted 1.1.3 runtime evidence:
+Accepted 1.1.6 runtime evidence:
 
-- schema-3 -> schema-4 rebuild behind loading: **900.79 ms**;
-- first accepted schema-4 summary: owner 75/6, cross-owner 8/6/0, unified self-consuming 61/60/1, non-`@` universe 77 / exact-self 19 / admitted 6, navigation 210/270/151/0;
-- full restart with cache untouched: schema-4 manifest loaded in **10.42 ms** and explicitly logged `FlowCanvas graph parse skipped`;
-- the pre-diary Astrologer state showed exactly one marker instead of the earlier three; `astrologer_diary_9a/9b` are verified same-visit continuations and no longer contribute independent reminders;
-- after diary completion, the player observed one marker for the actually executable Acid hand-in while Restoration Tools were absent, confirming live item gating remains authoritative;
-- `fh=True` in dialogue logging is not sufficient by itself to prove an interaction is executable under all live resource gates; acceptance uses the actual production gate evaluation and player-observed executable state.
+- schema-4 -> schema-5 rebuild behind loading: **1005.16 ms**;
+- canonical summary: owner 75/6, cross-owner 8/6/0, dialogue-lifecycle 65/64/1, non-`@` 77 / 19 / 6, ancestor owners 6 / 2 / 4 / 4 / 0, navigation 210/270/151/0;
+- subsequent same-process save reload: schema-5 manifest read in **3.89 ms** with `FlowCanvas graph parse skipped`;
+- final live-object transition invalidated the prewarmed binding once, causing a guarded **3.21 ms** manifest re-read with no graph parse before `Ready`;
+- the fallback is bounded to the load/runtime ownership transition and is not recurring gameplay work;
+- the Snake two-interaction regression passed **2 -> 1 -> 0**.
 
 Historical performance lineage:
 
@@ -214,23 +237,35 @@ Historical performance lineage:
 - 1.0.26 moved structural parsing behind loading and persisted it;
 - 1.0.27 moved the cache under BepInEx;
 - 1.0.28 removed recurring steady-state allocations and the previous roughly 30-second rhythmic freeze pattern disappeared in player testing;
-- 1.0.30 added persisted navigation reachability while preserving the allocation-light steady state;
+- 1.0.30 added persisted navigation reachability;
 - 1.0.32 added narrow verified completion-route predicates;
-- 1.0.35 added the audited non-`@` exact-self-consuming structural class as a separate supplement;
-- 1.1.3 consolidated that supplement into schema 4 and added independent-path deduplication without adding gameplay graph traversal.
-
-The remaining sparse hitches are not attributed to Day Wheel: the same modpack/control work established a comparable baseline without Day Wheel, and accepted logs contain separate Unity `UnloadUnusedAssets` operations around 0.7 s with roughly 934k loaded objects.
+- 1.0.35 added the audited non-`@` exact-self class;
+- 1.1.3 unified exact-self persistence and independent-path deduplication;
+- 1.1.6 generalized exact-self ownership to nearest persistent lifecycle ownership without adding gameplay graph traversal.
 
 The rejected universal provenance-parser experiment pushed loading work toward roughly 1.8 seconds and is not an accepted architecture. Do not reintroduce arbitrary external dependency/provenance traversal into production.
 
-## Accepted architecture consolidation in 1.1.3
+## Accepted architecture consolidation in 1.1.6
 
-The post-1.0.35 audit found that the semantic model was more unified than the implementation. Accepted 1.1.3 performs the narrow safe consolidation that runtime evidence justified:
+The accepted architecture is now substantially more general than the historical implementation.
 
-- the separate `NonAtSelfConsumingRuleCache` production layer is removed;
-- audited non-`@` exact-self candidates compile into the same `WeekdayInteractionRuleCache.TopicRule` representation used at runtime;
-- schema 4 persists unified topic/navigation data in one primary manifest;
-- navigation supplies the independent-root-path check that prevents same-visit downstream exact-self answers from becoming extra reminders;
-- the owner/cross task derivation and the two verified mandatory event-only stages remain evidence-specific rather than being generalized into a universal parser.
+### What is unified
 
-The broader research recommendation for a single shared parsed graph index remains optional future engineering work. The rejected universal provenance parser remains rejected: production does not traverse arbitrary external quest dependency chains, and accepted 1.1.3 preserves bounded parsing of the six weekday-NPC graphs only.
+- persisted `@` and non-`@` one-time dialogue use one dialogue-lifecycle representation;
+- exact-self and child-consumed-parent cases use one **nearest persistent lifecycle owner** rule;
+- navigation ancestry, phrase state, and supported AnswerData/SmartRes gates are shared predicates;
+- task-owned and same-visit deduplication are part of compilation rather than tactical runtime exceptions;
+- the Snake counterfeit-coins hard-code from 1.1.5 is removed;
+- one schema-5 manifest persists the resulting compact runtime model.
+
+### What intentionally remains separate
+
+1. **Task ownership.** A visible journal task with an authored weekday-NPC route is a different source of evidence from dialogue lifetime. Owner-local and cross-owner are provenance variants inside this class.
+2. **Verified completion supplement.** Five promoted task routes already reuse normal topic/navigation predicates; `snake_trap` remains an exact verified relation-gated completion topology.
+3. **Mandatory event-only stages.** `npc_inquisitor/inquisitor_talk` and `npc_cultist/snake_back` have no selectable answer representing the required visit and therefore cannot honestly be forced into the dialogue-lifecycle rule.
+
+A future maintainability refactor may build one shared parsed `WeekdayGraphIndex` so the task, navigation, and lifecycle derivation passes stop duplicating bootstrap parsing/indexing. That would be a code-organization improvement, not a new gameplay algorithm, and should only be attempted with static parity guards.
+
+Likewise, the remaining promoted completion routes may be audited for derivation by a bounded task-effect compiler. Do **not** replace the current small verified supplement with the previously rejected universal provenance parser merely to claim a single algorithm.
+
+The correct target is therefore **one compact interaction engine with a small number of evidence-backed derivation passes**, not one artificial predicate pretending that Graveyard Keeper authors every required visit through the same mechanism.

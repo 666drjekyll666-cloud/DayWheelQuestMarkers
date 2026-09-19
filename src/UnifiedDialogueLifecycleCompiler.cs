@@ -7,14 +7,15 @@ using System.Text.RegularExpressions;
 namespace CalendarQuestsPins
 {
     /// <summary>
-    /// Bootstrap-only compiler for the verified non-@ exact-self-consuming answer universe.
+    /// Bootstrap-only compiler for authored one-visit dialogue lifecycles not already represented
+    /// by the base @ self-consuming parser.
     ///
-    /// The accepted 1.0.35 supplement proved that @ is only an identifier convention. This compiler
-    /// converts the same verified non-@ class directly into WeekdayInteractionRuleCache.TopicRule
-    /// instances so schema 4 can persist one unified self-consuming rule set. It deliberately does
-    /// not broaden the accepted owner/cross task-completion traversal.
+    /// It preserves the accepted non-@ exact-self universe and adds the verified GK 1.407 rule that
+    /// a progressing branch may persistently consume its nearest selectable ancestor instead of itself.
+    /// Ownership is path-local, self consumption wins, task-owned visits are deduplicated, and runtime
+    /// gameplay evaluates only persisted TopicRules/navigation predicates.
     /// </summary>
-    internal sealed class UnifiedSelfConsumingCompiler
+    internal sealed class UnifiedDialogueLifecycleCompiler
     {
         internal sealed class Stats
         {
@@ -28,11 +29,23 @@ namespace CalendarQuestsPins
             internal int AdmittedTopics;
             internal int SupportedVariants;
             internal int UnsupportedVariants;
+            internal int AncestorOwnerCandidates;
+            internal int AncestorTaskExcluded;
+            internal int AncestorReversible;
+            internal int AncestorUtility;
+            internal int AncestorNavigationExcluded;
+            internal int AncestorExistingTopicExcluded;
+            internal int AncestorAdmittedTopics;
+            internal int AncestorSupportedVariants;
+            internal int AncestorUnsupportedVariants;
         }
 
         private const int ExpectedGraphCount = 6;
         private const int ExpectedNonAtUnique = 77;
         private const int ExpectedExactSelf = 19;
+        private const int ExpectedAncestorOwnerCandidates = 6;
+        private const int ExpectedAncestorTaskExcluded = 2;
+        private const int ExpectedAncestorAdmittedTopics = 4;
 
         private static readonly string[] NpcIds =
         {
@@ -69,9 +82,44 @@ namespace CalendarQuestsPins
             internal int AnswerIndex = -1;
         }
 
+        private sealed class BranchKey : IEquatable<BranchKey>
+        {
+            internal string AnswerId;
+            internal string MultiNodeId;
+            internal int AnswerIndex;
+
+            public bool Equals(BranchKey other)
+            {
+                return other != null &&
+                       string.Equals(AnswerId, other.AnswerId, StringComparison.Ordinal) &&
+                       string.Equals(MultiNodeId, other.MultiNodeId, StringComparison.Ordinal) &&
+                       AnswerIndex == other.AnswerIndex;
+            }
+
+            public override bool Equals(object obj) { return Equals(obj as BranchKey); }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hash = 17;
+                    hash = hash * 31 + (AnswerId == null ? 0 : AnswerId.GetHashCode());
+                    hash = hash * 31 + (MultiNodeId == null ? 0 : MultiNodeId.GetHashCode());
+                    hash = hash * 31 + AnswerIndex;
+                    return hash;
+                }
+            }
+        }
+
+        private sealed class BranchEffects
+        {
+            internal BranchKey Key;
+            internal readonly HashSet<string> Blacklists = new HashSet<string>(StringComparer.Ordinal);
+        }
+
         private readonly MethodInfo _createSmartRes;
 
-        internal UnifiedSelfConsumingCompiler()
+        internal UnifiedDialogueLifecycleCompiler()
         {
             _createSmartRes = typeof(WeekdayInteractionRuleCache).GetMethod(
                 "CreateSmartRes", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -85,7 +133,7 @@ namespace CalendarQuestsPins
             failure = null;
             if (targets == null || graphs == null || cache == null || navigation == null || _createSmartRes == null)
             {
-                failure = "unified self-consuming compiler inputs are incomplete";
+                failure = "unified dialogue lifecycle compiler inputs are incomplete";
                 return false;
             }
 
@@ -107,7 +155,7 @@ namespace CalendarQuestsPins
                 if (!graphs.TryGetValue(npcId, out serialized) || string.IsNullOrEmpty(serialized) ||
                     !targetsByNpc.TryGetValue(npcId, out target) || target == null || target.WorldObject == null)
                 {
-                    failure = "unified self-consuming graph/target unavailable: " + npcId;
+                    failure = "unified dialogue lifecycle graph/target unavailable: " + npcId;
                     return false;
                 }
                 stats.GraphCount++;
@@ -116,7 +164,7 @@ namespace CalendarQuestsPins
                 var connections = ParseConnections(serialized);
                 if (nodes.Count == 0 || connections.Count == 0)
                 {
-                    failure = "unified self-consuming graph index is empty: " + npcId;
+                    failure = "unified dialogue lifecycle graph index is empty: " + npcId;
                     return false;
                 }
 
@@ -194,6 +242,9 @@ namespace CalendarQuestsPins
                         else stats.SupportedVariants++;
                     }
                 }
+
+                CompileAncestorOwners(npcId, serialized, nodes, connections, exactIncoming, callsByUid,
+                    removals, completionAnswerIds, target, cache, navigation, stats);
             }
 
             stats.NonAtUnique = allNonAt.Count;
@@ -207,24 +258,194 @@ namespace CalendarQuestsPins
             failure = null;
             if (stats == null)
             {
-                failure = "unified self-consuming stats are null";
+                failure = "unified dialogue lifecycle stats are null";
                 return false;
             }
             if (stats.GraphCount != ExpectedGraphCount || stats.NonAtUnique != ExpectedNonAtUnique ||
                 stats.ExactSelf != ExpectedExactSelf || stats.Reversible != 0 || stats.Utility != 0 ||
-                stats.AdmittedTopics + stats.CompletionExcluded + stats.NavigationExcluded != ExpectedExactSelf)
+                stats.AdmittedTopics + stats.CompletionExcluded + stats.NavigationExcluded != ExpectedExactSelf ||
+                stats.AncestorOwnerCandidates != ExpectedAncestorOwnerCandidates ||
+                stats.AncestorTaskExcluded != ExpectedAncestorTaskExcluded ||
+                stats.AncestorReversible != 0 || stats.AncestorUtility != 0 ||
+                stats.AncestorNavigationExcluded != 0 || stats.AncestorExistingTopicExcluded != 0 ||
+                stats.AncestorAdmittedTopics != ExpectedAncestorAdmittedTopics ||
+                stats.AncestorUnsupportedVariants != 0)
             {
-                failure = "unified self-consuming universe mismatch: graphs=" + stats.GraphCount + "/" + ExpectedGraphCount +
+                failure = "unified dialogue lifecycle universe mismatch: graphs=" + stats.GraphCount + "/" + ExpectedGraphCount +
                           ", nonAtUnique=" + stats.NonAtUnique + "/" + ExpectedNonAtUnique +
                           ", exactSelf=" + stats.ExactSelf + "/" + ExpectedExactSelf +
                           ", reversible=" + stats.Reversible +
                           ", utility=" + stats.Utility +
-                          ", admitted=" + stats.AdmittedTopics +
+                          ", admittedSelf=" + stats.AdmittedTopics +
                           ", completionExcluded=" + stats.CompletionExcluded +
-                          ", navigationExcluded=" + stats.NavigationExcluded;
+                          ", navigationExcluded=" + stats.NavigationExcluded +
+                          ", ancestorCandidates=" + stats.AncestorOwnerCandidates + "/" + ExpectedAncestorOwnerCandidates +
+                          ", ancestorTaskExcluded=" + stats.AncestorTaskExcluded + "/" + ExpectedAncestorTaskExcluded +
+                          ", ancestorReversible=" + stats.AncestorReversible +
+                          ", ancestorUtility=" + stats.AncestorUtility +
+                          ", ancestorNavigationExcluded=" + stats.AncestorNavigationExcluded +
+                          ", ancestorExistingTopicExcluded=" + stats.AncestorExistingTopicExcluded +
+                          ", ancestorAdmitted=" + stats.AncestorAdmittedTopics + "/" + ExpectedAncestorAdmittedTopics +
+                          ", ancestorUnsupportedVariants=" + stats.AncestorUnsupportedVariants;
                 return false;
             }
             return true;
+        }
+
+        private void CompileAncestorOwners(string npcId, string serialized,
+            Dictionary<string, Node> nodes, List<Connection> connections,
+            Dictionary<string, List<Connection>> exactIncoming, Dictionary<string, List<string>> callsByUid,
+            HashSet<string> removals, HashSet<string> completionAnswerIds,
+            WeekdayInteractionRuleCache.TargetRules target, WeekdayInteractionRuleCache cache,
+            NavigationReachabilityCache navigation, Stats stats)
+        {
+            var branches = BuildBranchEffects(nodes, exactIncoming, callsByUid, serialized);
+            var owners = new HashSet<string>(StringComparer.Ordinal);
+
+            foreach (var pair in branches)
+            {
+                var branch = pair.Value;
+                if (branch == null || branch.Key == null || string.IsNullOrEmpty(branch.Key.AnswerId)) continue;
+
+                // Exact self-consumption always owns the interaction. Ancestor inspection is only
+                // for branches that do not persistently consume the selected answer itself.
+                if (branch.Blacklists.Contains(branch.Key.AnswerId)) continue;
+
+                var paths = navigation.GetPathsForCompilation(npcId, branch.Key.AnswerId);
+                if (paths == null) continue;
+                for (var p = 0; p < paths.Count; p++)
+                {
+                    var path = paths[p];
+                    if (path == null || path.Unsupported) continue;
+                    for (var a = path.Ancestors.Count - 1; a >= 0; a--)
+                    {
+                        var ancestor = path.Ancestors[a];
+                        if (ancestor == null || string.IsNullOrEmpty(ancestor.AnswerId)) continue;
+                        if (!branch.Blacklists.Contains(ancestor.AnswerId)) continue;
+                        owners.Add(ancestor.AnswerId);
+                        break;
+                    }
+                }
+            }
+
+            var ownerIds = new List<string>(owners);
+            ownerIds.Sort(StringComparer.Ordinal);
+            for (var i = 0; i < ownerIds.Count; i++)
+            {
+                var ownerId = ownerIds[i];
+                stats.AncestorOwnerCandidates++;
+
+                if (completionAnswerIds.Contains(ownerId))
+                {
+                    stats.AncestorTaskExcluded++;
+                    continue;
+                }
+                if (removals.Contains(ownerId))
+                {
+                    stats.AncestorReversible++;
+                    continue;
+                }
+                if (IsUtilityLike(ownerId))
+                {
+                    stats.AncestorUtility++;
+                    continue;
+                }
+                if (!navigation.HasInteractionRootPathWithoutAncestors(npcId, ownerId, completionAnswerIds))
+                {
+                    stats.AncestorNavigationExcluded++;
+                    continue;
+                }
+                if (FindTopic(target, ownerId) != null)
+                {
+                    stats.AncestorExistingTopicExcluded++;
+                    continue;
+                }
+
+                var topic = BuildTopicForAnswer(ownerId, serialized, nodes, connections, target.WorldObject, cache);
+                if (topic == null || topic.Variants.Count == 0) continue;
+                target.Topics.Add(topic);
+                stats.AncestorAdmittedTopics++;
+                for (var v = 0; v < topic.Variants.Count; v++)
+                {
+                    if (topic.Variants[v] != null && topic.Variants[v].Unsupported)
+                        stats.AncestorUnsupportedVariants++;
+                    else
+                        stats.AncestorSupportedVariants++;
+                }
+            }
+        }
+
+        private static Dictionary<BranchKey, BranchEffects> BuildBranchEffects(
+            Dictionary<string, Node> nodes, Dictionary<string, List<Connection>> exactIncoming,
+            Dictionary<string, List<string>> callsByUid, string serialized)
+        {
+            var result = new Dictionary<BranchKey, BranchEffects>();
+            foreach (var node in nodes.Values)
+            {
+                string blacklistedId;
+                if (!TryReadBlacklistAdd(node, serialized, out blacklistedId) || string.IsNullOrEmpty(blacklistedId))
+                    continue;
+
+                var anchors = FindExactAnswerAnchors(nodes, exactIncoming, callsByUid, node.Id, 96);
+                for (var a = 0; a < anchors.Count; a++)
+                {
+                    var anchor = anchors[a];
+                    Node multi;
+                    if (!nodes.TryGetValue(anchor.MultiNodeId, out multi)) continue;
+                    var answers = ReadMultiAnswers(serialized, multi);
+                    if (anchor.AnswerIndex < 0 || anchor.AnswerIndex >= answers.Count) continue;
+                    var answerId = answers[anchor.AnswerIndex];
+                    if (string.IsNullOrEmpty(answerId)) continue;
+
+                    var key = new BranchKey
+                    {
+                        AnswerId = answerId,
+                        MultiNodeId = anchor.MultiNodeId,
+                        AnswerIndex = anchor.AnswerIndex
+                    };
+                    BranchEffects effects;
+                    if (!result.TryGetValue(key, out effects))
+                    {
+                        effects = new BranchEffects { Key = key };
+                        result.Add(key, effects);
+                    }
+                    effects.Blacklists.Add(blacklistedId);
+                }
+            }
+            return result;
+        }
+
+        private WeekdayInteractionRuleCache.TopicRule BuildTopicForAnswer(string answerId, string serialized,
+            Dictionary<string, Node> nodes, List<Connection> connections, object worldObject,
+            WeekdayInteractionRuleCache cache)
+        {
+            var merged = new WeekdayInteractionRuleCache.TopicRule { AnswerId = answerId };
+            foreach (var node in nodes.Values)
+            {
+                if (!node.Type.EndsWith("Flow_MultiAnswer", StringComparison.Ordinal)) continue;
+                var answers = ReadMultiAnswers(serialized, node);
+                for (var i = 0; i < answers.Count; i++)
+                {
+                    if (!string.Equals(answers[i], answerId, StringComparison.Ordinal)) continue;
+                    var topic = BuildTopic(answerId, node.Id, i, serialized, nodes, connections, worldObject, cache);
+                    for (var v = 0; v < topic.Variants.Count; v++) AddVariant(merged, topic.Variants[v]);
+                }
+            }
+            if (merged.Variants.Count == 0)
+                merged.Variants.Add(new WeekdayInteractionRuleCache.RuleVariant { AnswerId = answerId, Unsupported = true });
+            return merged;
+        }
+
+        private static WeekdayInteractionRuleCache.TopicRule FindTopic(
+            WeekdayInteractionRuleCache.TargetRules target, string answerId)
+        {
+            if (target == null || string.IsNullOrEmpty(answerId)) return null;
+            for (var i = 0; i < target.Topics.Count; i++)
+            {
+                var topic = target.Topics[i];
+                if (topic != null && string.Equals(topic.AnswerId, answerId, StringComparison.Ordinal)) return topic;
+            }
+            return null;
         }
 
         private WeekdayInteractionRuleCache.TopicRule BuildTopic(string answerId, string multiId, int answerIndex,

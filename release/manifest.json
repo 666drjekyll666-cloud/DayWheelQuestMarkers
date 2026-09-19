@@ -1,10 +1,10 @@
 {
-  "version": "1.1.3",
-  "tag": "v1.1.3",
-  "title": "Day Wheel Quest Markers 1.1.3",
-  "source_sha": "438558980ae5fbf62cac361b14f9aaaf8d292099",
-  "artifact_id": 10571433560,
-  "asset_name": "Day Wheel Quest Markers 1.1.3.dll",
-  "sha256": "4cd4c67063deb672de32d1d88bb578fdcf5800dc4012ce397b5ceac13735030a",
-  "notes_file": "release/1.1.3.md"
+  "version": "1.1.6",
+  "tag": "v1.1.6",
+  "title": "Day Wheel Quest Markers 1.1.6",
+  "source_sha": "e2ad9c7ef2bbf312ae79f2a2fb3d1bfb7f5cc1c7",
+  "artifact_id": 10586585349,
+  "asset_name": "Day Wheel Quest Markers 1.1.6.dll",
+  "sha256": "d17cf1629acb92c9c06a8f983a826a75c40fa8f0b38fff48c45d48314e19a339",
+  "notes_file": "release/1.1.6.md"
 }

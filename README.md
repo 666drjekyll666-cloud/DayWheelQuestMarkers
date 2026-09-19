@@ -20,7 +20,7 @@ Unsupported structures fail closed rather than producing a misleading marker.
 
 - Supports the six vanilla weekday NPCs: Astrologer, Inquisitor, Snake, Merchant, Ms. Charm, and Bishop.
 - Handles normal NPC-owned objectives and verified cross-owner objectives.
-- Detects currently available authored one-time weekday-NPC conversations without requiring them to complete a visible journal task.
+- Detects currently available authored one-time weekday-NPC conversations through their persistent dialogue lifecycle, including child choices that consume a one-time parent interaction.
 - Covers verified intermediate and bridge progression cases that are not represented by a simple owner-local task-completion route.
 - Preserves the game's quest-marker categories and colors where the interaction has a known task category.
 - Shows separate markers for multiple simultaneous independent actionable interactions on the same weekday, without double-counting follow-up choices from the same NPC visit.
