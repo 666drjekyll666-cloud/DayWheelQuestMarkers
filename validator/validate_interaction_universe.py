@@ -509,14 +509,21 @@ def validate_live_answer_dispositions(
                 disposition = "NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER"
                 evidence = "no-task-completion-no-persistent-lifecycle"
 
-        derived[key] = (disposition, owner, evidence)
+        task_ids = ",".join(sorted({
+            x["task"] for x in task_routes
+            if x["kind"] == "SELECTABLE"
+            and x["npc"] == row["npc"]
+            and x["answer"] == row["id"]
+            and x["trace"] == row["node"]
+        }))
+        derived[key] = (disposition, owner, task_ids, evidence)
 
     log.check("live_dispositions.derivation_conflicts", not conflicts,
               "none" if not conflicts else "; ".join(conflicts[:8]))
 
     accepted = {
         (x["npc"], x["multi"], x["index"], x["answer"]):
-            (x["disposition"], x["owner"], x["evidence"])
+            (x["disposition"], x["owner"], x["tasks"], x["evidence"])
         for x in accepted_rows
     }
     log.check("live_dispositions.rows",
