@@ -1,75 +1,113 @@
-# Runtime Watchdog 0.1.0
+# Runtime Watchdog 0.2.0
 
 Status: **research-only / read-only / companion diagnostic for accepted Day Wheel Quest Markers 1.1.6**.
 
 ## Purpose
 
-The runtime watchdog is the live companion to the static interaction-universe validator.
+Runtime Watchdog 0.2.0 combines two independent live checks:
 
-The static validator answers:
+1. **production/runtime integrity** — accepted manifest counts, live bindings, known weekday-NPC bindings, and desired-marker vs active-HUD parity;
+2. **live dialogue coverage** — every authored weekday-NPC multi-answer menu that actually executes, and every option the game actually renders, must belong to the accepted GK 1.407 interaction universe.
 
-> Does the accepted GK 1.407 six-weekday-NPC interaction universe remain structurally accounted for?
+The watchdog never mutates the save, tasks, phrases, NPC state, production plugin fields, or production marker UI.
 
-The runtime watchdog answers:
+## Live dialogue seam
 
-> While the accepted 1.1.6 production DLL is running, is a proven runtime contract currently being violated?
+Accepted GK 1.407 assembly evidence establishes this native chain:
 
-It never mutates the save, tasks, phrases, NPC state, production plugin fields, or marker UI.
+`Flow_MultiAnswer -> WorldGameObject.ShowMultianswer -> MultiAnswerGUI.ShowAnswers -> MultiAnswerOptionGUI.Show`
 
-## Visible behavior
+0.2.0 uses Harmony only at those narrow presentation/execution seams:
 
-Normal state: **no watchdog UI at all**.
+- the exact `Flow_MultiAnswer` runtime callback identifies the owning weekday NPC, exact multi-answer node ID, and authored answer list;
+- `MultiAnswerOptionGUI.Show(AnswerVisualData, ...)` observes only options the game actually renders and records the game-owned `id` and `can_be_picked` state;
+- reconciliation completes at the end of the native rendered-menu `MultiAnswerGUI.ShowAnswers` call.
 
-After a proven contradiction persists for three one-second samples, the watchdog displays a large red **!** in the upper-right corner and the text:
+No FlowCanvas graph scan is performed during gameplay.
+
+## Accepted live-answer universe
+
+The embedded baseline contains exactly **243 authored answer occurrences / 224 unique NPC+answer IDs** across the six weekday-NPC graphs.
+
+Every exact `npc + multi node + answer index + answer ID` occurrence has an evidence-derived disposition:
+
+- `REMINDER_TASK_OWNED`: 88;
+- `REMINDER_DIALOGUE_OWNER`: 58;
+- `NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER`: 67;
+- `SAME_VISIT_NON_REMINDER`: 4;
+- `SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER`: 6;
+- `SAME_VISIT_DESCENDANT_OF_TASK_OWNER`: 6;
+- `EVENT_INVOKED_NON_REMINDER`: 14;
+- **UNKNOWN: 0**.
+
+This table is independently re-derived by `validator/validate_interaction_universe.py` from the accepted raw, lifecycle, task-route, and event-frontier fixtures. It is not a hand-written display-text whitelist.
+
+## Failure behavior
+
+Normal state: **no watchdog UI**.
+
+A live coverage contradiction is sticky for the current session and immediately shows a large red **!** in the upper-right corner plus:
 
 `DAY WHEEL WATCHDOG FAIL: <code>`
 
-The same failure is logged once as:
+Key live failure codes include:
 
-`WATCHDOG_FAIL code=<code> detail=<details>`
+- `LIVE_AUTHORED_MENU_UNKNOWN` — a weekday-NPC Flow_MultiAnswer node executed but is absent from the accepted universe;
+- `LIVE_AUTHORED_MENU_DRIFT` — the executing node's authored answer list differs from the accepted exact node/index/ID contract;
+- `LIVE_DIALOGUE_UNKNOWN` — an actually rendered option cannot be mapped to its exact accepted occurrence/disposition;
+- `LIVE_DIALOGUE_CONTEXT` — exact NPC/menu identity could not be read at the verified seam;
+- `LIVE_DIALOGUE_HOOK_EXCEPTION` — the observed menu execution failed inside the hooked native path;
+- `LIVE_WATCHDOG_INIT` — the fixture or verified GK 1.407 hook seam cannot be installed.
 
-When the contradiction disappears, the indicator disappears and the log records `WATCHDOG_RECOVERED`.
+Existing 0.1.0 runtime-integrity failure codes remain active.
 
-## Checks
+For successful weekday-NPC menus, the log emits one compact `LIVE_DIALOGUE_ACCOUNTING` record containing authored/visible/pickable counts and the evidence disposition of each rendered option.
 
-After a 12-second post-start grace period:
+## Marker comparison boundary
 
-1. the production plugin exists and is exactly version 1.1.6;
-2. accepted schema-5 structural counts match the frozen 1.1.6 contract;
-3. the production manifest reports valid live runtime bindings;
-4. the set of known weekday NPCs independently read from the save matches the set bound by the production rule cache;
-5. desired marker counts/styles in the production evaluator match the active marker visuals actually held by `CalendarMarkers`.
+0.2.0 deliberately does **not** assert that the number of options visible in the current submenu must equal the total marker count. That would be false for nested navigation, task-owned deduplication, same-visit descendants, and mandatory event-only stages.
 
-The three-sample persistence gate is intentional so HUD recreation / save-load ownership transitions do not create one-frame false alarms.
+Instead:
 
-## Scope and limitation
+- live dialogue coverage proves that every actual menu surface is known and classified;
+- the static validator proves the accepted classification table has no unexplained authored answer occurrence;
+- the existing runtime-integrity layer proves production's desired marker set is what the HUD actually renders.
 
-A missing red indicator means **no monitored contract violation was detected**. It is not a mathematical proof that every gameplay semantic is correct.
-
-Completeness of authored interaction discovery is covered separately by the static interaction-universe validator, whose accepted six-NPC baseline currently has `UNKNOWN = 0`.
-
-The two layers are complementary:
-
-- static coverage prevents unexplained authored interaction surfaces from being silently omitted;
-- runtime watchdog detects manifest/binding/rendering contradictions while production runs.
+A stricter live option-to-marker equality should only be added if an independent timing/dedup oracle is proven; 0.2.0 avoids a false-positive heuristic.
 
 ## Performance
 
-- one timer comparison per frame;
-- one bounded reflection-based check per second;
-- no FlowCanvas graph parsing;
-- no hierarchy/resource scan after the production/MainGame references have been found;
+Steady state is intentionally cheap:
+
+- per frame: only the BaseUnityPlugin timer comparison;
+- ordinary integrity checks: once every **5 seconds**;
+- transient integrity mismatch must repeat on **2 consecutive checks** before a red failure;
+- live dialogue coverage: **event-driven only**, doing work only while a weekday-NPC multi-answer menu is actually constructed;
+- embedded 243-row disposition table is parsed once at plugin startup;
+- live occurrence lookup is dictionary-based;
+- no FlowCanvas graph traversal;
+- no broad hierarchy/resource scans after the required runtime references are cached;
 - no background worker;
-- `OnGUI` returns immediately unless a failure is active.
+- no save mutation.
 
-## Frozen build
+The key live unknown-dialogue failures are immediate and do not wait for the five-second integrity cadence.
 
-- version: 0.1.0;
-- exact source: `170cb075ef9618a7b9eb8373de3ebb8c2f6205ff`;
-- frozen ref: `frozen/runtime-watchdog-0.1.0`;
-- CI run: `35453049579`;
-- job: `105923433242`;
+## Candidate 0.2.0
+
+- exact build source: `0956ccb26af5e72b4d834e3cd42e183f985bdf20`;
+- frozen ref: `frozen/runtime-watchdog-0.2.0`;
+- build workflow run: `35456895718`;
+- build job: `105933680313`;
 - build: **success, 0 warnings / 0 errors**;
-- artifact: `DayWheelQuestMarkers-RuntimeWatchdog-0.1.0`, ID `10587138300`;
-- raw DLL size: **17,920 bytes**;
-- raw DLL SHA-256: `c4a901ef1fa8bcd5b8682e46f2952a1f738302c34214ef54ad8070d2acf4c703`.
+- artifact: `DayWheelQuestMarkers-RuntimeWatchdog-0.2.0`, ID `10588138858`;
+- raw DLL size: **57,344 bytes**;
+- raw DLL SHA-256: `04649c1444275a3e9e2361f912a2326081e231b748ad760c22893aa489e6f067`.
+
+Supporting exhaustive validator:
+
+- run `35456618512`;
+- job `105932928974`;
+- **PASS, 88 checks / 0 failed**;
+- live dispositions: **243 occurrences classified / UNKNOWN=0**.
+
+Production Day Wheel Quest Markers 1.1.6 is unchanged.
