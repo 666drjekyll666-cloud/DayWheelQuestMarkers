@@ -10,7 +10,7 @@ namespace CalendarQuestsPins
     {
         public const string PluginGuid = "nikich.gyk.calendarquestspins";
         public const string PluginName = "Day Wheel Quest Markers";
-        public const string PluginVersion = "1.1.3";
+        public const string PluginVersion = "1.1.4";
 
         private const float TickSeconds = 1f;
         private const float StructureCheckSeconds = 30f;
@@ -26,6 +26,7 @@ namespace CalendarQuestsPins
         private bool _waitingForPeriodicNpc;
         private bool _loggedReady;
         private bool _prewarmedDuringLoading;
+        private bool _snakeContributorDumped;
         private ulong _currentKnownNpcFingerprint;
 
         private readonly List<MarkerStyle>[] _currentSinMarkers = new List<MarkerStyle>[7];
@@ -185,10 +186,21 @@ namespace CalendarQuestsPins
             ReflectionUtil.TryRead(_save, "black_list_of_phrases", out blacklisted);
             ClearMarkerSets();
 
+            var traceSnake = !_snakeContributorDumped;
+            var snakeContributors = 0;
+            if (traceSnake)
+            {
+                Logger.LogInfo("SNAKE_MARKER_BEGIN");
+                LogSnakePhraseState(unlocked, blacklisted, "@snake_1\u0441");
+                LogSnakePhraseState(unlocked, blacklisted, "@snake_instrument");
+                LogNpcTaskState("npc_actress", "actress_money");
+            }
+
             foreach (var target in _rules.AllTargets)
             {
                 var sinTypeValue = GetSinTypeValue(target.NpcId);
                 if (sinTypeValue <= 0 || sinTypeValue >= _currentSinMarkers.Length) continue;
+                var traceTarget = traceSnake && string.Equals(target.NpcId, "npc_cultist", StringComparison.Ordinal);
 
                 if (target.KnownNpc != null)
                 {
@@ -199,30 +211,65 @@ namespace CalendarQuestsPins
                         {
                             string taskId;
                             if (!WeekdayInteractionRuleCache.IsVisibleTask(task, out taskId)) continue;
-                            var actionable = _reachability.IsOwnerTaskActionable(target, taskId, unlocked, blacklisted) ||
-                                             _verifiedCompletionRules.IsOwnerTaskActionable(target, taskId, unlocked, blacklisted,
-                                                 _reachability, _mainGame);
+                            var navigationActionable = _reachability.IsOwnerTaskActionable(target, taskId, unlocked, blacklisted);
+                            var verifiedActionable = _verifiedCompletionRules.IsOwnerTaskActionable(target, taskId, unlocked, blacklisted,
+                                _reachability, _mainGame);
+                            var actionable = navigationActionable || verifiedActionable;
+                            if (traceTarget)
+                                Logger.LogInfo("SNAKE_OWNER task=" + taskId +
+                                               " navigation=" + navigationActionable +
+                                               " verified=" + verifiedActionable +
+                                               " actionable=" + actionable);
                             if (!actionable) continue;
                             AddMarker(sinTypeValue, GetMarkerStyle(taskId));
+                            if (traceTarget) snakeContributors++;
                         }
                     }
 
                     for (var i = 0; i < target.Topics.Count; i++)
                     {
                         var topic = target.Topics[i];
-                        if (topic == null || VerifiedCompletionReminderRules.IsPromotedCompletionTopic(target.NpcId, topic.AnswerId)) continue;
-                        if (!_reachability.IsTopicActionable(target, topic, unlocked, blacklisted)) continue;
+                        if (topic == null) continue;
+                        var promoted = VerifiedCompletionReminderRules.IsPromotedCompletionTopic(target.NpcId, topic.AnswerId);
+                        var topicNavigation = _reachability.IsNavigationReachable(target.NpcId, topic.AnswerId, unlocked, blacklisted);
+                        var topicActionable = _reachability.IsTopicActionable(target, topic, unlocked, blacklisted);
+                        if (traceTarget)
+                            Logger.LogInfo("SNAKE_TOPIC answer=" + topic.AnswerId +
+                                           " unlocked=" + ContainsString(unlocked, topic.AnswerId) +
+                                           " blacklisted=" + ContainsString(blacklisted, topic.AnswerId) +
+                                           " navigation=" + topicNavigation +
+                                           " actionable=" + topicActionable +
+                                           " promoted=" + promoted +
+                                           " variants=" + FormatVariantIds(topic.Variants));
+                        if (promoted || !topicActionable) continue;
                         AddMarker(sinTypeValue, MarkerStyle.Base);
+                        if (traceTarget) snakeContributors++;
                     }
                 }
 
                 for (var i = 0; i < target.CrossTasks.Count; i++)
                 {
                     var task = target.CrossTasks[i];
-                    if (!_rules.IsCrossTaskVisible(task)) continue;
-                    if (!_reachability.IsCrossTaskActionable(target, task, unlocked, blacklisted)) continue;
+                    var visible = _rules.IsCrossTaskVisible(task);
+                    var actionable = _reachability.IsCrossTaskActionable(target, task, unlocked, blacklisted);
+                    if (traceTarget)
+                        Logger.LogInfo("SNAKE_CROSS owner=" + task.OwnerNpcId +
+                                       " task=" + task.TaskId +
+                                       " visible=" + visible +
+                                       " actionable=" + actionable +
+                                       " variants=" + FormatVariantIds(task.Rules));
+                    if (!visible || !actionable) continue;
                     AddMarker(sinTypeValue, GetMarkerStyle(task.TaskId));
+                    if (traceTarget) snakeContributors++;
                 }
+            }
+
+            if (traceSnake)
+            {
+                Logger.LogInfo("SNAKE_MARKER_SUMMARY visualCount=" + _currentSinMarkers[3].Count +
+                               " contributorCount=" + snakeContributors);
+                Logger.LogInfo("SNAKE_MARKER_END");
+                _snakeContributorDumped = true;
             }
 
             if (!HasAnyMarkers())
@@ -279,6 +326,7 @@ namespace CalendarQuestsPins
             {
                 _save = newSave;
                 _runtimeRestoreAttemptedSave = null;
+                _snakeContributorDumped = false;
                 ClearRuntimeCaches();
                 _prewarmedDuringLoading = false;
                 _nextStructureCheck = Time.realtimeSinceStartup + StructureCheckSeconds;
@@ -389,6 +437,55 @@ namespace CalendarQuestsPins
                            ", paths=" + _manifest.NavigationPathCount +
                            ", predicates=" + _manifest.NavigationPredicateCount +
                            ", unsupported paths=" + _manifest.NavigationUnsupportedPathCount + ".");
+        }
+
+        private void LogSnakePhraseState(object unlocked, object blacklisted, string answerId)
+        {
+            Logger.LogInfo("SNAKE_PHRASE answer=" + answerId +
+                           " unlocked=" + ContainsString(unlocked, answerId) +
+                           " blacklisted=" + ContainsString(blacklisted, answerId));
+        }
+
+        private void LogNpcTaskState(string npcId, string taskId)
+        {
+            foreach (var target in _rules.AllTargets)
+            {
+                if (!string.Equals(target.NpcId, npcId, StringComparison.Ordinal) || target.KnownNpc == null) continue;
+                var tasks = ReflectionUtil.EnumerateMember(target.KnownNpc, "tasks");
+                if (tasks == null) break;
+                foreach (var task in tasks)
+                {
+                    if (!string.Equals(ReflectionUtil.ReadString(task, "id"), taskId, StringComparison.Ordinal)) continue;
+                    object state;
+                    ReflectionUtil.TryRead(task, "state", out state);
+                    string ignored;
+                    Logger.LogInfo("SNAKE_TASK_STATE npc=" + npcId +
+                                   " task=" + taskId +
+                                   " state=" + (state == null ? "<null>" : state.ToString()) +
+                                   " visible=" + WeekdayInteractionRuleCache.IsVisibleTask(task, out ignored));
+                    return;
+                }
+                break;
+            }
+            Logger.LogInfo("SNAKE_TASK_STATE npc=" + npcId + " task=" + taskId + " missing=true");
+        }
+
+        private static bool ContainsString(object values, string value)
+        {
+            var enumerable = values as System.Collections.IEnumerable;
+            if (enumerable == null || string.IsNullOrEmpty(value)) return false;
+            foreach (var item in enumerable)
+                if (string.Equals(item == null ? null : item.ToString(), value, StringComparison.Ordinal)) return true;
+            return false;
+        }
+
+        private static string FormatVariantIds(List<WeekdayInteractionRuleCache.RuleVariant> variants)
+        {
+            if (variants == null || variants.Count == 0) return "<none>";
+            var ids = new List<string>(variants.Count);
+            for (var i = 0; i < variants.Count; i++)
+                ids.Add(variants[i] == null || string.IsNullOrEmpty(variants[i].AnswerId) ? "<null>" : variants[i].AnswerId);
+            return string.Join(",", ids.ToArray());
         }
 
         private static int GetSinTypeValue(string npcId)
