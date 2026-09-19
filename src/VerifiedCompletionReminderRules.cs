@@ -1,15 +1,15 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace CalendarQuestsPins
 {
     /// <summary>
-    /// Narrow GK 1.407 supplement for owner-local completion routes proven by the
-    /// auto-interaction audit but not represented as owner rules in the accepted
-    /// schema-2 manifest. Most promoted answers reuse the existing persisted one-shot
-    /// and navigation predicates; only the verified Snake stone-ready relation gate
-    /// needs a tiny game-owned SmartRes evaluation here.
+    /// Narrow GK 1.407 supplement for verified interaction routes that are not represented
+    /// by the accepted generic task/topic classifiers. Most promoted completion answers reuse
+    /// existing persisted one-shot/navigation predicates. Exact exceptional routes keep their
+    /// authored phrase/task/resource boundaries and delegate resource sufficiency to the game.
     /// </summary>
     internal sealed class VerifiedCompletionReminderRules
     {
