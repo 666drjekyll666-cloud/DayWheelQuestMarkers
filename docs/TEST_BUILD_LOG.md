@@ -419,7 +419,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 
 ## 1.1.5 — Snake counterfeit-coins intermediate fix
 
-- Status: **candidate / player validation pending / do not merge or release yet**.
+- Status: **candidate / player validation passed / architecture audit open / do not merge or release yet**.
 - Trigger: 1.1.4 proved a false negative when `npc_actress/actress_money` is Visible and both Snake conversations `@snake_1с` (counterfeit coins) and `@snake_instrument` (Restoration Tools chain) are independently actionable, but production emits only the latter marker.
 - Root cause: `@snake_1с` is a top-level persisted submenu parent with authored price `Item:quest_fake_coins = 1`. The parent itself does not self-blacklist; either child `snake_1с_4a` / `snake_1с_4b` blacklists the parent and unlocks `@actress_snake_back`. Therefore the accepted exact-self-consuming topic compiler correctly excludes the parent structurally, but the product model still requires a reminder because this exact visit is an authored intermediate step of visible task `npc_actress/actress_money`.
 - Fix: add one exact GK 1.407 verified cross-owner intermediate rule for `npc_actress/actress_money -> npc_cultist/@snake_1с`. It requires the owner task to be Visible, the exact phrase to be unlocked and not blacklisted, and game-owned `Player.IsEnough(SmartRes)` for `Item:quest_fake_coins x1`.
@@ -432,4 +432,4 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Raw DLL: **94,720 bytes**; SHA-256 `1dcc49cc2f96bc5fe54a922b9b3ce71148c8c9156b974586b3c98d248226f9fa`; local extraction/hash matches CI.
 - Build workflow restored to manual-only on `dev/1.1.5` immediately after freezing `candidate/1.1.5`.
 - Requested test: install only 1.1.5 over the diagnostic build, keep the existing schema-4 cache, load the preserved state where Snake offers both `@snake_1с` and `@snake_instrument`. Before speaking to Snake there must be exactly **two** Snake weekday markers. Then consume the counterfeit-coins Snake interaction (either authored child choice) and exit the dialogue; with the Restoration Tools interaction still available, the Snake marker count must fall naturally from **2 -> 1**.
-- Player result: **pending**.
+- Player result: **passed** on 2026-09-19. In the preserved Snake state, the weekday wheel showed exactly **2** Snake markers. After completing the counterfeit-coins interaction, the count dropped **2 -> 1** while the Restoration Tools interaction remained. After completing the Restoration Tools conversation, it dropped **1 -> 0**. The returned runtime log independently confirms that `@snake_1с` is present before selection, its child choice removes that parent entry, and `@snake_instrument` remains available afterward. The narrow 1.1.5 behavior is therefore validated; promotion remains intentionally deferred while the requested generalized interaction-lifecycle audit is open.
