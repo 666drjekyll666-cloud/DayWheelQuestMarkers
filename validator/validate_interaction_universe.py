@@ -344,6 +344,12 @@ def validate_complete_snapshots(
     log.check("snapshot.raw.no_interaction_root_unique_answers",
               len(no_root) == raw_expected["no_interaction_root_unique_answers"],
               f"observed={len(no_root)} expected={raw_expected['no_interaction_root_unique_answers']}")
+    expected_no_root = {
+        (x["npc"], x["answer"]) for x in raw_expected["no_interaction_root_answers"]
+    }
+    log.check("snapshot.raw.no_interaction_root_exact_set",
+              set(no_root) == expected_no_root,
+              f"observed={no_root} expected={sorted(expected_no_root)}")
 
     task_states = [x for x in raw_rows if x["kind"] == "task_state"]
     visible = [x for x in task_states if x["value2"] == "Visible"]
