@@ -1,15 +1,6 @@
 name: Build interaction lifecycle census probe
 
 on:
-  push:
-    branches:
-      - research/interaction-lifecycle-audit
-    paths:
-      - 'research/InteractionLifecycleCensusProbe/**'
-      - '.github/workflows/research-interaction-lifecycle-census.yml'
-      - 'src/ReflectionUtil.cs'
-      - 'src/WeekdayInteractionRuleCache.cs'
-      - 'src/NavigationReachabilityCache.cs'
   workflow_dispatch:
 
 permissions:
