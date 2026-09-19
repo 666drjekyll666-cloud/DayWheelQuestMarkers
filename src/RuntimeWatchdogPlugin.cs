@@ -16,9 +16,9 @@ namespace DayWheelQuestMarkersResearch
 
         private const string ProductionTypeName = "CalendarQuestsPins.CalendarQuestsPinsPlugin";
         private const string ExpectedProductionVersion = "1.1.6";
-        private const float TickSeconds = 1f;
+        private const float TickSeconds = 5f;
         private const float StartupGraceSeconds = 12f;
-        private const int PersistentMismatchTicks = 3;
+        private const int PersistentMismatchTicks = 2;
 
         private static readonly string[] WeekdayNpcIds =
         {
