@@ -495,7 +495,7 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 
 ### Research snapshot — coverage frontier 0.1.3
 
-- Status: **built / awaiting one runtime log**.
+- Status: **completed successfully / evidence accepted**.
 - Purpose: inspect only the 14 no-interaction-root answer IDs left by 0.1.2 and record bounded upstream/downstream topology so each can be classified from evidence rather than its name.
 - Exact build source: `1b4cd32db7574cf4a0a27118bec4aa557a61b627`.
 - Frozen ref: `frozen/interaction-universe-snapshot-0.1.3`.
@@ -504,4 +504,13 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Artifact: `InteractionUniverseTaskSnapshot-0.1.3`, artifact ID `10587301518`.
 - Raw DLL: **70,656 bytes**; SHA-256 `6b1850370798ac293059b25c24c3c71d36840d86bd29de5638b0145a7fe78eb0`.
 - Requested test: replace research snapshot 0.1.2 with 0.1.3, load the same developed save once, do nothing else, and return `LogOutput.log` after `FRONTIER_SUMMARY` / `TASKSNAP_END`.
-- Production Day Wheel Quest Markers remains accepted 1.1.6 and is unchanged.
+- Player result: **passed** on 2026-09-19. `LogOutput(20260919-153202).log` emitted exactly **14/14** frontier occurrences and `FRONTIER_SUMMARY candidateOccurrences=14`.
+- Evidence classification:
+  - Inquisitor node 95 / `first_meet_under_mountains`: 7 event-invoked answers;
+  - Inquisitor node 343 / `on_came_to_mountain_for_witch_burning`: 2 event-invoked answers;
+  - Inquisitor node 1711 / `inquisitor_after_dark_event` (`player_brings_three_dark_org` branch): 3 event-invoked answers;
+  - Snake node 318 / `player_back_to_cultist`: 2 event-invoked answers.
+- Accepted disposition for all 14: **`EVENT_INVOKED_NON_REMINDER`**. None is a fresh player-initiated weekday-NPC interaction root.
+- Coverage result for the accepted six weekday-NPC graph universe: **224 unique answer IDs = 210 navigation-backed + 14 explicitly classified event-invoked non-reminders; UNKNOWN = 0**.
+- No further player runtime capture is required for this research question. The temporary 0.1.3 DLL can be removed.
+- Production Day Wheel Quest Markers remains accepted **1.1.6** and is unchanged.
