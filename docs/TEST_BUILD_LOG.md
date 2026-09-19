@@ -469,3 +469,28 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Release: `v1.1.6`, target exact tested source `e2ad9c7ef2bbf312ae79f2a2fb3d1bfb7f5cc1c7`.
 - Published asset: `Day.Wheel.Quest.Markers.1.1.6.dll`, release asset ID `574894608`, **98,304 bytes**.
 - Published asset digest: `sha256:d17cf1629acb92c9c06a8f983a826a75c40fa8f0b38fff48c45d48314e19a339`, exactly matching the accepted DLL.
+
+
+## Interaction universe snapshot probe 0.1.2 — research handoff
+
+- Status: **research probe / player snapshot pending / not production**.
+- Trigger: probe 0.1.1 was loaded successfully but its 120-attempt readiness timeout expired while the game was still at the main-menu/save-selection stage, before the developed save and six weekday-NPC graphs became available. No task/navigation snapshot was captured.
+- Change: remove the pre-save hard timeout. The probe now polls cheaply once per second until a loaded save exposes all six weekday-NPC graphs, then runs once and disables itself.
+- Scope expansion prompted by completeness review: in addition to the complete owner-task route and navigation snapshots, the same run now emits a **raw pre-classification interaction universe**:
+  - every `Flow_MultiAnswer` answer occurrence;
+  - every `Flow_SetTaskState` transition;
+  - every non-function `CustomEvent`;
+  - every `Flow_AddInteractionEvent` / `Flow_RemoveInteractionEvent` declaration.
+  This raw inventory is intentionally broader than production reminder logic so unexplained interaction surfaces can become `UNKNOWN -> FAIL` rather than silently disappearing.
+- Expected independently established raw answer-occurrence total: **243** across the six weekday-NPC graphs.
+- Exact handed source: `96f451ffc08385817b9854d29ef411a5d682eeba`.
+- Frozen ref: `frozen/interaction-universe-snapshot-0.1.2` -> exact handed source above.
+- CI: run `35451084485`, job `105918235883` — **success**, 0 warnings / 0 errors.
+- Artifact: `InteractionUniverseTaskSnapshot-0.1.2`, artifact ID `10587060876`.
+- Raw DLL: **66,048 bytes**; SHA-256 `bb257edf217b151e37efc845ef9423dc3e06e0b3432cf269aefc2db8d0813a00`.
+- Requested test:
+  1. remove snapshot probe 0.1.1;
+  2. install snapshot probe 0.1.2 alongside accepted Day Wheel Quest Markers 1.1.6;
+  3. load any developed save where all six weekday NPCs are available;
+  4. no dialogue/quest interaction is required; after normal gameplay finishes loading, return `BepInEx/LogOutput.log`;
+  5. expected snapshot includes `TASKSNAP_SUMMARY`, `UNIVERSE_RAW_SUMMARY`, and `NAVSNAP_SUMMARY`. The strict importer will reject incomplete/non-canonical output.
