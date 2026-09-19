@@ -10,7 +10,7 @@ namespace CalendarQuestsPins
     {
         public const string PluginGuid = "nikich.gyk.calendarquestspins";
         public const string PluginName = "Day Wheel Quest Markers";
-        public const string PluginVersion = "1.1.3";
+        public const string PluginVersion = "1.1.5";
 
         private const float TickSeconds = 1f;
         private const float StructureCheckSeconds = 30f;
@@ -223,6 +223,10 @@ namespace CalendarQuestsPins
                     if (!_reachability.IsCrossTaskActionable(target, task, unlocked, blacklisted)) continue;
                     AddMarker(sinTypeValue, GetMarkerStyle(task.TaskId));
                 }
+
+                if (_verifiedCompletionRules.IsVerifiedCrossOwnerIntermediateActionable(
+                        target, _rules.AllTargets, unlocked, blacklisted, _mainGame))
+                    AddMarker(sinTypeValue, MarkerStyle.Base);
             }
 
             if (!HasAnyMarkers())
