@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>DayWheelQuestMarkers.RuntimeWatchdog</AssemblyName>
+    <RootNamespace>DayWheelQuestMarkersResearch</RootNamespace>
+    <Version>0.1.0</Version>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <Deterministic>true</Deterministic>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>bin\RuntimeWatchdog\</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="src\RuntimeWatchdogPlugin.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BepInEx.BaseLib" Version="5.4.21" />
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" />
+    <PackageReference Include="Unity3D.SDK" Version="2020.3.13.1" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
