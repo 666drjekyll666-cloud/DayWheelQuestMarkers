@@ -17,6 +17,8 @@
   <ItemGroup>
     <Compile Include="src\InteractionUniverseTaskSnapshotProbe.cs" />
     <Compile Include="src\ReflectionUtil.cs" />
+    <Compile Include="src\WeekdayInteractionRuleCache.cs" />
+    <Compile Include="src\NavigationReachabilityCache.cs" />
   </ItemGroup>
 
   <ItemGroup>
