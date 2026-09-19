@@ -162,7 +162,7 @@ Owner-local task reminder:
 
 Cross-owner task reminder is allowed only when a weekday NPC graph explicitly completes a task stored under another NPC and the same actionability/navigation gates pass.
 
-These task-linked rules remain necessary because not every actionable quest interaction is represented by generic exact self-consumption.
+These task-linked rules remain necessary because not every actionable quest interaction is represented by the generic dialogue-lifecycle class.
 
 ## Verified completion-route supplements
 
@@ -184,7 +184,7 @@ Prior research established narrow objective stages that the direct task-completi
 - Astrologer -> Snake instrument bridge: `@snake_instrument` -> `@snake_instrument_ready`, continuation relation gate 40;
 - six verified 1.0.22 intermediate families covering `astrologer_daghter`, `bishop_invitation_2`, `inquisitor_guards`, `merchant_support`, `snake_help`, and `actress_necklace` stages.
 
-Static persisted-topic evidence confirms these reminder-bearing stage topics are exact self-consuming authored topics. Production derives them through the generic one-shot classifier instead of maintaining parallel `VerifiedBridgeReminderRules` / `VerifiedIntermediateReminderRules` manifests.
+Static persisted-topic evidence confirms these reminder-bearing stage topics are persistent dialogue-lifecycle interactions. Production derives them through the common dialogue-lifecycle path instead of maintaining parallel `VerifiedBridgeReminderRules` / `VerifiedIntermediateReminderRules` manifests.
 
 ### Ms. Charm -> Snake counterfeit-coins evidence
 
@@ -204,7 +204,7 @@ GK 1.407 graphs can mirror live `WorldZone.GetTotalQuality()` into a player `Gam
 
 Production may derive an authoritative mirror only when that exact graph edge is unambiguous. For such an owner-local requirement it compares the live `WorldZone.GetTotalQuality()` against the authored requirement value instead of trusting the stale mirrored player parameter. Ambiguous or unresolved mirrors fail closed.
 
-Cross-owner and generic exact-self-consuming routes retain their accepted SmartRes/`Player.IsEnough` semantics unless separate evidence establishes that authoritative zone substitution is required there.
+Cross-owner and generic dialogue-lifecycle routes retain their accepted SmartRes/`Player.IsEnough` semantics unless separate evidence establishes that authoritative zone substitution is required there.
 
 ## Accepted persistent loading/performance contract
 
