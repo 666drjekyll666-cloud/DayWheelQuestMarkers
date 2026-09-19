@@ -1,15 +1,15 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace CalendarQuestsPins
 {
     /// <summary>
-    /// Narrow GK 1.407 supplement for owner-local completion routes proven by the
-    /// auto-interaction audit but not represented as owner rules in the accepted
-    /// schema-2 manifest. Most promoted answers reuse the existing persisted one-shot
-    /// and navigation predicates; only the verified Snake stone-ready relation gate
-    /// needs a tiny game-owned SmartRes evaluation here.
+    /// Narrow GK 1.407 supplement for verified interaction routes that are not represented
+    /// by the accepted generic task/topic classifiers. Most promoted completion answers reuse
+    /// existing persisted one-shot/navigation predicates. Exact exceptional routes keep their
+    /// authored phrase/task/resource boundaries and delegate resource sufficiency to the game.
     /// </summary>
     internal sealed class VerifiedCompletionReminderRules
     {
@@ -33,6 +33,8 @@ namespace CalendarQuestsPins
         private MethodInfo _smartResFactory;
         private object _snakeRelationSmartRes;
         private object _snakeRelationLinkedWgo;
+        private object _snakeFakeCoinsSmartRes;
+        private object _snakeFakeCoinsLinkedWgo;
         private object _boundPlayer;
         private MethodInfo _isEnough;
         private readonly object[] _isEnoughArgs = new object[1];
@@ -80,6 +82,24 @@ namespace CalendarQuestsPins
             return false;
         }
 
+        internal bool IsVerifiedCrossOwnerIntermediateActionable(WeekdayInteractionRuleCache.TargetRules target,
+            IEnumerable<WeekdayInteractionRuleCache.TargetRules> allTargets, object unlockedPhrases,
+            object blacklistedPhrases, object mainGame)
+        {
+            // Verified GK 1.407 Ms. Charm -> Snake money chain:
+            // @actress_2b_1a makes npc_actress/actress_money Visible and unlocks @snake_1с.
+            // @snake_1с is a root submenu parent priced at quest_fake_coins x1. Either child
+            // answer consumes the parent phrase and unlocks @actress_snake_back, whose authored
+            // branch completes actress_money. The parent does not self-blacklist directly, so it
+            // intentionally sits outside the generic exact-self-consuming topic classifier.
+            if (target == null || !string.Equals(target.NpcId, "npc_cultist", StringComparison.Ordinal)) return false;
+            if (!IsTaskVisible(allTargets, "npc_actress", "actress_money")) return false;
+
+            const string answerId = "@snake_1с";
+            if (!ContainsString(unlockedPhrases, answerId) || ContainsString(blacklistedPhrases, answerId)) return false;
+            return IsSnakeFakeCoinsEnough(target.WorldObject, mainGame);
+        }
+
         internal static bool IsPromotedCompletionTopic(string npcId, string answerId)
         {
             if (string.IsNullOrEmpty(npcId) || string.IsNullOrEmpty(answerId)) return false;
@@ -96,6 +116,8 @@ namespace CalendarQuestsPins
         {
             _snakeRelationSmartRes = null;
             _snakeRelationLinkedWgo = null;
+            _snakeFakeCoinsSmartRes = null;
+            _snakeFakeCoinsLinkedWgo = null;
             _boundPlayer = null;
             _isEnough = null;
             _isEnoughArgs[0] = null;
@@ -129,6 +151,46 @@ namespace CalendarQuestsPins
                 return result is bool && (bool)result;
             }
             catch { return false; }
+        }
+
+        private bool IsSnakeFakeCoinsEnough(object linkedWgo, object mainGame)
+        {
+            if (linkedWgo == null || mainGame == null || !ReflectionUtil.IsUnityAlive(linkedWgo)) return false;
+            if (!BindPlayer(mainGame)) return false;
+            if (_snakeFakeCoinsSmartRes == null || !ReferenceEquals(_snakeFakeCoinsLinkedWgo, linkedWgo))
+            {
+                _snakeFakeCoinsSmartRes = CreateSmartRes("Item", "quest_fake_coins", 1f, linkedWgo);
+                _snakeFakeCoinsLinkedWgo = linkedWgo;
+            }
+            if (_snakeFakeCoinsSmartRes == null || _isEnough == null || _boundPlayer == null) return false;
+            try
+            {
+                _isEnoughArgs[0] = _snakeFakeCoinsSmartRes;
+                var result = _isEnough.Invoke(_boundPlayer, _isEnoughArgs);
+                return result is bool && (bool)result;
+            }
+            catch { return false; }
+        }
+
+        private static bool IsTaskVisible(IEnumerable<WeekdayInteractionRuleCache.TargetRules> targets,
+            string npcId, string taskId)
+        {
+            if (targets == null || string.IsNullOrEmpty(npcId) || string.IsNullOrEmpty(taskId)) return false;
+            foreach (var target in targets)
+            {
+                if (target == null || target.KnownNpc == null ||
+                    !string.Equals(target.NpcId, npcId, StringComparison.Ordinal)) continue;
+                var tasks = ReflectionUtil.EnumerateMember(target.KnownNpc, "tasks");
+                if (tasks == null) return false;
+                foreach (var task in tasks)
+                {
+                    string visibleTaskId;
+                    if (!WeekdayInteractionRuleCache.IsVisibleTask(task, out visibleTaskId)) continue;
+                    if (string.Equals(visibleTaskId, taskId, StringComparison.Ordinal)) return true;
+                }
+                return false;
+            }
+            return false;
         }
 
         private bool BindPlayer(object mainGame)
