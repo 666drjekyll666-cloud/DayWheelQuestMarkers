@@ -240,10 +240,11 @@ namespace CalendarQuestsPins
                     {
                         if (topic.Variants[v] != null && topic.Variants[v].Unsupported) stats.UnsupportedVariants++;
                         else stats.SupportedVariants++;
-                        CompileAncestorOwners(npcId, serialized, nodes, connections, exactIncoming, callsByUid,
-                    removals, completionAnswerIds, target, cache, navigation, stats);
-            }
+                    }
                 }
+
+                CompileAncestorOwners(npcId, serialized, nodes, connections, exactIncoming, callsByUid,
+                    removals, completionAnswerIds, target, cache, navigation, stats);
             }
 
             stats.NonAtUnique = allNonAt.Count;
