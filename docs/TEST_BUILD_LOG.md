@@ -534,3 +534,26 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - False-alarm guard: game-start grace 12 s; binding/visual mismatches require 3 consecutive one-second samples.
 - Requested test: install beside normal Day Wheel Quest Markers 1.1.6, load a developed save, play normally including opening/closing menus and at least one quest-marker state transition. Normal result is **no watchdog UI at all**. If a red `!` appears, return `BepInEx/LogOutput.log` without attempting to interpret it manually.
 - Save/UI mutation: **none**.
+
+
+### Research companion — Runtime Watchdog 0.2.0
+
+- Status: **handed for runtime validation**.
+- Purpose: extend 0.1.0 with event-driven accounting of the actual weekday-NPC dialogue menus/options rendered by GK 1.407.
+- Exact build source: `0956ccb26af5e72b4d834e3cd42e183f985bdf20`.
+- Frozen ref: `frozen/runtime-watchdog-0.2.0`.
+- Build CI: run `35456895718`, job `105933680313`, **success, 0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-RuntimeWatchdog-0.2.0`, artifact ID `10588138858`.
+- Raw DLL: **57,344 bytes**; SHA-256 `04649c1444275a3e9e2361f912a2326081e231b748ad760c22893aa489e6f067`.
+- Supporting interaction validator: run `35456618512`, job `105932928974`, **PASS 88 / 0 failed**; all **243** authored answer occurrences classified, **UNKNOWN=0**.
+- Live architecture: exact `Flow_MultiAnswer` execution identifies NPC/menu; `MultiAnswerOptionGUI.Show` observes only game-rendered options; reconciliation ends at native `MultiAnswerGUI.ShowAnswers`. No gameplay graph scan.
+- Failure contract: any unknown executing menu, authored menu drift, or rendered option without an exact accepted disposition produces an immediate sticky red `!` and `WATCHDOG_FAIL` log record.
+- Performance contract: per-frame timer comparison only; ordinary integrity checks every **5 s** with two-sample confirmation; dialogue accounting event-driven only; fixture loaded once; no background worker/save mutation.
+- Requested test:
+  1. remove Runtime Watchdog 0.1.0 and any old Interaction Universe Snapshot DLL;
+  2. keep accepted Day Wheel Quest Markers 1.1.6;
+  3. install only Runtime Watchdog 0.2.0 beside it;
+  4. load the normal developed save and play normally; when convenient, talk to weekday NPCs and enter ordinary/nested dialogue menus;
+  5. expected result is **no red watchdog UI**;
+  6. return one `BepInEx/LogOutput.log`; if a red `!` appears, return that log without manual diagnosis.
+- Production Day Wheel Quest Markers remains accepted **1.1.6** and is unchanged.
