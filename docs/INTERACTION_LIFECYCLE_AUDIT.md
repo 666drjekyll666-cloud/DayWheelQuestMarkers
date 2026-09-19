@@ -202,3 +202,49 @@ The architecture is **not** best modeled as an endless list of unrelated quest e
 That is now the leading missing general rule. It is not yet promoted as universal until a complete path-sensitive census attempts to falsify it across all six weekday-NPC graphs.
 
 The next step is therefore a bounded static lifecycle census, not another gameplay special case and not a return to the rejected universal provenance parser.
+
+
+## Path-sensitive census probe 0.1.0
+
+A bounded read-only runtime census is now frozen for the one remaining evidence gap.
+
+Purpose:
+- inspect all six weekday-NPC serialized graphs, not only answers open in the current save;
+- reuse the production `WeekdayInteractionRuleCache` and `NavigationReachabilityCache` source directly;
+- reverse-trace exact blacklist-add effects to the concrete answer branch that executes them;
+- intersect each effect with each real interaction-root navigation path for that answer;
+- resolve the nearest persistent lifecycle owner as self first, otherwise nearest blacklisted ancestor on that same path;
+- apply production task-owned and same-visit suppression controls;
+- report reversible cases fail-closed.
+
+It does **not** patch methods, mutate quests/phrases/inventory/save state, change UI, or write a sidecar cache. It runs once after a loaded game is available, logs `LIFECYCLE_*` records, then stops doing work.
+
+Frozen research identity:
+- probe version: **0.1.0**;
+- exact source SHA: `537835501873cb0d5156a2c5db58b99065f8bad8`;
+- frozen ref: `frozen/interaction-lifecycle-census-0.1.0`;
+- workflow run: `35446788613`;
+- job: `105906987107`;
+- Release build: **0 warnings / 0 errors**;
+- artifact: `DayWheelInteractionLifecycleCensus-0.1.0`, artifact ID `10585179946`;
+- raw DLL: **62,976 bytes**;
+- raw DLL SHA-256: `2f47f772d9481696e81ca9c7846a00949c3d7ade555350ca2e490e52e4b2ae83`;
+- artifact ZIP digest: `sha256:2759af64fb7ccd27a64a5de1a9ee8efd330defed565f9eb899f3234637be97a2`.
+
+Required runtime evidence:
+1. Keep production **1.1.5** installed.
+2. Add only `DayWheelQuestMarkers-interaction-lifecycle-census-0.1.0.dll`.
+3. Load one ordinary established save. No NPC interaction is required.
+4. Wait until normal gameplay/HUD is visible; the probe emits the census automatically once.
+5. Exit the game and return the single `BepInEx/LogOutput.log`.
+6. Remove the census DLL after the run.
+
+Acceptance targets in the returned log:
+- `@snake_1с` must resolve as an admitted **ancestor** lifecycle owner;
+- `@merchant_2b` must be path-local if applicable but suppressed as already task-owned;
+- `@merchant_2e_1e` must be decided by actual path locality rather than blacklist coincidence;
+- ordinary navigation containers must not become admitted owners;
+- exact-self accepted interactions must remain represented by the self-owner class;
+- no reversible lifecycle owner may be admitted.
+
+Production remains unchanged while this evidence is pending. If the census supports the rule, the generalized runtime replacement belongs to **1.1.6** because 1.1.5 has already been handed out and frozen.
