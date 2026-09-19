@@ -301,3 +301,19 @@ with these precedence/deduplication rules:
 7. the two verified mandatory event-only stages remain separate.
 
 The generalized implementation is therefore approved for a **1.1.6 development candidate**. It should replace the exact 1.1.5 Snake fake-coins hard-code with the lifecycle compiler, while preserving 1.1.5 as immutable evidence.
+
+
+## 1.1.6 implementation handoff
+
+The census-approved model has now been implemented as candidate **1.1.6** without changing the task/event architecture:
+
+- exact source: `e2ad9c7ef2bbf312ae79f2a2fb3d1bfb7f5cc1c7`;
+- frozen ref: `candidate/1.1.6`;
+- `UnifiedDialogueLifecycleCompiler` preserves the accepted non-`@` exact-self universe and adds path-local nearest-ancestor ownership;
+- the 1.1.5 Snake counterfeit-coins hard-code is removed;
+- manifest schema is **5**, forcing one bootstrap rebuild;
+- expected ancestor integrity guards are 6 unique candidates / 2 task-owned exclusions / 4 admitted / 0 unsupported;
+- CI run `35447318962` succeeded with 0 warnings / 0 errors;
+- raw DLL SHA-256: `d17cf1629acb92c9c06a8f983a826a75c40fa8f0b38fff48c45d48314e19a339`.
+
+Runtime acceptance remains pending. The implementation must not be promoted to `main` until schema-5 bootstrap/load behavior and the relevant marker regression are accepted.
