@@ -25,6 +25,7 @@ DEFAULT_TASK_ROUTES = ROOT / "validator" / "fixtures" / "task-routes-1.1.6.tsv"
 DEFAULT_NAVIGATION = ROOT / "validator" / "fixtures" / "navigation-paths-1.1.6.tsv"
 DEFAULT_RAW_UNIVERSE = ROOT / "validator" / "fixtures" / "raw-interaction-universe-1.1.6.tsv"
 DEFAULT_FRONTIER = ROOT / "validator" / "fixtures" / "no-root-frontier-1.1.6.tsv"
+DEFAULT_LIVE_DISPOSITIONS = ROOT / "validator" / "fixtures" / "live-answer-dispositions-1.1.6.tsv"
 DEFAULT_REPORT = ROOT / "validator" / "out" / "validation-report.json"
 
 
@@ -434,6 +435,124 @@ def validate_no_root_frontier(
     }
 
 
+def validate_live_answer_dispositions(
+    accepted_rows: list[dict[str, str]],
+    raw_rows: list[dict[str, str]],
+    lifecycle_rows: list[dict[str, str]],
+    task_routes: list[dict[str, str]],
+    frontier_rows: list[dict[str, str]],
+    baseline: dict,
+    log: CheckLog,
+) -> dict:
+    expected = baseline["raw_interaction_universe"]["live_answer_dispositions"]
+
+    raw_answers = [x for x in raw_rows if x["kind"] == "answer"]
+    lifecycle_by_occ: dict[tuple[str, str, str, str], list[dict[str, str]]] = defaultdict(list)
+    for row in lifecycle_rows:
+        lifecycle_by_occ[(row["npc"], row["multi"], row["index"], row["branch"])].append(row)
+
+    frontier_occ = {
+        (row["npc"], row["multi"], row["answer"]) for row in frontier_rows
+    }
+
+    derived: dict[tuple[str, str, str, str], tuple[str, str, str]] = {}
+    conflicts: list[str] = []
+
+    for row in raw_answers:
+        key = (row["npc"], row["node"], row["index"], row["id"])
+        lifecycle = lifecycle_by_occ.get(key, [])
+        disposition = ""
+        owner = ""
+        evidence = ""
+
+        if (row["npc"], row["node"], row["id"]) in frontier_occ:
+            disposition = "EVENT_INVOKED_NON_REMINDER"
+            evidence = "frontier-0.1.3"
+        elif lifecycle:
+            semantics = {
+                (x["acceptedDisposition"], x["acceptedOwnerKind"], x["acceptedOwner"])
+                for x in lifecycle
+            }
+            if len(semantics) != 1:
+                conflicts.append(f"{key}: {sorted(semantics)}")
+                continue
+            accepted_disposition, owner_kind, owner = next(iter(semantics))
+            if accepted_disposition == "ADMIT" and owner_kind == "self":
+                disposition = "REMINDER_DIALOGUE_OWNER"
+            elif accepted_disposition == "ADMIT" and owner_kind == "ancestor":
+                disposition = "SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER"
+            elif accepted_disposition == "SUPPRESS_TASK_OWNED" and owner_kind == "self":
+                disposition = "REMINDER_TASK_OWNED"
+            elif accepted_disposition == "SUPPRESS_TASK_OWNED" and owner_kind == "ancestor":
+                disposition = "SAME_VISIT_DESCENDANT_OF_TASK_OWNER"
+            elif accepted_disposition == "SUPPRESS_SAME_VISIT":
+                disposition = "SAME_VISIT_NON_REMINDER"
+            elif accepted_disposition == "SUPPRESS_REVERSIBLE":
+                disposition = "REVERSIBLE_NON_REMINDER"
+            else:
+                conflicts.append(f"{key}: unsupported lifecycle semantic {next(iter(semantics))}")
+                continue
+            evidence = "lifecycle-census"
+        else:
+            direct_tasks = [
+                x for x in task_routes
+                if x["kind"] == "SELECTABLE"
+                and x["npc"] == row["npc"]
+                and x["answer"] == row["id"]
+                and x["trace"] == row["node"]
+            ]
+            if direct_tasks:
+                disposition = "REMINDER_TASK_OWNED"
+                owner = ",".join(sorted({x["task"] for x in direct_tasks}))
+                evidence = "task-route-snapshot"
+            else:
+                disposition = "NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER"
+                evidence = "no-task-completion-no-persistent-lifecycle"
+
+        derived[key] = (disposition, owner, evidence)
+
+    log.check("live_dispositions.derivation_conflicts", not conflicts,
+              "none" if not conflicts else "; ".join(conflicts[:8]))
+
+    accepted = {
+        (x["npc"], x["multi"], x["index"], x["answer"]):
+            (x["disposition"], x["owner"], x["evidence"])
+        for x in accepted_rows
+    }
+    log.check("live_dispositions.rows",
+              len(accepted_rows) == expected["answer_occurrences"],
+              f"observed={len(accepted_rows)} expected={expected['answer_occurrences']}")
+    log.check("live_dispositions.identity_unique",
+              len(accepted) == len(accepted_rows),
+              f"unique={len(accepted)} rows={len(accepted_rows)}")
+    log.check("live_dispositions.raw_exact_set",
+              set(accepted) == set(derived),
+              f"accepted={len(accepted)} derived={len(derived)}")
+    mismatches = [
+        (key, derived.get(key), value)
+        for key, value in accepted.items()
+        if derived.get(key) != value
+    ]
+    log.check("live_dispositions.exact_rederivation", not mismatches,
+              "all dispositions re-derived" if not mismatches else str(mismatches[:8]))
+
+    counts = Counter(value[0] for value in accepted.values())
+    for disposition, count in expected["counts"].items():
+        observed = counts[disposition]
+        log.check(f"live_dispositions.count.{disposition}", observed == count,
+                  f"observed={observed} expected={count}")
+
+    unknown = sum(1 for value in accepted.values() if "UNKNOWN" in value[0])
+    log.check("live_dispositions.unknown_zero", unknown == expected["unknown"],
+              f"observed={unknown} expected={expected['unknown']}")
+
+    return {
+        "answer_occurrences": len(accepted_rows),
+        "counts": dict(counts),
+        "unknown": unknown,
+    }
+
+
 def extract_int_constant(text: str, name: str) -> int | None:
     match = re.search(rf"\b{name}\s*=\s*(\d+)\s*;", text)
     return int(match.group(1)) if match else None
@@ -551,6 +670,7 @@ def main() -> int:
     parser.add_argument("--navigation", type=Path, default=DEFAULT_NAVIGATION)
     parser.add_argument("--raw-universe", type=Path, default=DEFAULT_RAW_UNIVERSE)
     parser.add_argument("--frontier", type=Path, default=DEFAULT_FRONTIER)
+    parser.add_argument("--live-dispositions", type=Path, default=DEFAULT_LIVE_DISPOSITIONS)
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     args = parser.parse_args()
 
@@ -568,9 +688,19 @@ def main() -> int:
         baseline,
         log,
     )
+    frontier_rows = load_tsv(args.frontier)
     frontier_report = validate_no_root_frontier(
-        load_tsv(args.frontier),
+        frontier_rows,
         snapshot_report,
+        baseline,
+        log,
+    )
+    live_disposition_report = validate_live_answer_dispositions(
+        load_tsv(args.live_dispositions),
+        load_tsv(args.raw_universe),
+        lifecycle_rows,
+        load_tsv(args.task_routes),
+        frontier_rows,
         baseline,
         log,
     )
@@ -589,7 +719,7 @@ def main() -> int:
             "dialogue_lifecycle": "path-level exhaustive for accepted census",
             "owner_task_completion": "complete 72-route snapshot plus accepted census/classification",
             "navigation": "complete 270-path production-derived snapshot; independent lifecycle oracle remains separate",
-            "raw_interaction_universe": "complete accepted six-NPC graph snapshot; all 14 no-root answers explicitly classified; UNKNOWN=0",
+            "raw_interaction_universe": "complete accepted six-NPC graph snapshot; all 243 authored answer occurrences have exact live dispositions; UNKNOWN=0",
             "event_only": "exact accepted set",
             "production_contract": "static bounded contract checks",
         },
@@ -597,6 +727,7 @@ def main() -> int:
         "tasks": task_report,
         "snapshot": snapshot_report,
         "frontier": frontier_report,
+        "live_answer_dispositions": live_disposition_report,
         "production_source": source_report,
         "checks": log.checks,
     }
@@ -622,6 +753,11 @@ def main() -> int:
         f"{snapshot_report['navigation_backed_unique_answers']} navigation-backed + "
         f"{frontier_report['classified']} event-invoked non-reminders; "
         f"UNKNOWN={frontier_report['unknown']}"
+    )
+    print(
+        "Live dispositions: "
+        f"{live_disposition_report['answer_occurrences']} occurrences classified; "
+        f"UNKNOWN={live_disposition_report['unknown']}"
     )
     for warning in log.warnings:
         print("COVERAGE NOTE:", warning)
