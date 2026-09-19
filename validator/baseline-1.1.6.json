@@ -30,6 +30,15 @@
       "workflow_run": 35451084485,
       "artifact_id": 10587060876,
       "dll_sha256": "bb257edf217b151e37efc845ef9423dc3e06e0b3432cf269aefc2db8d0813a00"
+    },
+    "no_root_frontier_probe": {
+      "version": "0.1.3",
+      "source_sha": "1b4cd32db7574cf4a0a27118bec4aa557a61b627",
+      "frozen_ref": "frozen/interaction-universe-snapshot-0.1.3",
+      "workflow_run": 35451885905,
+      "artifact_id": 10587301518,
+      "dll_sha256": "6b1850370798ac293059b25c24c3c71d36840d86bd29de5638b0145a7fe78eb0",
+      "runtime_log": "LogOutput(20260919-153202).log"
     }
   },
   "manifest": {
@@ -289,6 +298,10 @@
         "npc": "npc_inquisitor",
         "answer": "inquisitor_nothing"
       }
-    ]
+    ],
+    "no_root_classified": 14,
+    "no_root_unknown": 0,
+    "no_root_accepted_classification": "EVENT_INVOKED_NON_REMINDER",
+    "coverage_status": "CLOSED_FOR_ACCEPTED_1.1.6_SIX_NPC_GRAPH_UNIVERSE"
   }
 }
