@@ -4,7 +4,7 @@ Status: **research-only / read-only / not production**.
 
 Purpose: close the two explicit fixture gaps reported by the automatic interaction-universe validator without replaying quests or mutating a save.
 
-## Probe 0.1.1
+## Probe 0.1.3
 
 Assembly project:
 
@@ -38,7 +38,7 @@ The route output includes NPC, task ID, resolved answer ID, completion node, and
 
 This closes the historical evidence problem where probe 0.1.1 proved the aggregate 72/68/4 census but did not print all ordinary mapped rows.
 
-### Navigation snapshot
+### Raw universe and navigation snapshot
 
 The same DLL also produces a complete `NAVSNAP_PATH` snapshot using the accepted production navigation derivation:
 
@@ -98,3 +98,26 @@ Requested runtime capture:
 6. remove the snapshot DLL afterward.
 
 The log is accepted only if the importer verifies **72 task routes**, the exact two event-only stages, and **270 navigation paths** with canonical navigation totals.
+
+
+## 0.1.2 accepted runtime snapshot
+
+Player runtime log `LogOutput(20260919-152112).log` produced a complete snapshot:
+
+- task routes: **72 = 70 selectable + 2 event-only/unresolved**;
+- raw answers: **243 occurrences / 224 unique NPC+answer IDs**;
+- raw task-state transitions: **150 = 70 Visible + 80 Complete**;
+- raw CustomEvent entries: **66**;
+- AddInteractionEvent declarations: **19**;
+- RemoveInteractionEvent declarations: **4**;
+- navigation: **210 answers / 270 paths / 151 predicates / 0 unsupported**;
+- verified navigation contracts: **True**.
+
+The strict importer initially exposed a tooling bug: IDs containing spaces (for example `@actress_ song_done`) cannot be parsed with whitespace tokenization. The importer now uses field-boundary regular expressions and preserves these IDs exactly.
+
+The raw-vs-navigation comparison leaves **14 unique answer IDs** with no normal interaction-root path:
+
+- `npc_cultist`: `snake_back_12a`, `snake_back_12b`;
+- `npc_inquisitor`: `inquisitor_1_7a`, `inquisitor_1_7b`, `inquisitor_1_9a`, `inquisitor_1_9b`, `inquisitor_1_11a`, `inquisitor_1_11b`, `inquisitor_1_11c`, `inquisitor_2_9a`, `inquisitor_2_9b`, `inquisitor_gerry`, `inquisitor_cultists`, `inquisitor_nothing`.
+
+These are not silently classified. Probe 0.1.3 adds bounded upstream/downstream topology evidence for exactly this frontier so each candidate can be reviewed as event/cutscene/non-reminder or promoted if it represents an independently actionable weekday-NPC interaction.
