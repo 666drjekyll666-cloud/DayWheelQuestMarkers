@@ -8,6 +8,8 @@ on:
     paths:
       - 'RuntimeWatchdog.csproj'
       - 'src/RuntimeWatchdogPlugin.cs'
+      - 'src/LiveDialogueCoverageWatchdog.cs'
+      - 'validator/fixtures/live-answer-dispositions-1.1.6.tsv'
       - '.github/workflows/runtime-watchdog.yml'
 
 permissions:
@@ -38,7 +40,7 @@ jobs:
       - name: Upload DLL
         uses: actions/upload-artifact@v4
         with:
-          name: DayWheelQuestMarkers-RuntimeWatchdog-0.1.0
+          name: DayWheelQuestMarkers-RuntimeWatchdog-0.2.0
           path: bin/RuntimeWatchdog/DayWheelQuestMarkers.RuntimeWatchdog.dll
           if-no-files-found: error
           retention-days: 7
