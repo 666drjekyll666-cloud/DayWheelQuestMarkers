@@ -13,7 +13,7 @@ namespace CalendarQuestsPins
     {
         public const string PluginGuid = "nikich.gyk.daywheel.interaction-universe-task-snapshot";
         public const string PluginName = "Day Wheel Quest Markers - interaction universe task snapshot";
-        public const string PluginVersion = "0.1.1";
+        public const string PluginVersion = "0.1.2";
 
         private static readonly string[] NpcIds =
         {
@@ -28,7 +28,6 @@ namespace CalendarQuestsPins
         private object _mainGame;
         private bool _finished;
         private float _nextAttempt;
-        private int _attempts;
 
         private sealed class Node
         {
@@ -66,16 +65,7 @@ namespace CalendarQuestsPins
         {
             if (_finished || Time.realtimeSinceStartup < _nextAttempt) return;
             _nextAttempt = Time.realtimeSinceStartup + 1f;
-            _attempts++;
-            if (!RuntimeReady())
-            {
-                if (_attempts >= 120)
-                {
-                    Logger.LogError("TASKSNAP_ABORT runtime did not become ready after 120 attempts.");
-                    _finished = true;
-                }
-                return;
-            }
+            if (!RuntimeReady()) return;
 
             try { RunAudit(); }
             catch (Exception ex) { Logger.LogError("TASKSNAP_FATAL " + ex); }
