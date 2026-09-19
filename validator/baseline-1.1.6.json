@@ -231,6 +231,64 @@
     "add_interaction_events": 19,
     "remove_interaction_events": 4,
     "navigation_backed_unique_answers": 210,
-    "no_interaction_root_unique_answers": 14
+    "no_interaction_root_unique_answers": 14,
+    "no_interaction_root_answers": [
+      {
+        "npc": "npc_cultist",
+        "answer": "snake_back_12a"
+      },
+      {
+        "npc": "npc_cultist",
+        "answer": "snake_back_12b"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_1_11a"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_1_11b"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_1_11c"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_1_7a"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_1_7b"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_1_9a"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_1_9b"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_2_9a"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_2_9b"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_cultists"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_gerry"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_nothing"
+      }
+    ]
   }
 }
