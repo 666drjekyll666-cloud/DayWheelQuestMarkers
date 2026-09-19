@@ -129,6 +129,7 @@ Use these as long-lived sources of truth:
 - `docs/VERIFIED_RUNTIME_DATA.md`
 - `docs/TEST_BUILD_LOG.md`
 - `docs/UNIFIED_INTERACTION_1.1.6.md`
+- `docs/EXHAUSTIVE_VALIDATION_HARNESS.md`
 - `docs/MIGRATION_PROVENANCE.md`
 - current production source and project file
 
@@ -143,6 +144,8 @@ For generic dialogue classification, the accepted structural evidence is **persi
 - reversible, ambiguous, unsupported, utility-like, and root-unreachable structures fail closed.
 
 Do not broaden this to arbitrary dialogue visibility, `fh=True` alone, or translated-text heuristics.
+
+For any future structural change to task/dialogue/navigation classification, run the interaction-universe validator before handing a player DLL. An unexplained baseline delta is a failed regression, even if aggregate counts still look plausible. Baseline updates require interaction-level evidence; do not merely change expected numbers to make CI green.
 
 The remaining narrow completion/event supplement is not permission to accumulate ad-hoc fixes. Before adding an exact rule, first test whether the state can be represented by the task compiler or dialogue-lifecycle compiler. Exact mappings are allowed only when runtime evidence proves a genuinely different host mechanism.
 
