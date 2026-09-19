@@ -1,0 +1,18 @@
+# Accepted classification of the 14 raw GK 1.407 answer IDs that have no normal interaction-root navigation path.
+# Evidence: player runtime LogOutput(20260919-153202).log from read-only snapshot probe 0.1.3.
+# These menus are entered from CustomEvent/cutscene topology, not from a fresh player-initiated weekday NPC interaction.
+npc	answer	multi	rootNode	rootEvent	classification	reason
+npc_inquisitor	inquisitor_1_7a	157	95	first_meet_under_mountains	EVENT_INVOKED_NON_REMINDER	event dialogue; continues scripted mountain sequence
+npc_inquisitor	inquisitor_1_7b	157	95	first_meet_under_mountains	EVENT_INVOKED_NON_REMINDER	event dialogue; continues scripted mountain sequence
+npc_inquisitor	inquisitor_1_9a	174	95	first_meet_under_mountains	EVENT_INVOKED_NON_REMINDER	event dialogue; continues scripted mountain sequence
+npc_inquisitor	inquisitor_1_9b	174	95	first_meet_under_mountains	EVENT_INVOKED_NON_REMINDER	event dialogue; continues scripted mountain sequence
+npc_inquisitor	inquisitor_1_11a	199	95	first_meet_under_mountains	EVENT_INVOKED_NON_REMINDER	event dialogue; continues scripted mountain sequence
+npc_inquisitor	inquisitor_1_11b	199	95	first_meet_under_mountains	EVENT_INVOKED_NON_REMINDER	event dialogue; continues scripted mountain sequence
+npc_inquisitor	inquisitor_1_11c	199	95	first_meet_under_mountains	EVENT_INVOKED_NON_REMINDER	event dialogue; continues scripted mountain sequence
+npc_inquisitor	inquisitor_2_9a	448	343	on_came_to_mountain_for_witch_burning	EVENT_INVOKED_NON_REMINDER	event dialogue; creates inquisitor_talk then sends NPC home
+npc_inquisitor	inquisitor_2_9b	448	343	on_came_to_mountain_for_witch_burning	EVENT_INVOKED_NON_REMINDER	event dialogue; sends NPC home
+npc_inquisitor	inquisitor_gerry	1738	1711	inquisitor_after_dark_event	EVENT_INVOKED_NON_REMINDER	event dialogue entered by player_brings_three_dark_org
+npc_inquisitor	inquisitor_cultists	1738	1711	inquisitor_after_dark_event	EVENT_INVOKED_NON_REMINDER	event dialogue entered by player_brings_three_dark_org
+npc_inquisitor	inquisitor_nothing	1738	1711	inquisitor_after_dark_event	EVENT_INVOKED_NON_REMINDER	event dialogue entered by player_brings_three_dark_org
+npc_cultist	snake_back_12a	359	318	player_back_to_cultist	EVENT_INVOKED_NON_REMINDER	event dialogue; consumes choice and opens snake_blood within same scripted visit
+npc_cultist	snake_back_12b	359	318	player_back_to_cultist	EVENT_INVOKED_NON_REMINDER	event dialogue; consumes choice and opens snake_blood within same scripted visit
