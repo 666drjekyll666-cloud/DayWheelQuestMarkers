@@ -1,9 +1,6 @@
 name: Build interaction lifecycle audit probe
 
 on:
-  push:
-    branches:
-      - research/interaction-lifecycle-audit
   workflow_dispatch:
 
 permissions:
