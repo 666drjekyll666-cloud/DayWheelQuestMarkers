@@ -269,3 +269,36 @@ A future maintainability refactor may build one shared parsed `WeekdayGraphIndex
 Likewise, the remaining promoted completion routes may be audited for derivation by a bounded task-effect compiler. Do **not** replace the current small verified supplement with the previously rejected universal provenance parser merely to claim a single algorithm.
 
 The correct target is therefore **one compact interaction engine with a small number of evidence-backed derivation passes**, not one artificial predicate pretending that Graveyard Keeper authors every required visit through the same mechanism.
+
+
+## Accepted interaction-universe coverage evidence
+
+Research snapshots 0.1.2 and 0.1.3 establish the bounded completeness contract for the six weekday-NPC authored graphs used by Day Wheel Quest Markers on GK 1.407.
+
+Accepted raw universe:
+
+- **243** authored `Flow_MultiAnswer` answer occurrences;
+- **224** unique `NPC + answer ID` pairs;
+- **150** task-state transitions;
+- **66** `CustomEvent` nodes;
+- **19** `Flow_AddInteractionEvent` nodes;
+- **4** `Flow_RemoveInteractionEvent` nodes;
+- **72** owner-local completion routes = **70 selectable + 2 event-only**;
+- **270** production-derived navigation paths.
+
+Of the 224 unique answer IDs, **210** have a normal interaction-root navigation path. Read-only frontier probe 0.1.3 proved that the remaining **14** are entered from `CustomEvent` / scripted-event topology rather than a fresh player-initiated weekday-NPC interaction. Their accepted classification is:
+
+`EVENT_INVOKED_NON_REMINDER`
+
+The four verified event-root families are:
+
+- Inquisitor node 95 / `first_meet_under_mountains`: 7 answers;
+- Inquisitor node 343 / `on_came_to_mountain_for_witch_burning`: 2 answers;
+- Inquisitor node 1711 / `inquisitor_after_dark_event`: 3 answers;
+- Snake node 318 / `player_back_to_cultist`: 2 answers.
+
+Therefore the accepted six-NPC graph universe has **UNKNOWN = 0**.
+
+This is a bounded completeness claim for the graph/node families relevant to this mod, not a claim that every Graveyard Keeper world interaction for every NPC is represented by `Flow_MultiAnswer`. New production generalization must preserve this boundary or update it with new accepted evidence; unexplained raw answers must fail the coverage watchdog rather than being silently ignored.
+
+The 0.1.3 topology capture is research-only and does not change production Day Wheel Quest Markers 1.1.6.
