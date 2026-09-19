@@ -13,7 +13,7 @@ namespace CalendarQuestsPins
     {
         public const string PluginGuid = "nikich.gyk.daywheel.interaction-universe-task-snapshot";
         public const string PluginName = "Day Wheel Quest Markers - interaction universe task snapshot";
-        public const string PluginVersion = "0.1.2";
+        public const string PluginVersion = "0.1.3";
 
         private static readonly string[] NpcIds =
         {
@@ -106,6 +106,7 @@ namespace CalendarQuestsPins
             Logger.LogInfo("TASKSNAP_SUMMARY ownerComplete=" + totalComplete + " mappedSelectable=" + totalMapped + " candidateNonSelectable=" + totalCandidates);
             DumpRawInteractionUniverse();
             DumpNavigationSnapshot();
+            DumpCoverageFrontier();
             Logger.LogInfo("TASKSNAP_END probe disabled after this snapshot");
         }
 
@@ -260,6 +261,222 @@ namespace CalendarQuestsPins
                            " customEvents=" + totalCustomEvents +
                            " addInteractionEvents=" + totalAddInteractionEvents +
                            " removeInteractionEvents=" + totalRemoveInteractionEvents);
+        }
+
+        private void DumpCoverageFrontier()
+        {
+            object save;
+            if (_mainGame == null || !ReflectionUtil.TryRead(_mainGame, "save", out save) || save == null)
+            {
+                Logger.LogError("FRONTIER_ABORT save unavailable.");
+                return;
+            }
+
+            var rules = new WeekdayInteractionRuleCache();
+            if (!rules.Build(save, _mainGame))
+            {
+                Logger.LogError("FRONTIER_ABORT structural rule cache could not build.");
+                return;
+            }
+
+            var targets = new Dictionary<string, WeekdayInteractionRuleCache.TargetRules>(StringComparer.Ordinal);
+            foreach (var target in rules.AllTargets)
+                if (target != null && !string.IsNullOrEmpty(target.NpcId)) targets[target.NpcId] = target;
+
+            var navigation = new NavigationReachabilityCache(rules);
+            var totalCandidates = 0;
+            Logger.LogInfo("FRONTIER_BEGIN game=1.407 purpose=no-interaction-root-answer-topology readOnly=True");
+
+            for (var n = 0; n < NpcIds.Length; n++)
+            {
+                var npcId = NpcIds[n];
+                WeekdayInteractionRuleCache.TargetRules target;
+                var serialized = ReadSerializedGraph(npcId);
+                if (serialized == null || !targets.TryGetValue(npcId, out target))
+                {
+                    Logger.LogError("FRONTIER_ABORT npc=" + npcId + " graphOrTargetUnavailable=True");
+                    return;
+                }
+
+                string failure;
+                if (!navigation.BuildTarget(npcId, serialized, target.WorldObject, target, out failure))
+                {
+                    Logger.LogError("FRONTIER_ABORT npc=" + npcId + " failure=" + Safe(failure));
+                    return;
+                }
+
+                var nodes = BuildNodeIndex(serialized);
+                var connections = ParseConnections(serialized);
+                var incoming = BuildIncomingFlow(nodes, connections);
+                AddFunctionLinks(serialized, nodes, incoming);
+                AddEventLinks(serialized, nodes, incoming);
+                var outgoing = BuildOutgoingFlow(incoming);
+
+                var sortedNodes = new List<Node>(nodes.Values);
+                sortedNodes.Sort(delegate(Node a, Node b)
+                {
+                    int ai;
+                    int bi;
+                    if (int.TryParse(a.Id, out ai) && int.TryParse(b.Id, out bi)) return ai.CompareTo(bi);
+                    return string.CompareOrdinal(a.Id, b.Id);
+                });
+
+                for (var i = 0; i < sortedNodes.Count; i++)
+                {
+                    var multi = sortedNodes[i];
+                    if (!multi.Type.EndsWith("Flow_MultiAnswer", StringComparison.Ordinal)) continue;
+                    var answers = ReadMultiAnswers(serialized, multi);
+                    for (var a = 0; a < answers.Count; a++)
+                    {
+                        var answerId = answers[a];
+                        if (string.IsNullOrEmpty(answerId)) continue;
+                        var paths = navigation.GetPathsForCompilation(npcId, answerId);
+                        if (paths != null && paths.Count > 0) continue;
+
+                        totalCandidates++;
+                        Logger.LogInfo("FRONTIER_ANSWER npc=" + npcId +
+                                       " multi=" + multi.Id +
+                                       " index=" + a +
+                                       " answer=" + Safe(answerId));
+                        EmitFrontierReverse(npcId, answerId, multi.Id, serialized, nodes, incoming);
+                        EmitFrontierForward(npcId, answerId, multi.Id, a, serialized, nodes, outgoing);
+                    }
+                }
+            }
+
+            Logger.LogInfo("FRONTIER_SUMMARY candidateOccurrences=" + totalCandidates);
+        }
+
+        private void EmitFrontierReverse(string npcId, string answerId, string multiNodeId, string serialized,
+            Dictionary<string, Node> nodes, Dictionary<string, List<Connection>> incoming)
+        {
+            var closure = BuildReverseClosure(multiNodeId, incoming, 160, 512);
+            var roots = new List<ReverseNode>();
+            for (var i = 0; i < closure.Count; i++)
+            {
+                List<Connection> edges;
+                if (!incoming.TryGetValue(closure[i].Id, out edges) || edges.Count == 0)
+                    roots.Add(closure[i]);
+            }
+
+            roots.Sort(delegate(ReverseNode a, ReverseNode b) { return b.Depth.CompareTo(a.Depth); });
+            Logger.LogInfo("FRONTIER_REVERSE_SUMMARY npc=" + npcId +
+                           " answer=" + Safe(answerId) +
+                           " multi=" + multiNodeId +
+                           " nodes=" + closure.Count +
+                           " roots=" + roots.Count);
+            for (var i = 0; i < roots.Count; i++)
+            {
+                Node root;
+                if (!nodes.TryGetValue(roots[i].Id, out root)) continue;
+                Logger.LogInfo("FRONTIER_ROOT npc=" + npcId +
+                               " answer=" + Safe(answerId) +
+                               " multi=" + multiNodeId +
+                               " node=" + root.Id +
+                               " depth=" + roots[i].Depth +
+                               " type=" + ShortType(root.Type) +
+                               " fields=" + DescribeFields(serialized, root));
+            }
+
+            closure.Sort(delegate(ReverseNode a, ReverseNode b) { return b.Depth.CompareTo(a.Depth); });
+            for (var i = 0; i < closure.Count && i < 128; i++)
+            {
+                Node node;
+                if (!nodes.TryGetValue(closure[i].Id, out node)) continue;
+                if (!IsFrontierSignal(node.Type)) continue;
+                Logger.LogInfo("FRONTIER_UPSTREAM npc=" + npcId +
+                               " answer=" + Safe(answerId) +
+                               " multi=" + multiNodeId +
+                               " node=" + node.Id +
+                               " depth=" + closure[i].Depth +
+                               " type=" + ShortType(node.Type) +
+                               " fields=" + DescribeFields(serialized, node));
+            }
+        }
+
+        private void EmitFrontierForward(string npcId, string answerId, string multiNodeId, int answerIndex,
+            string serialized, Dictionary<string, Node> nodes, Dictionary<string, List<Connection>> outgoing)
+        {
+            List<Connection> startEdges;
+            if (!outgoing.TryGetValue(multiNodeId, out startEdges)) startEdges = new List<Connection>();
+
+            var queue = new Queue<ReverseNode>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            var starts = 0;
+            for (var i = 0; i < startEdges.Count; i++)
+            {
+                if (ParseOutPortIndex(startEdges[i].SourcePort) != answerIndex) continue;
+                if (!seen.Add(startEdges[i].TargetNode)) continue;
+                queue.Enqueue(new ReverseNode { Id = startEdges[i].TargetNode, Depth = 1 });
+                starts++;
+            }
+
+            var visited = new List<ReverseNode>();
+            while (queue.Count > 0 && seen.Count <= 512)
+            {
+                var current = queue.Dequeue();
+                visited.Add(current);
+                if (current.Depth >= 160) continue;
+                List<Connection> edges;
+                if (!outgoing.TryGetValue(current.Id, out edges)) continue;
+                for (var i = 0; i < edges.Count; i++)
+                {
+                    if (!seen.Add(edges[i].TargetNode)) continue;
+                    queue.Enqueue(new ReverseNode { Id = edges[i].TargetNode, Depth = current.Depth + 1 });
+                }
+            }
+
+            Logger.LogInfo("FRONTIER_FORWARD_SUMMARY npc=" + npcId +
+                           " answer=" + Safe(answerId) +
+                           " multi=" + multiNodeId +
+                           " starts=" + starts +
+                           " nodes=" + visited.Count);
+            for (var i = 0; i < visited.Count; i++)
+            {
+                Node node;
+                if (!nodes.TryGetValue(visited[i].Id, out node)) continue;
+                if (!IsFrontierSignal(node.Type)) continue;
+                Logger.LogInfo("FRONTIER_DOWNSTREAM npc=" + npcId +
+                               " answer=" + Safe(answerId) +
+                               " multi=" + multiNodeId +
+                               " node=" + node.Id +
+                               " depth=" + visited[i].Depth +
+                               " type=" + ShortType(node.Type) +
+                               " fields=" + DescribeFields(serialized, node));
+            }
+        }
+
+        private static Dictionary<string, List<Connection>> BuildOutgoingFlow(
+            Dictionary<string, List<Connection>> incoming)
+        {
+            var outgoing = new Dictionary<string, List<Connection>>(StringComparer.Ordinal);
+            foreach (var pair in incoming)
+            {
+                var edges = pair.Value;
+                for (var i = 0; i < edges.Count; i++)
+                {
+                    List<Connection> list;
+                    if (!outgoing.TryGetValue(edges[i].SourceNode, out list))
+                        outgoing[edges[i].SourceNode] = list = new List<Connection>();
+                    list.Add(edges[i]);
+                }
+            }
+            return outgoing;
+        }
+
+        private static bool IsFrontierSignal(string type)
+        {
+            if (string.IsNullOrEmpty(type)) return false;
+            return type.IndexOf("Flow_SetTaskState", StringComparison.Ordinal) >= 0 ||
+                   type.IndexOf("Flow_AddPhraseToBlacklist", StringComparison.Ordinal) >= 0 ||
+                   type.IndexOf("Flow_RemovePhraseFromBlacklist", StringComparison.Ordinal) >= 0 ||
+                   type.IndexOf("Flow_AddInteractionEvent", StringComparison.Ordinal) >= 0 ||
+                   type.IndexOf("Flow_RemoveInteractionEvent", StringComparison.Ordinal) >= 0 ||
+                   type.IndexOf("Flow_FireEvent", StringComparison.Ordinal) >= 0 ||
+                   type.IndexOf("CustomEvent", StringComparison.Ordinal) >= 0 ||
+                   type.IndexOf("CustomFunction", StringComparison.Ordinal) >= 0 ||
+                   type.IndexOf("Flow_WaitForFlow", StringComparison.Ordinal) >= 0 ||
+                   type.IndexOf("SmartRes", StringComparison.Ordinal) >= 0;
         }
 
         private void DumpNavigationSnapshot()
