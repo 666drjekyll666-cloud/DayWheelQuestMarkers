@@ -104,6 +104,7 @@ namespace CalendarQuestsPins
                 totalCandidates += candidates;
             }
             Logger.LogInfo("TASKSNAP_SUMMARY ownerComplete=" + totalComplete + " mappedSelectable=" + totalMapped + " candidateNonSelectable=" + totalCandidates);
+            DumpRawInteractionUniverse();
             DumpNavigationSnapshot();
             Logger.LogInfo("TASKSNAP_END probe disabled after this snapshot");
         }
@@ -151,6 +152,114 @@ namespace CalendarQuestsPins
             }
 
             Logger.LogInfo("TASKSNAP_NPC npc=" + npcId + " ownerComplete=" + ownerComplete + " mappedSelectable=" + mappedSelectable + " candidateNonSelectable=" + candidates + " functionLinks=" + functionLinks + " eventLinks=" + eventLinks);
+        }
+
+        private void DumpRawInteractionUniverse()
+        {
+            var totalAnswerOccurrences = 0;
+            var totalTaskStates = 0;
+            var totalCustomEvents = 0;
+            var totalAddInteractionEvents = 0;
+            var totalRemoveInteractionEvents = 0;
+
+            Logger.LogInfo("UNIVERSE_RAW_BEGIN game=1.407 npcs=6 independentOfProductionClassification=True");
+            for (var n = 0; n < NpcIds.Length; n++)
+            {
+                var npcId = NpcIds[n];
+                var serialized = ReadSerializedGraph(npcId);
+                if (serialized == null)
+                {
+                    Logger.LogError("UNIVERSE_RAW_ABORT npc=" + npcId + " graphUnavailable=True");
+                    return;
+                }
+
+                var nodes = BuildNodeIndex(serialized);
+                var answerOccurrences = 0;
+                var taskStates = 0;
+                var customEvents = 0;
+                var addInteractionEvents = 0;
+                var removeInteractionEvents = 0;
+
+                var sortedNodes = new List<Node>(nodes.Values);
+                sortedNodes.Sort(delegate(Node a, Node b)
+                {
+                    int ai;
+                    int bi;
+                    if (int.TryParse(a.Id, out ai) && int.TryParse(b.Id, out bi)) return ai.CompareTo(bi);
+                    return string.CompareOrdinal(a.Id, b.Id);
+                });
+
+                for (var i = 0; i < sortedNodes.Count; i++)
+                {
+                    var node = sortedNodes[i];
+                    if (node.Type.EndsWith("Flow_MultiAnswer", StringComparison.Ordinal))
+                    {
+                        var answers = ReadMultiAnswers(serialized, node);
+                        for (var a = 0; a < answers.Count; a++)
+                        {
+                            Logger.LogInfo("UNIVERSE_ANSWER npc=" + npcId +
+                                           " multi=" + node.Id +
+                                           " index=" + a +
+                                           " answer=" + Safe(answers[a]));
+                            answerOccurrences++;
+                        }
+                    }
+
+                    if (node.Type.EndsWith("Flow_SetTaskState", StringComparison.Ordinal))
+                    {
+                        Logger.LogInfo("UNIVERSE_TASK_STATE npc=" + npcId +
+                                       " node=" + node.Id +
+                                       " owner=" + Safe(ReadNodeContent(serialized, node, "NPC id")) +
+                                       " task=" + Safe(ReadNodeContent(serialized, node, "Task")) +
+                                       " state=" + Safe(ReadNodeContent(serialized, node, "State")));
+                        taskStates++;
+                    }
+
+                    if (node.Type.EndsWith("CustomEvent", StringComparison.Ordinal) &&
+                        !node.Type.EndsWith("CustomFunctionEvent", StringComparison.Ordinal))
+                    {
+                        Logger.LogInfo("UNIVERSE_CUSTOM_EVENT npc=" + npcId +
+                                       " node=" + node.Id +
+                                       " event=" + Safe(ReadNestedRawNodeString(serialized, node, "eventName", "_value")));
+                        customEvents++;
+                    }
+
+                    if (node.Type.EndsWith("Flow_AddInteractionEvent", StringComparison.Ordinal))
+                    {
+                        Logger.LogInfo("UNIVERSE_ADD_INTERACTION npc=" + npcId +
+                                       " node=" + node.Id +
+                                       " event=" + Safe(ReadNodeContent(serialized, node, "Event")));
+                        addInteractionEvents++;
+                    }
+
+                    if (node.Type.EndsWith("Flow_RemoveInteractionEvent", StringComparison.Ordinal))
+                    {
+                        Logger.LogInfo("UNIVERSE_REMOVE_INTERACTION npc=" + npcId +
+                                       " node=" + node.Id +
+                                       " event=" + Safe(ReadNodeContent(serialized, node, "Event")));
+                        removeInteractionEvents++;
+                    }
+                }
+
+                totalAnswerOccurrences += answerOccurrences;
+                totalTaskStates += taskStates;
+                totalCustomEvents += customEvents;
+                totalAddInteractionEvents += addInteractionEvents;
+                totalRemoveInteractionEvents += removeInteractionEvents;
+
+                Logger.LogInfo("UNIVERSE_RAW_NPC npc=" + npcId +
+                               " answerOccurrences=" + answerOccurrences +
+                               " taskStates=" + taskStates +
+                               " customEvents=" + customEvents +
+                               " addInteractionEvents=" + addInteractionEvents +
+                               " removeInteractionEvents=" + removeInteractionEvents);
+            }
+
+            Logger.LogInfo("UNIVERSE_RAW_SUMMARY answerOccurrences=" + totalAnswerOccurrences +
+                           " taskStates=" + totalTaskStates +
+                           " customEvents=" + totalCustomEvents +
+                           " addInteractionEvents=" + totalAddInteractionEvents +
+                           " removeInteractionEvents=" + totalRemoveInteractionEvents);
         }
 
         private void DumpNavigationSnapshot()
