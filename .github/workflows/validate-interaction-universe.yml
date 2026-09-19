@@ -2,6 +2,20 @@ name: Validate interaction universe
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+      - 'dev/**'
+      - 'research/**'
+    paths:
+      - 'validator/**'
+      - 'src/WeekdayInteractionRuleCache.cs'
+      - 'src/NavigationReachabilityCache.cs'
+      - 'src/UnifiedDialogueLifecycleCompiler.cs'
+      - 'src/PersistentRuleManifest.cs'
+      - 'src/VerifiedCompletionReminderRules.cs'
+      - 'src/CalendarQuestsPinsPlugin.cs'
+      - '.github/workflows/validate-interaction-universe.yml'
   pull_request:
     paths:
       - 'validator/**'
@@ -17,7 +31,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: interaction-universe-${{ github.workflow }}-${{ github.ref }}
+  group: interaction-universe-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
