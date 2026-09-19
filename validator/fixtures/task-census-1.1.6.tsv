@@ -1,0 +1,25 @@
+# Accepted GK 1.407 owner-task census fixture from read-only probe 0.1.1.
+# Provenance: frozen/auto-interaction-audit-probe-0.1.1 @ bd48d3b744013a4137ea3c01dd5a9fd32282ccc4.
+# Sections are compact derived evidence; no serialized game graphs are stored.
+[npc]
+npc	ownerComplete	mappedSelectable	candidateNonSelectable	functionLinks
+npc_astrologer	14	14	0	36
+npc_inquisitor	9	8	1	30
+npc_cultist	12	9	3	52
+npc_merchant	14	14	0	54
+npc_actress	10	10	0	17
+npc_bishop	13	13	0	38
+
+[candidate]
+npc	task	completeNode	reverseNodes	roots	functionLinks
+npc_inquisitor	inquisitor_talk	676	10	1	30
+npc_cultist	snake_key	59	8	1	52
+npc_cultist	snake_back	1367	10	1	52
+npc_cultist	snake_trap	1638	41	1	52
+
+[selected-mapped-controls]
+npc	task	answer	trace
+npc_astrologer	dlc_souls_s29_1	@souls_s_s30_ask	44
+npc_cultist	dlc_souls_s29_3	@souls_s_s33_ask	106
+npc_actress	dlc_souls_s29_2	@souls_s_s31_ask	30
+npc_bishop	bishop_rcitezen	@bishop_get_citezen	1068
