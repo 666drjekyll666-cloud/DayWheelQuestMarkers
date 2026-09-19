@@ -4,7 +4,7 @@
     <LangVersion>7.3</LangVersion>
     <AssemblyName>DayWheelQuestMarkers.RuntimeWatchdog</AssemblyName>
     <RootNamespace>DayWheelQuestMarkersResearch</RootNamespace>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Optimize>true</Optimize>
     <DebugType>none</DebugType>
@@ -15,10 +15,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="src\RuntimeWatchdogPlugin.cs" />
+    <Compile Include="src\LiveDialogueCoverageWatchdog.cs" />
+    <EmbeddedResource Include="validator\fixtures\live-answer-dispositions-1.1.6.tsv">
+      <LogicalName>DayWheelQuestMarkersResearch.LiveAnswerDispositions.tsv</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BepInEx.BaseLib" Version="5.4.21" />
     <PackageReference Include="BepInEx.Core" Version="5.4.21" />
+    <PackageReference Include="HarmonyX" Version="2.9.0" />
     <PackageReference Include="Unity3D.SDK" Version="2020.3.13.1" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>
