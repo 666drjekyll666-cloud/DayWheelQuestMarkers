@@ -24,6 +24,7 @@ DEFAULT_TASKS = ROOT / "validator" / "fixtures" / "task-census-1.1.6.tsv"
 DEFAULT_TASK_ROUTES = ROOT / "validator" / "fixtures" / "task-routes-1.1.6.tsv"
 DEFAULT_NAVIGATION = ROOT / "validator" / "fixtures" / "navigation-paths-1.1.6.tsv"
 DEFAULT_RAW_UNIVERSE = ROOT / "validator" / "fixtures" / "raw-interaction-universe-1.1.6.tsv"
+DEFAULT_FRONTIER = ROOT / "validator" / "fixtures" / "no-root-frontier-1.1.6.tsv"
 DEFAULT_REPORT = ROOT / "validator" / "out" / "validation-report.json"
 
 
@@ -373,6 +374,66 @@ def validate_complete_snapshots(
     }
 
 
+def validate_no_root_frontier(
+    rows: list[dict[str, str]],
+    snapshot_report: dict,
+    baseline: dict,
+    log: CheckLog,
+) -> dict:
+    expected = baseline["raw_interaction_universe"]
+    expected_classification = expected["no_root_accepted_classification"]
+
+    observed_keys = {(x["npc"], x["answer"]) for x in rows}
+    expected_keys = {
+        (x["npc"], x["answer"]) for x in snapshot_report["no_interaction_root_unique_answers"]
+    }
+
+    log.check("frontier.rows", len(rows) == expected["no_root_classified"],
+              f"observed={len(rows)} expected={expected['no_root_classified']}")
+    log.check("frontier.identity_unique", len(observed_keys) == len(rows),
+              f"unique={len(observed_keys)} rows={len(rows)}")
+    log.check("frontier.exact_raw_no_root_set", observed_keys == expected_keys,
+              f"observed={sorted(observed_keys)} expected={sorted(expected_keys)}")
+
+    wrong_classification = [
+        (x["npc"], x["answer"], x["classification"])
+        for x in rows if x["classification"] != expected_classification
+    ]
+    log.check("frontier.classification",
+              not wrong_classification,
+              f"all={expected_classification}" if not wrong_classification else
+              f"unexpected={wrong_classification}")
+
+    root_counts = Counter(
+        (x["npc"], x["rootNode"], x["rootEvent"]) for x in rows
+    )
+    expected_root_counts = {
+        (x["npc"], x["root_node"], x["root_event"]): x["answers"]
+        for x in expected["no_root_event_roots"]
+    }
+    log.check("frontier.event_root_contracts", dict(root_counts) == expected_root_counts,
+              f"observed={dict(root_counts)} expected={expected_root_counts}")
+
+    unknown = sorted(expected_keys - observed_keys)
+    log.check("frontier.unknown_zero", len(unknown) == expected["no_root_unknown"],
+              f"observed={len(unknown)} expected={expected['no_root_unknown']} unknown={unknown}")
+
+    return {
+        "classified": len(rows),
+        "classification": expected_classification,
+        "unknown": len(unknown),
+        "event_roots": [
+            {
+                "npc": npc,
+                "root_node": node,
+                "root_event": event,
+                "answers": count,
+            }
+            for (npc, node, event), count in sorted(root_counts.items())
+        ],
+    }
+
+
 def extract_int_constant(text: str, name: str) -> int | None:
     match = re.search(rf"\b{name}\s*=\s*(\d+)\s*;", text)
     return int(match.group(1)) if match else None
@@ -489,6 +550,7 @@ def main() -> int:
     parser.add_argument("--task-routes", type=Path, default=DEFAULT_TASK_ROUTES)
     parser.add_argument("--navigation", type=Path, default=DEFAULT_NAVIGATION)
     parser.add_argument("--raw-universe", type=Path, default=DEFAULT_RAW_UNIVERSE)
+    parser.add_argument("--frontier", type=Path, default=DEFAULT_FRONTIER)
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     args = parser.parse_args()
 
@@ -506,15 +568,13 @@ def main() -> int:
         baseline,
         log,
     )
-    source_report = validate_production_source(baseline, log)
-
-    no_root = snapshot_report["no_interaction_root_unique_answers"]
-    log.warn(
-        "Coverage watchdog is not yet closed: 14 raw authored answer IDs have no normal "
-        "interaction-root navigation path and require explicit topology review before they can "
-        "be classified as cutscene/event-only/non-reminder or promoted to reminder evidence. "
-        f"Candidates={no_root}"
+    frontier_report = validate_no_root_frontier(
+        load_tsv(args.frontier),
+        snapshot_report,
+        baseline,
+        log,
     )
+    source_report = validate_production_source(baseline, log)
 
     report = {
         "validator_format": 1,
@@ -529,13 +589,14 @@ def main() -> int:
             "dialogue_lifecycle": "path-level exhaustive for accepted census",
             "owner_task_completion": "complete 72-route snapshot plus accepted census/classification",
             "navigation": "complete 270-path production-derived snapshot; independent lifecycle oracle remains separate",
-            "raw_interaction_universe": "complete raw snapshot; 14 no-interaction-root answer IDs pending topology review",
+            "raw_interaction_universe": "complete accepted six-NPC graph snapshot; all 14 no-root answers explicitly classified; UNKNOWN=0",
             "event_only": "exact accepted set",
             "production_contract": "static bounded contract checks",
         },
         "lifecycle": lifecycle_report,
         "tasks": task_report,
         "snapshot": snapshot_report,
+        "frontier": frontier_report,
         "production_source": source_report,
         "checks": log.checks,
     }
@@ -559,7 +620,8 @@ def main() -> int:
         "Raw universe: "
         f"{snapshot_report['raw_unique_answer_ids']} unique answer IDs -> "
         f"{snapshot_report['navigation_backed_unique_answers']} navigation-backed + "
-        f"{len(snapshot_report['no_interaction_root_unique_answers'])} no-root candidates"
+        f"{frontier_report['classified']} event-invoked non-reminders; "
+        f"UNKNOWN={frontier_report['unknown']}"
     )
     for warning in log.warnings:
         print("COVERAGE NOTE:", warning)
