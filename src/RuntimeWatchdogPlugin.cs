@@ -12,7 +12,7 @@ namespace DayWheelQuestMarkersResearch
     {
         public const string PluginGuid = "nikich.gyk.daywheelquestmarkers.runtimewatchdog";
         public const string PluginName = "Day Wheel Quest Markers - Runtime Watchdog";
-        public const string PluginVersion = "0.1.0";
+        public const string PluginVersion = "0.2.0";
 
         private const string ProductionTypeName = "CalendarQuestsPins.CalendarQuestsPinsPlugin";
         private const string ExpectedProductionVersion = "1.1.6";
@@ -40,6 +40,11 @@ namespace DayWheelQuestMarkersResearch
         private int _bindingMismatchTicks;
         private int _visualMismatchTicks;
 
+        private string _liveFailureCode;
+        private string _liveFailureDetail;
+        private string _lastLoggedLiveFailure;
+        private LiveDialogueCoverageWatchdog _liveDialogue;
+
         private GUIStyle _bangStyle;
         private GUIStyle _textStyle;
 
@@ -48,7 +53,20 @@ namespace DayWheelQuestMarkersResearch
             _mainGameType = FindType("MainGame");
             _productionType = FindType(ProductionTypeName);
             _nextTick = Time.realtimeSinceStartup + 0.5f;
+            _liveDialogue = new LiveDialogueCoverageWatchdog(this);
+            string liveFailure;
+            if (!_liveDialogue.Initialize(out liveFailure))
+                ReportLiveFailure("LIVE_WATCHDOG_INIT", liveFailure);
             Logger.LogInfo(PluginName + " " + PluginVersion + " loaded. Read-only; no save or production state mutation.");
+        }
+
+        private void OnDestroy()
+        {
+            if (_liveDialogue != null)
+            {
+                _liveDialogue.Dispose();
+                _liveDialogue = null;
+            }
         }
 
         private void Update()
@@ -389,6 +407,21 @@ namespace DayWheelQuestMarkersResearch
             return true;
         }
 
+        internal void ReportLiveFailure(string code, string detail)
+        {
+            _liveFailureCode = code;
+            _liveFailureDetail = detail ?? "<no detail>";
+            var signature = code + "|" + _liveFailureDetail;
+            if (string.Equals(signature, _lastLoggedLiveFailure, StringComparison.Ordinal)) return;
+            _lastLoggedLiveFailure = signature;
+            Logger.LogError("WATCHDOG_FAIL code=" + code + " detail=" + _liveFailureDetail);
+        }
+
+        internal void LogLiveInfo(string message)
+        {
+            if (!string.IsNullOrEmpty(message)) Logger.LogInfo(message);
+        }
+
         private void SetFailure(string code, string detail)
         {
             _failureCode = code;
@@ -417,7 +450,8 @@ namespace DayWheelQuestMarkersResearch
 
         private void OnGUI()
         {
-            if (string.IsNullOrEmpty(_failureCode)) return;
+            var displayCode = !string.IsNullOrEmpty(_liveFailureCode) ? _liveFailureCode : _failureCode;
+            if (string.IsNullOrEmpty(displayCode)) return;
             if (_bangStyle == null)
             {
                 _bangStyle = new GUIStyle(GUI.skin.label)
@@ -439,8 +473,8 @@ namespace DayWheelQuestMarkersResearch
 
             var bangRect = new Rect(Screen.width - 82f, 12f, 64f, 64f);
             GUI.Label(bangRect, "!", _bangStyle);
-            var textRect = new Rect(Mathf.Max(8f, Screen.width - 520f), 70f, 500f, 44f);
-            GUI.Label(textRect, "DAY WHEEL WATCHDOG FAIL: " + _failureCode, _textStyle);
+            var textRect = new Rect(Mathf.Max(8f, Screen.width - 620f), 70f, 600f, 44f);
+            GUI.Label(textRect, "DAY WHEEL WATCHDOG FAIL: " + displayCode, _textStyle);
         }
 
         private static void ExpectInt(object target, string name, int expected, List<string> failures)
