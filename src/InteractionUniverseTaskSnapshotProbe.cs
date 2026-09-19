@@ -25,6 +25,7 @@ namespace CalendarQuestsPins
         private Type _worldMapType;
         private Type _controllerType;
         private MethodInfo _worldObjectGetter;
+        private object _mainGame;
         private bool _finished;
         private float _nextAttempt;
         private int _attempts;
@@ -86,6 +87,11 @@ namespace CalendarQuestsPins
             if (_mainGameType == null || _worldMapType == null || _controllerType == null || _worldObjectGetter == null) return false;
             object started;
             if (!TryReadStatic(_mainGameType, "game_started", out started) || !(started is bool) || !(bool)started) return false;
+            if (_mainGame == null || !ReflectionUtil.IsUnityAlive(_mainGame))
+                _mainGame = ReflectionUtil.FindActiveUnityInstance(_mainGameType);
+            if (_mainGame == null) return false;
+            object save;
+            if (!ReflectionUtil.TryRead(_mainGame, "save", out save) || save == null) return false;
             for (var i = 0; i < NpcIds.Length; i++)
                 if (ReadSerializedGraph(NpcIds[i]) == null) return false;
             return true;
@@ -108,6 +114,7 @@ namespace CalendarQuestsPins
                 totalCandidates += candidates;
             }
             Logger.LogInfo("TASKSNAP_SUMMARY ownerComplete=" + totalComplete + " mappedSelectable=" + totalMapped + " candidateNonSelectable=" + totalCandidates);
+            DumpNavigationSnapshot();
             Logger.LogInfo("TASKSNAP_END probe disabled after this snapshot");
         }
 
@@ -154,6 +161,123 @@ namespace CalendarQuestsPins
             }
 
             Logger.LogInfo("TASKSNAP_NPC npc=" + npcId + " ownerComplete=" + ownerComplete + " mappedSelectable=" + mappedSelectable + " candidateNonSelectable=" + candidates + " functionLinks=" + functionLinks + " eventLinks=" + eventLinks);
+        }
+
+        private void DumpNavigationSnapshot()
+        {
+            object save;
+            if (_mainGame == null || !ReflectionUtil.TryRead(_mainGame, "save", out save) || save == null)
+            {
+                Logger.LogError("NAVSNAP_ABORT save unavailable.");
+                return;
+            }
+
+            var rules = new WeekdayInteractionRuleCache();
+            if (!rules.Build(save, _mainGame))
+            {
+                Logger.LogError("NAVSNAP_ABORT production structural rule cache could not build.");
+                return;
+            }
+
+            var targets = new Dictionary<string, WeekdayInteractionRuleCache.TargetRules>(StringComparer.Ordinal);
+            foreach (var target in rules.AllTargets)
+                if (target != null && !string.IsNullOrEmpty(target.NpcId)) targets[target.NpcId] = target;
+
+            var navigation = new NavigationReachabilityCache(rules);
+            Logger.LogInfo("NAVSNAP_BEGIN game=1.407 npcs=6 source=production-navigation-derivation snapshotOnly=True");
+            for (var n = 0; n < NpcIds.Length; n++)
+            {
+                var npcId = NpcIds[n];
+                WeekdayInteractionRuleCache.TargetRules target;
+                var serialized = ReadSerializedGraph(npcId);
+                if (serialized == null || !targets.TryGetValue(npcId, out target))
+                {
+                    Logger.LogError("NAVSNAP_ABORT npc=" + npcId + " graphOrTargetUnavailable=True");
+                    return;
+                }
+
+                string failure;
+                if (!navigation.BuildTarget(npcId, serialized, target.WorldObject, target, out failure))
+                {
+                    Logger.LogError("NAVSNAP_ABORT npc=" + npcId + " failure=" + Safe(failure));
+                    return;
+                }
+
+                var answerIds = new HashSet<string>(StringComparer.Ordinal);
+                var nodes = BuildNodeIndex(serialized);
+                foreach (var node in nodes.Values)
+                {
+                    if (!node.Type.EndsWith("Flow_MultiAnswer", StringComparison.Ordinal)) continue;
+                    var answers = ReadMultiAnswers(serialized, node);
+                    for (var i = 0; i < answers.Count; i++)
+                        if (!string.IsNullOrEmpty(answers[i])) answerIds.Add(answers[i]);
+                }
+
+                var sorted = new List<string>(answerIds);
+                sorted.Sort(StringComparer.Ordinal);
+                var emitted = 0;
+                for (var a = 0; a < sorted.Count; a++)
+                {
+                    var paths = navigation.GetPathsForCompilation(npcId, sorted[a]);
+                    if (paths == null || paths.Count == 0) continue;
+                    for (var p = 0; p < paths.Count; p++)
+                    {
+                        Logger.LogInfo("NAVSNAP_PATH npc=" + npcId +
+                                       " answer=" + Safe(sorted[a]) +
+                                       " pathIndex=" + p +
+                                       " unsupported=" + paths[p].Unsupported +
+                                       " ancestors=" + FormatAncestors(paths[p].Ancestors));
+                        emitted++;
+                    }
+                }
+                Logger.LogInfo("NAVSNAP_NPC npc=" + npcId + " emittedPaths=" + emitted);
+            }
+
+            string verifiedFailure;
+            var contractsOk = navigation.ValidateVerifiedContracts(out verifiedFailure);
+            Logger.LogInfo("NAVSNAP_SUMMARY answers=" + navigation.AnswerCount +
+                           " paths=" + navigation.PathCount +
+                           " predicates=" + navigation.PredicateCount +
+                           " unsupportedPaths=" + navigation.UnsupportedPathCount +
+                           " verifiedContracts=" + contractsOk +
+                           " verifiedFailure=" + Safe(verifiedFailure));
+        }
+
+        private static string FormatAncestors(List<NavigationReachabilityCache.EntryPredicate> ancestors)
+        {
+            if (ancestors == null || ancestors.Count == 0) return "<none>";
+            var sb = new StringBuilder();
+            for (var i = 0; i < ancestors.Count; i++)
+            {
+                if (i > 0) sb.Append('>');
+                var p = ancestors[i];
+                sb.Append(Safe(p.AnswerId))
+                  .Append("{unlock=").Append(p.RequireUnlocked)
+                  .Append(",notBlacklisted=").Append(p.RequireNotBlacklisted)
+                  .Append(",unsupported=").Append(p.Unsupported)
+                  .Append(",gates=");
+                if (p.GateVariants == null || p.GateVariants.Count == 0) sb.Append("<none>");
+                else
+                {
+                    for (var g = 0; g < p.GateVariants.Count; g++)
+                    {
+                        if (g > 0) sb.Append(';');
+                        var v = p.GateVariants[g];
+                        sb.Append(v.Unsupported ? "U" : "S")
+                          .Append(":P=").Append(FormatRequirement(v.Price))
+                          .Append(":L=").Append(FormatRequirement(v.Lock));
+                    }
+                }
+                sb.Append('}');
+            }
+            return sb.ToString();
+        }
+
+        private static string FormatRequirement(WeekdayInteractionRuleCache.Requirement requirement)
+        {
+            if (requirement == null) return "<none>";
+            return Safe(requirement.ResType) + ":" + Safe(requirement.Id) + "=" +
+                   requirement.Value.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
         }
 
         private bool TryResolveSelectable(string startNodeId, string serialized, Dictionary<string, Node> nodes,
