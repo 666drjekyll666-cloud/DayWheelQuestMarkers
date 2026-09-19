@@ -328,6 +328,19 @@
         "root_event": "player_back_to_cultist",
         "answers": 2
       }
-    ]
+    ],
+    "live_answer_dispositions": {
+      "answer_occurrences": 243,
+      "unknown": 0,
+      "counts": {
+        "REMINDER_TASK_OWNED": 88,
+        "NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER": 67,
+        "REMINDER_DIALOGUE_OWNER": 58,
+        "SAME_VISIT_NON_REMINDER": 4,
+        "SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER": 6,
+        "EVENT_INVOKED_NON_REMINDER": 14,
+        "SAME_VISIT_DESCENDANT_OF_TASK_OWNER": 6
+      }
+    }
   }
 }
