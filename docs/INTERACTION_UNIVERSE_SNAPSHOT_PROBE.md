@@ -75,3 +75,26 @@ After the snapshot is captured, the DLL should be removed. Its output is convert
 - no background worker;
 - executes once after runtime readiness;
 - disables itself after the snapshot.
+
+## Frozen 0.1.1 build
+
+- exact build source: `f6fef176b210f7c0e625ebb47a9b5f58d9c8f70d`;
+- frozen ref: `frozen/interaction-universe-snapshot-0.1.1`;
+- workflow run: `35450399543`;
+- job: `105916438810`;
+- build result: **success, 0 warnings / 0 errors**;
+- artifact: `InteractionUniverseTaskSnapshot-0.1.1`, artifact ID `10585578817`;
+- raw DLL: `DayWheelQuestMarkers-interaction-universe-snapshot-0.1.1.dll`;
+- raw DLL size: **64,000 bytes**;
+- raw DLL SHA-256: `4f0c62218ceb5474d2e59a63ff333aee6e149fa3119bd02a9a0ac6f848269999`.
+
+Requested runtime capture:
+
+1. keep normal stable Day Wheel Quest Markers 1.1.6 installed;
+2. install this snapshot DLL temporarily alongside it;
+3. load any developed save where the six weekday NPC graphs are available;
+4. no dialogue interaction or gameplay action is required; wait only until the normal loaded game HUD is visible and the probe has emitted `TASKSNAP_END`;
+5. exit normally and provide `BepInEx/LogOutput.log`;
+6. remove the snapshot DLL afterward.
+
+The log is accepted only if the importer verifies **72 task routes**, the exact two event-only stages, and **270 navigation paths** with canonical navigation totals.
