@@ -1,0 +1,214 @@
+{
+  "format": 1,
+  "game": "Graveyard Keeper 1.407",
+  "baseline_version": "1.1.6",
+  "accepted_runtime_source": "e2ad9c7ef2bbf312ae79f2a2fb3d1bfb7f5cc1c7",
+  "accepted_baseline_ref": "baseline/1.1.6-accepted",
+  "evidence": {
+    "lifecycle_probe": {
+      "version": "0.1.0",
+      "source_sha": "537835501873cb0d5156a2c5db58b99065f8bad8",
+      "frozen_ref": "frozen/interaction-lifecycle-census-0.1.0",
+      "workflow_run": 35446788613
+    },
+    "task_probe": {
+      "version": "0.1.1",
+      "source_sha": "bd48d3b744013a4137ea3c01dd5a9fd32282ccc4",
+      "frozen_ref": "frozen/auto-interaction-audit-probe-0.1.1",
+      "workflow_run": 34755385493
+    },
+    "event_probe": {
+      "version": "0.1.2",
+      "source_sha": "dd4d26167eb05512e5fa4760d95d4f82607fd080",
+      "frozen_ref": "frozen/auto-interaction-event-provenance-probe-0.1.2",
+      "workflow_run": 34756182698
+    }
+  },
+  "manifest": {
+    "schema": 5,
+    "owner_supported": 75,
+    "owner_unsupported": 6,
+    "cross_tasks": 8,
+    "cross_supported": 6,
+    "cross_unsupported": 0,
+    "base_at_topics": 55,
+    "base_at_supported": 54,
+    "base_at_unsupported": 1
+  },
+  "navigation": {
+    "answers": 210,
+    "paths": 270,
+    "predicates": 151,
+    "unsupported_paths": 0
+  },
+  "lifecycle": {
+    "path_records": 216,
+    "authored_answer_occurrences": 243,
+    "branches_with_blacklist": 161,
+    "self_path_owners": 204,
+    "ancestor_path_owners": 12,
+    "admitted_self_paths": 87,
+    "admitted_ancestor_paths": 6,
+    "task_owned_suppressed_paths": 117,
+    "same_visit_suppressed_paths": 6,
+    "reversible_suppressed_paths": 0,
+    "unique_admitted_owners": 60,
+    "non_at_unique": 77,
+    "exact_self": 19,
+    "exact_self_admitted_topics": 6,
+    "completion_excluded": 9,
+    "ancestor_owner_candidates": 6,
+    "ancestor_task_excluded": 2,
+    "ancestor_admitted_topics": 4,
+    "ancestor_supported_variants": 4,
+    "ancestor_unsupported_variants": 0,
+    "ancestor_owners": [
+      {
+        "npc": "npc_astrologer",
+        "owner": "@tr_quest_13_research_1",
+        "disposition": "ADMIT"
+      },
+      {
+        "npc": "npc_cultist",
+        "owner": "@snake_1с",
+        "disposition": "ADMIT"
+      },
+      {
+        "npc": "npc_merchant",
+        "owner": "@merchant_2b",
+        "disposition": "SUPPRESS_TASK_OWNED"
+      },
+      {
+        "npc": "npc_merchant",
+        "owner": "@merchant_2e_1e",
+        "disposition": "ADMIT"
+      },
+      {
+        "npc": "npc_merchant",
+        "owner": "@merchant_favore_done",
+        "disposition": "SUPPRESS_TASK_OWNED"
+      },
+      {
+        "npc": "npc_bishop",
+        "owner": "bishop_2_1a",
+        "disposition": "ADMIT"
+      }
+    ]
+  },
+  "task_census": {
+    "owner_complete_nodes": 72,
+    "probe_0_1_1_selectable": 68,
+    "probe_0_1_1_unresolved": 4,
+    "per_npc": [
+      {
+        "npc": "npc_astrologer",
+        "complete": 14,
+        "selectable": 14,
+        "unresolved": 0
+      },
+      {
+        "npc": "npc_inquisitor",
+        "complete": 9,
+        "selectable": 8,
+        "unresolved": 1
+      },
+      {
+        "npc": "npc_cultist",
+        "complete": 12,
+        "selectable": 9,
+        "unresolved": 3
+      },
+      {
+        "npc": "npc_merchant",
+        "complete": 14,
+        "selectable": 14,
+        "unresolved": 0
+      },
+      {
+        "npc": "npc_actress",
+        "complete": 10,
+        "selectable": 10,
+        "unresolved": 0
+      },
+      {
+        "npc": "npc_bishop",
+        "complete": 13,
+        "selectable": 13,
+        "unresolved": 0
+      }
+    ],
+    "unresolved_resolution": [
+      {
+        "npc": "npc_inquisitor",
+        "task": "inquisitor_talk",
+        "kind": "event_only"
+      },
+      {
+        "npc": "npc_cultist",
+        "task": "snake_key",
+        "kind": "selectable_event_hop",
+        "answer": "@snake_give_key"
+      },
+      {
+        "npc": "npc_cultist",
+        "task": "snake_back",
+        "kind": "event_only"
+      },
+      {
+        "npc": "npc_cultist",
+        "task": "snake_trap",
+        "kind": "selectable_event_hop",
+        "answer": "snake_stone_ready"
+      }
+    ],
+    "final_selectable_task_completions": 70,
+    "final_event_only_task_stages": 2,
+    "event_only": [
+      {
+        "npc": "npc_inquisitor",
+        "task": "inquisitor_talk"
+      },
+      {
+        "npc": "npc_cultist",
+        "task": "snake_back"
+      }
+    ]
+  },
+  "verified_completion_supplement": {
+    "promoted_routes": [
+      {
+        "npc": "npc_astrologer",
+        "task": "dlc_souls_s29_1",
+        "answer": "@souls_s_s30_ask"
+      },
+      {
+        "npc": "npc_cultist",
+        "task": "snake_key",
+        "answer": "@snake_give_key"
+      },
+      {
+        "npc": "npc_cultist",
+        "task": "dlc_souls_s29_3",
+        "answer": "@souls_s_s33_ask"
+      },
+      {
+        "npc": "npc_actress",
+        "task": "dlc_souls_s29_2",
+        "answer": "@souls_s_s31_ask"
+      },
+      {
+        "npc": "npc_bishop",
+        "task": "bishop_rcitezen",
+        "answer": "@bishop_get_citezen"
+      }
+    ],
+    "exact_selectable_specials": [
+      {
+        "npc": "npc_cultist",
+        "task": "snake_trap",
+        "answer": "snake_stone_ready",
+        "gate": "GameRes:_rel>=10"
+      }
+    ]
+  }
+}
