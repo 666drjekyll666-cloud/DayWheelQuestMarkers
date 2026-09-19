@@ -22,6 +22,14 @@
       "source_sha": "dd4d26167eb05512e5fa4760d95d4f82607fd080",
       "frozen_ref": "frozen/auto-interaction-event-provenance-probe-0.1.2",
       "workflow_run": 34756182698
+    },
+    "universe_snapshot_probe": {
+      "version": "0.1.2",
+      "source_sha": "96f451ffc08385817b9854d29ef411a5d682eeba",
+      "frozen_ref": "frozen/interaction-universe-snapshot-0.1.2",
+      "workflow_run": 35451084485,
+      "artifact_id": 10587060876,
+      "dll_sha256": "bb257edf217b151e37efc845ef9423dc3e06e0b3432cf269aefc2db8d0813a00"
     }
   },
   "manifest": {
@@ -39,7 +47,8 @@
     "answers": 210,
     "paths": 270,
     "predicates": 151,
-    "unsupported_paths": 0
+    "unsupported_paths": 0,
+    "snapshot_fixture_paths": 270
   },
   "lifecycle": {
     "path_records": 216,
@@ -172,7 +181,8 @@
         "npc": "npc_cultist",
         "task": "snake_back"
       }
-    ]
+    ],
+    "complete_route_fixture_rows": 72
   },
   "verified_completion_supplement": {
     "promoted_routes": [
@@ -208,6 +218,76 @@
         "task": "snake_trap",
         "answer": "snake_stone_ready",
         "gate": "GameRes:_rel>=10"
+      }
+    ]
+  },
+  "raw_interaction_universe": {
+    "answer_occurrences": 243,
+    "unique_answer_ids": 224,
+    "task_state_transitions": 150,
+    "task_visible_transitions": 70,
+    "task_complete_transitions": 80,
+    "custom_events": 66,
+    "add_interaction_events": 19,
+    "remove_interaction_events": 4,
+    "navigation_backed_unique_answers": 210,
+    "no_interaction_root_unique_answers": 14,
+    "no_interaction_root_answers": [
+      {
+        "npc": "npc_cultist",
+        "answer": "snake_back_12a"
+      },
+      {
+        "npc": "npc_cultist",
+        "answer": "snake_back_12b"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_1_11a"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_1_11b"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_1_11c"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_1_7a"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_1_7b"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_1_9a"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_1_9b"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_2_9a"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_2_9b"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_cultists"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_gerry"
+      },
+      {
+        "npc": "npc_inquisitor",
+        "answer": "inquisitor_nothing"
       }
     ]
   }

@@ -1,0 +1,66 @@
+name: Build interaction universe task snapshot probe
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/interaction-universe-snapshot
+    paths:
+      - 'InteractionUniverseTaskSnapshot.csproj'
+      - 'src/InteractionUniverseTaskSnapshotProbe.cs'
+      - 'src/ReflectionUtil.cs'
+      - '.github/workflows/interaction-universe-task-snapshot.yml'
+      - 'nuget.config'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: interaction-universe-task-snapshot-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore InteractionUniverseTaskSnapshot.csproj --configfile nuget.config
+
+      - name: Build read-only snapshot probe
+        run: dotnet build InteractionUniverseTaskSnapshot.csproj -c Release --no-restore
+
+      - name: Stage artifact
+        id: artifact
+        shell: pwsh
+        run: |
+          $source = Get-Content 'src/InteractionUniverseTaskSnapshotProbe.cs' -Raw
+          if ($source -notmatch 'PluginVersion\s*=\s*"([^"]+)"') {
+            throw 'Could not read PluginVersion'
+          }
+          $version = $Matches[1]
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $asset = "DayWheelQuestMarkers-interaction-universe-task-snapshot-$version.dll"
+          Copy-Item 'bin/InteractionUniverseTaskSnapshot/DayWheelQuestMarkers.InteractionUniverseTaskSnapshot.dll' "dist/$asset"
+          $hash = (Get-FileHash "dist/$asset" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "asset=$asset" >> $env:GITHUB_OUTPUT
+          "sha256=$hash" >> $env:GITHUB_OUTPUT
+          Write-Host "Snapshot probe $version SHA-256: $hash"
+
+      - name: Upload snapshot probe
+        uses: actions/upload-artifact@v4
+        with:
+          name: InteractionUniverseTaskSnapshot-${{ steps.artifact.outputs.version }}
+          path: dist/${{ steps.artifact.outputs.asset }}
+          if-no-files-found: error
+          retention-days: 7

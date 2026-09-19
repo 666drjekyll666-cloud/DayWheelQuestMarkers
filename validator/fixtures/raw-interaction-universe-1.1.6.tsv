@@ -1,0 +1,486 @@
+# Raw accepted GK 1.407 interaction universe from read-only snapshot probe 0.1.2.
+# Deliberately broader than production reminder classification.
+# Player runtime evidence: LogOutput(20260919-152112).log.
+kind	npc	node	index	id	value1	value2
+answer	npc_actress	30	0	actress_2a_2		
+answer	npc_actress	30	1	actress_2b		
+answer	npc_actress	30	2	@actress_snake_back		
+answer	npc_actress	30	3	@actress_father		
+answer	npc_actress	30	4	@actress_money_back		
+answer	npc_actress	30	5	@actress_parfume_ready		
+answer	npc_actress	30	6	@actress_story_gold		
+answer	npc_actress	30	7	@actress_lute_done		
+answer	npc_actress	30	8	@actress_title		
+answer	npc_actress	30	9	@actress_ song_done		
+answer	npc_actress	30	10	@actress_marketing		
+answer	npc_actress	30	11	@actress_ jewelry		
+answer	npc_actress	30	12	@tr_quest_8_singing_charm_1		
+answer	npc_actress	30	13	@tr_quest_8_singing_charm_8		
+answer	npc_actress	30	14	@actress_trade		
+answer	npc_actress	30	15	@souls_s_s31_ask		
+answer	npc_actress	30	16	Leave		
+answer	npc_actress	67	0	@actress_2b_1a		
+answer	npc_actress	67	1	@actress_2b_1b		
+answer	npc_actress	67	2	actress_no_question		
+answer	npc_actress	968	0	tr_quest_8_singing_charm_7a		
+answer	npc_actress	968	1	tr_quest_8_singing_charm_7b		
+answer	npc_actress	968	2	tr_quest_8_singing_charm_7c		
+answer	npc_astrologer	44	0	astrologer_2a		
+answer	npc_astrologer	44	1	astrologer_2b		
+answer	npc_astrologer	44	2	@astrologer_diary		
+answer	npc_astrologer	44	3	@astrologer_acid		
+answer	npc_astrologer	44	4	@astrologer_tools		
+answer	npc_astrologer	44	5	@astrologer_necronamicon		
+answer	npc_astrologer	44	6	@astrologer_charm		
+answer	npc_astrologer	44	7	@astrologer_charm_no		
+answer	npc_astrologer	44	8	@astrologer_charm_know		
+answer	npc_astrologer	44	9	@astrolog_expedition		
+answer	npc_astrologer	44	10	@astrologer_silver		
+answer	npc_astrologer	44	11	@astrologer_gold		
+answer	npc_astrologer	44	12	@astrologer_title		
+answer	npc_astrologer	44	13	@astrologer_fix_mill		
+answer	npc_astrologer	44	14	@astrologer_fix		
+answer	npc_astrologer	44	15	@astrologer_last_0		
+answer	npc_astrologer	44	16	@astrologer_items		
+answer	npc_astrologer	44	17	@tr_quest_13_research_1		
+answer	npc_astrologer	44	18	@refugees_s_ev_7_1_1		
+answer	npc_astrologer	44	19	@astrologer_trade		
+answer	npc_astrologer	44	20	@souls_s_s30_ask		
+answer	npc_astrologer	44	21	Leave		
+answer	npc_astrologer	67	0	@astrologer_2a_1a_1		
+answer	npc_astrologer	67	1	@astrologer_2a_1b_1		
+answer	npc_astrologer	67	2	Back		
+answer	npc_astrologer	104	0	astrologer_2a_1b_6a		
+answer	npc_astrologer	104	1	astrologer_2a_1b_6b		
+answer	npc_astrologer	104	2	astrologer_2a_1b_6c		
+answer	npc_astrologer	104	3	Back		
+answer	npc_astrologer	219	0	astrologer_diary_9a		
+answer	npc_astrologer	219	1	astrologer_diary_9b		
+answer	npc_astrologer	507	0	@astrologer_about_acid		
+answer	npc_astrologer	507	1	@astrologer_about_tools		
+answer	npc_astrologer	1384	0	tr_quest_13_research_2		
+answer	npc_astrologer	1384	1	Leave		
+answer	npc_bishop	75	0	bishop_2_1a		
+answer	npc_bishop	75	1	bishop_2_1b		
+answer	npc_bishop	75	2	bishop_2_1c		
+answer	npc_bishop	75	3	bishop_2_1e		
+answer	npc_bishop	75	4	@bishop_4_0		
+answer	npc_bishop	75	5	@bishop_5_1		
+answer	npc_bishop	75	6	@bishop_trade		
+answer	npc_bishop	75	7	@bishop_6a		
+answer	npc_bishop	75	8	@souls_s_s15_ask		
+answer	npc_bishop	75	9	bishop_2_1d		
+answer	npc_bishop	132	0	bishop_2_1a_6a		
+answer	npc_bishop	132	1	bishop_2_1a_6b		
+answer	npc_bishop	161	0	bishop_2_1e_4a		
+answer	npc_bishop	161	1	bishop_2_1e_4b		
+answer	npc_bishop	161	2	bishop_2_1e_4c		
+answer	npc_bishop	679	0	@bishop_6b		
+answer	npc_bishop	679	1	@bishop_6c		
+answer	npc_bishop	679	2	@bishop_6d		
+answer	npc_bishop	679	3	@bishop_6a		
+answer	npc_bishop	679	4	@bishop_trade		
+answer	npc_bishop	679	5	@souls_s_s15_ask		
+answer	npc_bishop	679	6	Leave		
+answer	npc_bishop	1030	0	about_cathedral		
+answer	npc_bishop	1030	1	@bishop_cathidral_cross		
+answer	npc_bishop	1030	2	@bishop_cathidral_skull		
+answer	npc_bishop	1030	3	@bishop_cathidral_80		
+answer	npc_bishop	1030	4	@bishop_aristocrat		
+answer	npc_bishop	1030	5	@bishop_invitation		
+answer	npc_bishop	1030	6	@bishop_magic_item		
+answer	npc_bishop	1030	7	@bishop_final_ceremony		
+answer	npc_bishop	1030	8	@bishop_magic_100		
+answer	npc_bishop	1030	9	@souls_s_s15_ask		
+answer	npc_bishop	1030	10	Trade		
+answer	npc_bishop	1030	11	Leave		
+answer	npc_bishop	1068	0	@bishop_get_citezen		
+answer	npc_bishop	1068	1	@bishop_cathidral		
+answer	npc_bishop	1068	2	@bishop_town_cathidral		
+answer	npc_bishop	1068	3	@bishop_statue_ready		
+answer	npc_bishop	1068	4	Back		
+answer	npc_cultist	106	0	snake_1a		
+answer	npc_cultist	106	1	snake_1b		
+answer	npc_cultist	106	2	@snake_1с		
+answer	npc_cultist	106	3	@snake_give_key		
+answer	npc_cultist	106	4	@give_blod_bucket		
+answer	npc_cultist	106	5	@give_blod_nails		
+answer	npc_cultist	106	6	@snake_buisnes		
+answer	npc_cultist	106	7	@snake_meat_1		
+answer	npc_cultist	106	8	@snake_pass_1		
+answer	npc_cultist	106	9	@snake_instrument		
+answer	npc_cultist	106	10	@snake_instrument_ready		
+answer	npc_cultist	106	11	@snake_about_nacklase		
+answer	npc_cultist	106	12	@snake_ritual_help		
+answer	npc_cultist	106	13	@snake_sword		
+answer	npc_cultist	106	14	@snake_necronomicon		
+answer	npc_cultist	106	15	@snake_aple		
+answer	npc_cultist	106	16	@snake_aple_get		
+answer	npc_cultist	106	17	@snake_final_ritual		
+answer	npc_cultist	106	18	@snake_magic_item		
+answer	npc_cultist	106	19	@snake_10th		
+answer	npc_cultist	106	20	@snake_items		
+answer	npc_cultist	106	21	@snake_items_give		
+answer	npc_cultist	106	22	@snake_magic_100		
+answer	npc_cultist	106	23	@tr_quest_7_snake_booze_1		
+answer	npc_cultist	106	24	@tr_quest_7_booze_after_week_1		
+answer	npc_cultist	106	25	@tr_quest_7_about_booze_again_1		
+answer	npc_cultist	106	26	@tr_quest_12_snake_asking_1		
+answer	npc_cultist	106	27	@tr_quest_12_snake_asking_1_alias		
+answer	npc_cultist	106	28	@tr_quest_12_after_first_rat_race_1		
+answer	npc_cultist	106	29	@souls_s_s33_ask		
+answer	npc_cultist	106	30	@souls_s_s43_ask		
+answer	npc_cultist	106	31	Leave		
+answer	npc_cultist	359	0	snake_back_12a		
+answer	npc_cultist	359	1	snake_back_12b		
+answer	npc_cultist	624	0	snake_1с_4a		
+answer	npc_cultist	624	1	snake_1с_4b		
+answer	npc_cultist	763	0	@snake_nacklase_0		
+answer	npc_cultist	763	1	@snake_nacklase_again		
+answer	npc_cultist	763	2	Leave		
+answer	npc_cultist	825	0	@snake_nacklase_again_10a		
+answer	npc_cultist	825	1	@snake_nacklase_again_10b		
+answer	npc_cultist	825	2	@snake_nacklase_again_10c		
+answer	npc_cultist	985	0	@snake_help		
+answer	npc_cultist	985	1	@snake_help_done		
+answer	npc_cultist	985	2	Leave		
+answer	npc_cultist	1520	0	snake_stone_ready		
+answer	npc_cultist	1520	1	Leave		
+answer	npc_cultist	1759	0	snake_aple_get_3a		
+answer	npc_cultist	1759	1	snake_aple_get_4b		
+answer	npc_inquisitor	157	0	inquisitor_1_7a		
+answer	npc_inquisitor	157	1	inquisitor_1_7b		
+answer	npc_inquisitor	174	0	inquisitor_1_9a		
+answer	npc_inquisitor	174	1	inquisitor_1_9b		
+answer	npc_inquisitor	199	0	inquisitor_1_11a		
+answer	npc_inquisitor	199	1	inquisitor_1_11b		
+answer	npc_inquisitor	199	2	inquisitor_1_11c		
+answer	npc_inquisitor	448	0	inquisitor_2_9a		
+answer	npc_inquisitor	448	1	inquisitor_2_9b		
+answer	npc_inquisitor	704	0	inquisitor_burn_3a_1a		
+answer	npc_inquisitor	704	1	inquisitor_burn_3a_1b		
+answer	npc_inquisitor	736	0	@inquisitor_grave_1_1		
+answer	npc_inquisitor	736	1	@inquisitor_grave_2_1		
+answer	npc_inquisitor	736	2	@inquisitor_grave_2a		
+answer	npc_inquisitor	736	3	@inquisitor_firewood_1		
+answer	npc_inquisitor	736	4	@inquisitor_flyer		
+answer	npc_inquisitor	736	5	@inquisitor_firewood_1_buy		
+answer	npc_inquisitor	736	6	@inquisitor_flyer_buy		
+answer	npc_inquisitor	736	7	@inquisitor_portal_guard		
+answer	npc_inquisitor	736	8	@refugees_s15_1_2		
+answer	npc_inquisitor	736	9	@souls_s_s22_ask		
+answer	npc_inquisitor	736	10	Leave		
+answer	npc_inquisitor	843	0	@inquisitor_grave_1_1		
+answer	npc_inquisitor	843	1	@inquisitor_grave_2_1		
+answer	npc_inquisitor	843	2	@inquisitor_grave_2a		
+answer	npc_inquisitor	843	3	@inquisitor_wine_ready		
+answer	npc_inquisitor	843	4	@inquisitor_tent		
+answer	npc_inquisitor	843	5	@inquisitor_tent_ready		
+answer	npc_inquisitor	843	6	@inquisitor_portal_guard		
+answer	npc_inquisitor	843	7	@inquisitor_portal_done		
+answer	npc_inquisitor	843	8	@inquisitor_burn_again		
+answer	npc_inquisitor	843	9	@inquisitor_ceremony		
+answer	npc_inquisitor	843	10	@inquisitor_dark		
+answer	npc_inquisitor	843	11	@inquisitor_magic_item		
+answer	npc_inquisitor	843	12	@inquisitor_magic_100		
+answer	npc_inquisitor	843	13	@inquisitor_gypsy		
+answer	npc_inquisitor	843	14	@refugees_s15_1_2		
+answer	npc_inquisitor	843	15	@souls_s_s22_ask		
+answer	npc_inquisitor	843	16	Leave		
+answer	npc_inquisitor	1556	0	inquisitor_dark_hart		
+answer	npc_inquisitor	1556	1	inquisitor_dark_brain		
+answer	npc_inquisitor	1556	2	inquisitor_dark_intestine		
+answer	npc_inquisitor	1556	3	Back		
+answer	npc_inquisitor	1738	0	inquisitor_gerry		
+answer	npc_inquisitor	1738	1	inquisitor_cultists		
+answer	npc_inquisitor	1738	2	inquisitor_nothing		
+answer	npc_merchant	38	0	merchant_2a		
+answer	npc_merchant	38	1	@merchant_2b		
+answer	npc_merchant	38	2	@merchant_2e		
+answer	npc_merchant	38	3	@merchant_forgive		
+answer	npc_merchant	38	4	@merchant_forgive_pay		
+answer	npc_merchant	38	5	@merchant_favore		
+answer	npc_merchant	38	6	@merchant_favore_done		
+answer	npc_merchant	38	7	@merchant_on_cure		
+answer	npc_merchant	38	8	@merchant_dinner		
+answer	npc_merchant	38	9	@merchant_traide_license		
+answer	npc_merchant	38	10	@merchant_strategy		
+answer	npc_merchant	38	11	@merchant_business		
+answer	npc_merchant	38	12	@merchant_70		
+answer	npc_merchant	38	13	@merchant_ceremony		
+answer	npc_merchant	38	14	@merchant_actress		
+answer	npc_merchant	38	15	@merchant_magic_item		
+answer	npc_merchant	38	16	@merchant_magic_100		
+answer	npc_merchant	38	17	@tr_quest_15_merchant_vase_1		
+answer	npc_merchant	38	18	merchant_2c		
+answer	npc_merchant	38	19	@merchant_new_trade		
+answer	npc_merchant	38	20	@souls_s_s24_ask		
+answer	npc_merchant	38	21	merchant_2d		
+answer	npc_merchant	75	0	merchant_2b_5a		
+answer	npc_merchant	75	1	merchant_2b_5b		
+answer	npc_merchant	98	0	merchant_2b_5b_2a		
+answer	npc_merchant	98	1	merchant_2b_5b_2b		
+answer	npc_merchant	127	0	merchant_2b_5b_2b_4a		
+answer	npc_merchant	127	1	merchant_2b_5b_2b_4b		
+answer	npc_merchant	190	0	merchant_2e_1a		
+answer	npc_merchant	190	1	merchant_2e_1b		
+answer	npc_merchant	190	2	merchant_2e_1c		
+answer	npc_merchant	190	3	merchant_2e_1d		
+answer	npc_merchant	190	4	@merchant_2e_1e		
+answer	npc_merchant	190	5	@merchant_2e_1f		
+answer	npc_merchant	190	6	merchant_2e_1g		
+answer	npc_merchant	231	0	merchant_2e_1d_4a		
+answer	npc_merchant	231	1	merchant_2e_1d_4b		
+answer	npc_merchant	402	0	merchant_favore_done_12a		
+answer	npc_merchant	402	1	merchant_favore_done_12b		
+answer	npc_merchant	537	0	@merchant_on_deal_done_4a		
+answer	npc_merchant	537	1	merchant_on_deal_done_4b		
+answer	npc_merchant	938	0	@merchant_on_deal_done_4a		
+answer	npc_merchant	938	1	@merchant_marketing		
+answer	npc_merchant	938	2	@merchant_marketing_done		
+answer	npc_merchant	938	3	@merchant_sales_done		
+answer	npc_merchant	938	4	@merchant_crate_1		
+answer	npc_merchant	938	5	merchant_business_back		
+answer	npc_merchant	1121	0	merchant_70_7a		
+answer	npc_merchant	1121	1	merchant_70_7b		
+answer	npc_merchant	1126	0	merchant_70_7a		
+answer	npc_merchant	1126	1	merchant_70_7b_2b		
+task_state	npc_actress	57		actress_faith	<none>	Complete
+task_state	npc_actress	94		actress_money	<none>	Visible
+task_state	npc_actress	140		actress_money	<none>	Complete
+task_state	npc_actress	144		actress_necklace	<none>	Visible
+task_state	npc_actress	237		actress_faith	<none>	Visible
+task_state	npc_actress	387		actress_necklace	<none>	Complete
+task_state	npc_actress	405		actress_parfume	<none>	Visible
+task_state	npc_actress	425		actress_parfume	<none>	Complete
+task_state	npc_actress	443		actress_story	<none>	Visible
+task_state	npc_actress	495		actress_story	<none>	Complete
+task_state	npc_actress	515		actress_alisa	<none>	Visible
+task_state	npc_actress	578		actress_alisa	<none>	Complete
+task_state	npc_actress	598		actress_aristocrat	<none>	Visible
+task_state	npc_actress	655		actress_aristocrat	<none>	Complete
+task_state	npc_actress	673		actress_song	<none>	Visible
+task_state	npc_actress	778		actress_song	<none>	Complete
+task_state	npc_actress	806		actress_Vagner	<none>	Visible
+task_state	npc_actress	812		astrologer_find_help	npc_astrologer	Visible
+task_state	npc_actress	977		dlc_stories_persuade_charm	<none>	Complete
+task_state	npc_actress	979		dlc_stories_krezvold_after_charm	npc_blacksmith	Visible
+task_state	npc_actress	1209		dlc_souls_s29_2	<none>	Complete
+task_state	npc_astrologer	169		astrologer_diary	<none>	Visible
+task_state	npc_astrologer	187		astrologer_skull	<none>	Complete
+task_state	npc_astrologer	201		astrologer_diary	<none>	Complete
+task_state	npc_astrologer	209		player_laser	player	Visible
+task_state	npc_astrologer	228		astrologer_acid	<none>	Visible
+task_state	npc_astrologer	230		astrologer_tools	<none>	Visible
+task_state	npc_astrologer	268		astrologer_acid	<none>	Complete
+task_state	npc_astrologer	284		astrologer_tools	<none>	Complete
+task_state	npc_astrologer	357		player_astrolog	player	Complete
+task_state	npc_astrologer	377		astrologer_skull	<none>	Visible
+task_state	npc_astrologer	672		astrologer_baron	<none>	Visible
+task_state	npc_astrologer	724		astrologer_baron	<none>	Complete
+task_state	npc_astrologer	736		astrologer_daghter	<none>	Visible
+task_state	npc_astrologer	760		astrologer_daghter	<none>	Complete
+task_state	npc_astrologer	770		astrologer_help	<none>	Visible
+task_state	npc_astrologer	784		astrologer_find_help	<none>	Complete
+task_state	npc_astrologer	788		astrologer_help	<none>	Complete
+task_state	npc_astrologer	842		astrologer_sbook	<none>	Visible
+task_state	npc_astrologer	884		astrologer_sbook	<none>	Complete
+task_state	npc_astrologer	943		astrologer_gbook	<none>	Visible
+task_state	npc_astrologer	963		astrologer_gbook	<none>	Complete
+task_state	npc_astrologer	1026		astrologer_aristocrat	<none>	Visible
+task_state	npc_astrologer	1076		astrologer_aristocrat	<none>	Complete
+task_state	npc_astrologer	1405		astrologer_sbook	<none>	Complete
+task_state	npc_astrologer	1467		s_ev_7_1_astrologer	<none>	Complete
+task_state	npc_astrologer	1608		dlc_souls_s29_1	<none>	Complete
+task_state	npc_bishop	157		player_sertificate	player	Visible
+task_state	npc_bishop	207		bishop_5_qual	<none>	Complete
+task_state	npc_bishop	229		bishop_bowls	<none>	Visible
+task_state	npc_bishop	258		bishop_bowls	<none>	Complete
+task_state	npc_bishop	268		bishop_30_qual	<none>	Visible
+task_state	npc_bishop	270		bishop_20_qual	<none>	Visible
+task_state	npc_bishop	278		bishop_fish	<none>	Visible
+task_state	npc_bishop	300		bishop_fish	<none>	Complete
+task_state	npc_bishop	413		bishop_5_qual	<none>	Visible
+task_state	npc_bishop	698		bishop_30_qual	<none>	Complete
+task_state	npc_bishop	724		bishop_20_qual	<none>	Complete
+task_state	npc_bishop	740		bishop_fish	<none>	Complete
+task_state	npc_bishop	994		bishop_rcitezen	<none>	Visible
+task_state	npc_bishop	1100		bishop_rcitezen	<none>	Complete
+task_state	npc_bishop	1183		bishop_last_cross	<none>	Visible
+task_state	npc_bishop	1189		bishop_last_skull	<none>	Visible
+task_state	npc_bishop	1275		bishop_last_cross	<none>	Complete
+task_state	npc_bishop	1334		bishop_last_skull	<none>	Complete
+task_state	npc_bishop	1406		bishop_statue	<none>	Complete
+task_state	npc_bishop	1502		bishop_aristocrat 	<none>	Visible
+task_state	npc_bishop	1506		bishop_invitation_1	<none>	Visible
+task_state	npc_bishop	1558		bishop_aristocrat 	<none>	Complete
+task_state	npc_bishop	1620		bishop_invitation_2	<none>	Complete
+task_state	npc_bishop	1923		dlc_souls_s12_1	npc_bishop	Complete
+task_state	npc_bishop	1931		dlc_souls_s15	npc_euric	Visible
+task_state	npc_cultist	59		snake_key	<none>	Complete
+task_state	npc_cultist	378		snake_blood	<none>	Visible
+task_state	npc_cultist	576		snake_key	<none>	Visible
+task_state	npc_cultist	673		snake_blood	<none>	Complete
+task_state	npc_cultist	952		snake_necronomicon	<none>	Visible
+task_state	npc_cultist	1016		snake_necronomicon	<none>	Complete
+task_state	npc_cultist	1043		snake_help	<none>	Visible
+task_state	npc_cultist	1146		snake_stars	<none>	Visible
+task_state	npc_cultist	1182		snake_stars	<none>	Complete
+task_state	npc_cultist	1188		snake_sword	<none>	Visible
+task_state	npc_cultist	1225		snake_sword	<none>	Complete
+task_state	npc_cultist	1254		snake_back	<none>	Visible
+task_state	npc_cultist	1367		snake_back	<none>	Complete
+task_state	npc_cultist	1638		snake_trap	<none>	Complete
+task_state	npc_cultist	1739		snake_aple	<none>	Visible
+task_state	npc_cultist	1757		snake_aple	<none>	Complete
+task_state	npc_cultist	1777		snake_dark	<none>	Visible
+task_state	npc_cultist	1975		player_items	player	Complete
+task_state	npc_cultist	2138		dlc_stories_booze_after_week	<none>	Visible
+task_state	npc_cultist	2148		dlc_stories_booze_after_week	<none>	Complete
+task_state	npc_cultist	2167		dlc_stories_bring_booze_dig	npc_dig	Visible
+task_state	npc_cultist	2185		dlc_stories_booze_after_week	<none>	Visible
+task_state	npc_cultist	2237		dlc_stories_steal_amulet	<none>	Complete
+task_state	npc_cultist	2261		dlc_stories_organize_rat_race	<none>	Visible
+task_state	npc_cultist	2331		dlc_stories_return_cultist	<none>	Complete
+task_state	npc_cultist	2349		dlc_stories_bring_amulet_to_gerry	tavern_skull	Visible
+task_state	npc_cultist	2351		dlc_stories_amulet_searching	npc_light_keeper	Complete
+task_state	npc_cultist	2456		dlc_souls_s29_3	<none>	Complete
+task_state	npc_cultist	2698		dlc_souls_s43	player	Visible
+task_state	npc_cultist	2704		dlc_souls_s42	player	Complete
+task_state	npc_inquisitor	135		skull_inquisitor	crafting_skull_3	Complete
+task_state	npc_inquisitor	531		inquisitor_talk	<none>	Visible
+task_state	npc_inquisitor	676		inquisitor_talk	<none>	Complete
+task_state	npc_inquisitor	690		inquisitor_burn	<none>	Visible
+task_state	npc_inquisitor	717		inquisitor_burn	<none>	Visible
+task_state	npc_inquisitor	771		inq_get_perm	<none>	Visible
+task_state	npc_inquisitor	787		inq_get_perm	<none>	Complete
+task_state	npc_inquisitor	805		inquisitor_burn	<none>	Complete
+task_state	npc_inquisitor	1085		inquisitor_wine	<none>	Visible
+task_state	npc_inquisitor	1183		inquisitor_wine	<none>	Complete
+task_state	npc_inquisitor	1225		inquisitor_tent	<none>	Visible
+task_state	npc_inquisitor	1270		inquisitor_tent	<none>	Complete
+task_state	npc_inquisitor	1409		inquisitor_guards	<none>	Complete
+task_state	npc_inquisitor	1446		bishop_invitation_1	npc_bishop	Complete
+task_state	npc_inquisitor	1448		bishop_invitation_2	npc_bishop	Visible
+task_state	npc_inquisitor	1536		inquisitor_evidence	<none>	Visible
+task_state	npc_inquisitor	1575		inquisitor_evidence	<none>	Complete
+task_state	npc_inquisitor	1857		baron_help	npc_gypsy	Complete
+task_state	npc_inquisitor	1902		s_ev_15_1_inq_beatrice	<none>	Complete
+task_state	npc_inquisitor	1996		dlc_souls_s21_2	<none>	Complete
+task_state	npc_merchant	67		horadric_garden	npc_tavern owner	Complete
+task_state	npc_merchant	140		merchant_garden	<none>	Visible
+task_state	npc_merchant	162		merchant_get_along	<none>	Visible
+task_state	npc_merchant	244		merchant_debt	<none>	Visible
+task_state	npc_merchant	274		merchant_garden	<none>	Complete
+task_state	npc_merchant	292		merchant_debt	<none>	Complete
+task_state	npc_merchant	326		merchant_get_along	<none>	Complete
+task_state	npc_merchant	342		merchant_grass	<none>	Visible
+task_state	npc_merchant	352		merchant_grass	<none>	Complete
+task_state	npc_merchant	394		merchant_curse	<none>	Visible
+task_state	npc_merchant	566		merchant_trade	npc_merchant	Visible
+task_state	npc_merchant	683		merchant_curse	npc_merchant	Complete
+task_state	npc_merchant	711		merchant_dinner	npc_merchant	Visible
+task_state	npc_merchant	796		merchant_dinner	npc_merchant	Complete
+task_state	npc_merchant	802		merchant_strategy	npc_merchant	Visible
+task_state	npc_merchant	823		merchant_trade	npc_merchant	Complete
+task_state	npc_merchant	879		merchant_marketing	<none>	Visible
+task_state	npc_merchant	883		merchant_sales	<none>	Visible
+task_state	npc_merchant	916		merchant_strategy	npc_merchant	Complete
+task_state	npc_merchant	979		merchant_marketing	npc_merchant	Complete
+task_state	npc_merchant	1001		merchant_sales	npc_merchant	Complete
+task_state	npc_merchant	1137		merchant_support	<none>	Visible
+task_state	npc_merchant	1177		merchant_show	<none>	Complete
+task_state	npc_merchant	1258		merchant_support	<none>	Complete
+task_state	npc_merchant	1417		merchant_show	<none>	Visible
+task_state	npc_merchant	1491		dlc_stories_buy_vase_from_m	<none>	Complete
+task_state	npc_merchant	1501		dlc_stories_buy_vase_from_bk	npc_beekeeper	Visible
+task_state	npc_merchant	1586		dlc_souls_s23_2	<none>	Complete
+custom_event	npc_actress	2		on_came_to_finish		
+custom_event	npc_actress	13		interaction		
+custom_event	npc_actress	200		on_back_to_start		
+custom_event	npc_actress	207		going_home		
+custom_event	npc_actress	214		intro		
+custom_event	npc_actress	912		actress_afterall_event		
+custom_event	npc_astrologer	2		on_came_to_finish		
+custom_event	npc_astrologer	27		interaction		
+custom_event	npc_astrologer	326		on_back_to_start		
+custom_event	npc_astrologer	338		intro		
+custom_event	npc_astrologer	928		astrologer_books_1		
+custom_event	npc_astrologer	1007		astrologer_books_2		
+custom_event	npc_astrologer	1172		astrologer_afterall_event		
+custom_event	npc_astrologer	1449		astrologer_after_give_research		
+custom_event	npc_bishop	2		on_came_to_finish		
+custom_event	npc_bishop	37		interaction		
+custom_event	npc_bishop	60		on_back_to_start		
+custom_event	npc_bishop	342		intro		
+custom_event	npc_bishop	434		going_home		
+custom_event	npc_bishop	480		on_cup_20_reached		
+custom_event	npc_bishop	558		on_after_first_time_preaching		
+custom_event	npc_bishop	627		on_upgrade_church		
+custom_event	npc_bishop	936		after_upgrade_1_to_2		
+custom_event	npc_bishop	1449		stop_walk_and_go_home		
+custom_event	npc_bishop	1634		bishop_afterall_event		
+custom_event	npc_bishop	1843		wait_event		
+custom_event	npc_bishop	1854		bishop_graveyard_walk		
+custom_event	npc_bishop	2161		TryRemoveStackedChurchVisitors		
+custom_event	npc_cultist	2		on_came_to_finish		
+custom_event	npc_cultist	19		interaction		
+custom_event	npc_cultist	26		on_back_to_start		
+custom_event	npc_cultist	35		going_home		
+custom_event	npc_cultist	42		morgue_quest		
+custom_event	npc_cultist	232		open_gate		
+custom_event	npc_cultist	254		player_cutscene_death		
+custom_event	npc_cultist	318		player_back_to_cultist		
+custom_event	npc_cultist	513		intro		
+custom_event	npc_cultist	535		custom_cultist_spawn		
+custom_event	npc_cultist	559		custom_cultist_remove		
+custom_event	npc_cultist	888		snake_all_tasks		
+custom_event	npc_cultist	1346		on_back_to_snake_after_ritual		
+custom_event	npc_cultist	1453		place_cultist_near_stone		
+custom_event	npc_cultist	1466		waiting_near_stone		
+custom_event	npc_cultist	1541		snake_stone_ready		
+custom_event	npc_inquisitor	2		on_came_to_finish		
+custom_event	npc_inquisitor	33		interaction		
+custom_event	npc_inquisitor	52		on_back_to_start		
+custom_event	npc_inquisitor	61		going_home		
+custom_event	npc_inquisitor	82		on_came_to_mountains_inquisitor_talking_point		
+custom_event	npc_inquisitor	95		first_meet_under_mountains		
+custom_event	npc_inquisitor	343		on_came_to_mountain_for_witch_burning		
+custom_event	npc_inquisitor	580		going_home_with_guard_2		
+custom_event	npc_inquisitor	609		spawn_guard		
+custom_event	npc_inquisitor	628		guardians_spawn		
+custom_event	npc_inquisitor	649		guardians_despawn		
+custom_event	npc_inquisitor	969		second_witch_burning		
+custom_event	npc_inquisitor	1415		witch_burning_enable		
+custom_event	npc_inquisitor	1495		inquisitor_black_event		
+custom_event	npc_inquisitor	1711		inquisitor_after_dark_event		
+custom_event	npc_merchant	2		on_came_to_finish		
+custom_event	npc_merchant	25		interaction		
+custom_event	npc_merchant	469		on_back_to_start		
+custom_event	npc_merchant	481		intro		
+custom_event	npc_merchant	810		unlock_merchant_strategy		
+custom_event	npc_merchant	1302		merchant_afterall_event		
+custom_event	npc_merchant	1396		merchant_plan_done_event		
+add_interaction	npc_astrologer	13		astrologer_books_1		
+add_interaction	npc_astrologer	17		astrologer_books_2		
+add_interaction	npc_astrologer	21		astrologer_afterall_event		
+add_interaction	npc_astrologer	25		astrologer_after_give_research		
+add_interaction	npc_bishop	23		intro		
+add_interaction	npc_bishop	35		bishop_afterall_event		
+add_interaction	npc_bishop	211		donkey_talk_after_church_open		
+add_interaction	npc_bishop	397		intro		
+add_interaction	npc_bishop	411		first_use		
+add_interaction	npc_bishop	453		bishop_intro		
+add_interaction	npc_bishop	595		intro		
+add_interaction	npc_bishop	760		horadric_after_church_upgrade		
+add_interaction	npc_cultist	239		intro		
+add_interaction	npc_cultist	1280		on_back_to_snake_after_ritual		
+add_interaction	npc_cultist	1464		waiting_near_stone		
+add_interaction	npc_inquisitor	27		inquisitor_black_event		
+add_interaction	npc_inquisitor	31		inquisitor_after_dark_event		
+add_interaction	npc_merchant	15		merchant_afterall_event		
+add_interaction	npc_merchant	19		merchant_plan_done_event		
+remove_interaction	npc_bishop	449		intro		
+remove_interaction	npc_cultist	522		intro		
+remove_interaction	npc_inquisitor	76		inquisitor_black_event		
+remove_interaction	npc_inquisitor	80		inquisitor_after_dark_event		
