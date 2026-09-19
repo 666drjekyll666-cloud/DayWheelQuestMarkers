@@ -1,0 +1,57 @@
+name: Build interaction lifecycle census probe
+
+on:
+  push:
+    branches:
+      - research/interaction-lifecycle-audit
+    paths:
+      - 'research/InteractionLifecycleCensusProbe/**'
+      - '.github/workflows/research-interaction-lifecycle-census.yml'
+      - 'src/ReflectionUtil.cs'
+      - 'src/WeekdayInteractionRuleCache.cs'
+      - 'src/NavigationReachabilityCache.cs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: interaction-lifecycle-census-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore research/InteractionLifecycleCensusProbe/InteractionLifecycleCensusProbe.csproj --configfile nuget.config
+
+      - name: Build Release probe
+        run: dotnet build research/InteractionLifecycleCensusProbe/InteractionLifecycleCensusProbe.csproj -c Release --no-restore
+
+      - name: Stage artifact
+        id: artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $asset = 'DayWheelQuestMarkers-interaction-lifecycle-census-0.1.0.dll'
+          Copy-Item 'research/InteractionLifecycleCensusProbe/bin/Release/DayWheelInteractionLifecycleCensus.dll' "dist/$asset"
+          $hash = (Get-FileHash "dist/$asset" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "sha256=$hash" >> $env:GITHUB_OUTPUT
+          Write-Host "Probe SHA-256: $hash"
+
+      - name: Upload probe
+        uses: actions/upload-artifact@v4
+        with:
+          name: DayWheelInteractionLifecycleCensus-0.1.0
+          path: dist/DayWheelQuestMarkers-interaction-lifecycle-census-0.1.0.dll
+          if-no-files-found: error
+          retention-days: 7
