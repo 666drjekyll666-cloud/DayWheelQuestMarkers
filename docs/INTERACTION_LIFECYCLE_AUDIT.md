@@ -316,4 +316,12 @@ The census-approved model has now been implemented as candidate **1.1.6** withou
 - CI run `35447318962` succeeded with 0 warnings / 0 errors;
 - raw DLL SHA-256: `d17cf1629acb92c9c06a8f983a826a75c40fa8f0b38fff48c45d48314e19a339`.
 
-Runtime acceptance remains pending. The implementation must not be promoted to `main` until schema-5 bootstrap/load behavior and the relevant marker regression are accepted.
+Runtime validation completed successfully on 2026-09-19:
+
+- schema 5 bootstrapped behind loading in **1005.16 ms**;
+- lifecycle integrity guards matched the census exactly: **6** ancestor-owner candidates / **2** task-owned exclusions / **4** admitted / **4** supported / **0** unsupported;
+- a subsequent main-menu save reload re-read the persisted schema-5 manifest in **3.89 ms** with `FlowCanvas graph parse skipped`;
+- final live-object rebinding on that same-process reload required one guarded **3.21 ms** manifest re-read, again with no graph parse; this is bounded loading-transition recovery rather than recurring gameplay work;
+- the player repeated the Snake counterfeit-coins + Restoration Tools regression and observed the required **2 -> 1 -> 0** marker sequence.
+
+The 1.1.6 candidate has therefore passed its requested runtime/player validation. Stable promotion remains gated only on explicit player acceptance; the exact handed build remains frozen.
