@@ -21,6 +21,9 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BASELINE = ROOT / "validator" / "baseline-1.1.6.json"
 DEFAULT_LIFECYCLE = ROOT / "validator" / "fixtures" / "lifecycle-paths-1.1.6.tsv"
 DEFAULT_TASKS = ROOT / "validator" / "fixtures" / "task-census-1.1.6.tsv"
+DEFAULT_TASK_ROUTES = ROOT / "validator" / "fixtures" / "task-routes-1.1.6.tsv"
+DEFAULT_NAVIGATION = ROOT / "validator" / "fixtures" / "navigation-paths-1.1.6.tsv"
+DEFAULT_RAW_UNIVERSE = ROOT / "validator" / "fixtures" / "raw-interaction-universe-1.1.6.tsv"
 DEFAULT_REPORT = ROOT / "validator" / "out" / "validation-report.json"
 
 
@@ -61,6 +64,16 @@ def load_lifecycle(path: Path) -> list[dict[str, str]]:
         return []
     reader = csv.DictReader(lines, delimiter="\t")
     return list(reader)
+
+def load_tsv(path: Path) -> list[dict[str, str]]:
+    lines = [
+        line for line in path.read_text(encoding="utf-8").splitlines()
+        if line and not line.startswith("#")
+    ]
+    if not lines:
+        return []
+    return list(csv.DictReader(lines, delimiter="\t"))
+
 
 
 def derive_lifecycle_owner(row: dict[str, str]) -> tuple[str | None, str | None]:
@@ -272,6 +285,88 @@ def validate_task_census(sections: dict, baseline: dict, log: CheckLog) -> dict:
     }
 
 
+def validate_complete_snapshots(
+    task_routes: list[dict[str, str]],
+    navigation_rows: list[dict[str, str]],
+    raw_rows: list[dict[str, str]],
+    baseline: dict,
+    log: CheckLog,
+) -> dict:
+    raw_expected = baseline["raw_interaction_universe"]
+
+    log.check("snapshot.task_routes.rows", len(task_routes) == 72,
+              f"observed={len(task_routes)} expected=72")
+    selectable = [x for x in task_routes if x["kind"] == "SELECTABLE"]
+    unresolved = [x for x in task_routes if x["kind"] == "EVENT_OR_UNRESOLVED"]
+    log.check("snapshot.task_routes.selectable", len(selectable) == 70,
+              f"observed={len(selectable)} expected=70")
+    unresolved_set = {(x["npc"], x["task"]) for x in unresolved}
+    expected_unresolved = {
+        ("npc_inquisitor", "inquisitor_talk"),
+        ("npc_cultist", "snake_back"),
+    }
+    log.check("snapshot.task_routes.event_only_set", unresolved_set == expected_unresolved,
+              f"observed={sorted(unresolved_set)} expected={sorted(expected_unresolved)}")
+
+    log.check("snapshot.navigation.rows", len(navigation_rows) == baseline["navigation"]["snapshot_fixture_paths"],
+              f"observed={len(navigation_rows)} expected={baseline['navigation']['snapshot_fixture_paths']}")
+    nav_keys = {(x["npc"], x["answer"], x["pathIndex"]) for x in navigation_rows}
+    log.check("snapshot.navigation.identity_unique", len(nav_keys) == len(navigation_rows),
+              f"unique={len(nav_keys)} rows={len(navigation_rows)}")
+    unsupported = [x for x in navigation_rows if x["unsupported"] != "False"]
+    log.check("snapshot.navigation.unsupported_zero", not unsupported,
+              "all paths supported" if not unsupported else f"unsupported rows={unsupported[:8]}")
+
+    by_kind = Counter(x["kind"] for x in raw_rows)
+    expected_kind_counts = {
+        "answer": raw_expected["answer_occurrences"],
+        "task_state": raw_expected["task_state_transitions"],
+        "custom_event": raw_expected["custom_events"],
+        "add_interaction": raw_expected["add_interaction_events"],
+        "remove_interaction": raw_expected["remove_interaction_events"],
+    }
+    for kind, expected in expected_kind_counts.items():
+        observed = by_kind[kind]
+        log.check(f"snapshot.raw.{kind}", observed == expected,
+                  f"observed={observed} expected={expected}")
+
+    answers = [x for x in raw_rows if x["kind"] == "answer"]
+    raw_unique = {(x["npc"], x["id"]) for x in answers}
+    nav_unique = {(x["npc"], x["answer"]) for x in navigation_rows}
+    no_root = sorted(raw_unique - nav_unique)
+
+    log.check("snapshot.raw.unique_answer_ids",
+              len(raw_unique) == raw_expected["unique_answer_ids"],
+              f"observed={len(raw_unique)} expected={raw_expected['unique_answer_ids']}")
+    log.check("snapshot.raw.navigation_backed_unique_answers",
+              len(raw_unique & nav_unique) == raw_expected["navigation_backed_unique_answers"],
+              f"observed={len(raw_unique & nav_unique)} expected={raw_expected['navigation_backed_unique_answers']}")
+    log.check("snapshot.raw.no_interaction_root_unique_answers",
+              len(no_root) == raw_expected["no_interaction_root_unique_answers"],
+              f"observed={len(no_root)} expected={raw_expected['no_interaction_root_unique_answers']}")
+
+    task_states = [x for x in raw_rows if x["kind"] == "task_state"]
+    visible = [x for x in task_states if x["value2"] == "Visible"]
+    complete = [x for x in task_states if x["value2"] == "Complete"]
+    log.check("snapshot.raw.task_visible",
+              len(visible) == raw_expected["task_visible_transitions"],
+              f"observed={len(visible)} expected={raw_expected['task_visible_transitions']}")
+    log.check("snapshot.raw.task_complete",
+              len(complete) == raw_expected["task_complete_transitions"],
+              f"observed={len(complete)} expected={raw_expected['task_complete_transitions']}")
+
+    return {
+        "task_route_rows": len(task_routes),
+        "navigation_rows": len(navigation_rows),
+        "raw_kind_counts": dict(by_kind),
+        "raw_unique_answer_ids": len(raw_unique),
+        "navigation_backed_unique_answers": len(raw_unique & nav_unique),
+        "no_interaction_root_unique_answers": [
+            {"npc": npc, "answer": answer} for npc, answer in no_root
+        ],
+    }
+
+
 def extract_int_constant(text: str, name: str) -> int | None:
     match = re.search(rf"\b{name}\s*=\s*(\d+)\s*;", text)
     return int(match.group(1)) if match else None
@@ -385,6 +480,9 @@ def main() -> int:
     parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
     parser.add_argument("--lifecycle", type=Path, default=DEFAULT_LIFECYCLE)
     parser.add_argument("--tasks", type=Path, default=DEFAULT_TASKS)
+    parser.add_argument("--task-routes", type=Path, default=DEFAULT_TASK_ROUTES)
+    parser.add_argument("--navigation", type=Path, default=DEFAULT_NAVIGATION)
+    parser.add_argument("--raw-universe", type=Path, default=DEFAULT_RAW_UNIVERSE)
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     args = parser.parse_args()
 
@@ -395,18 +493,21 @@ def main() -> int:
     lifecycle_report = validate_lifecycle(lifecycle_rows, baseline, log)
     task_sections = parse_task_fixture(args.tasks)
     task_report = validate_task_census(task_sections, baseline, log)
+    snapshot_report = validate_complete_snapshots(
+        load_tsv(args.task_routes),
+        load_tsv(args.navigation),
+        load_tsv(args.raw_universe),
+        baseline,
+        log,
+    )
     source_report = validate_production_source(baseline, log)
 
-    # This is an explicit coverage boundary, not a hidden pass condition.
+    no_root = snapshot_report["no_interaction_root_unique_answers"]
     log.warn(
-        "Owner-task census is complete at the 72-node classification level, but the historical "
-        "0.1.1 evidence did not emit a row for every one of the 70 selectable completion routes. "
-        "A one-time read-only route exporter is required to make that layer route-by-route exhaustive."
-    )
-    log.warn(
-        "Navigation has accepted runtime totals 210 answers / 270 paths / 151 predicates / 0 unsupported, "
-        "but no complete path fixture is yet stored. Lifecycle fixture coverage exercises many of those paths "
-        "but is not a complete navigation oracle."
+        "Coverage watchdog is not yet closed: 14 raw authored answer IDs have no normal "
+        "interaction-root navigation path and require explicit topology review before they can "
+        "be classified as cutscene/event-only/non-reminder or promoted to reminder evidence. "
+        f"Candidates={no_root}"
     )
 
     report = {
@@ -420,13 +521,15 @@ def main() -> int:
         "warnings": log.warnings,
         "coverage": {
             "dialogue_lifecycle": "path-level exhaustive for accepted census",
-            "owner_task_completion": "complete census/classification; individual selectable-route fixture partial",
-            "navigation": "accepted totals plus lifecycle-path coverage; complete standalone path fixture pending",
+            "owner_task_completion": "complete 72-route snapshot plus accepted census/classification",
+            "navigation": "complete 270-path production-derived snapshot; independent lifecycle oracle remains separate",
+            "raw_interaction_universe": "complete raw snapshot; 14 no-interaction-root answer IDs pending topology review",
             "event_only": "exact accepted set",
             "production_contract": "static bounded contract checks",
         },
         "lifecycle": lifecycle_report,
         "tasks": task_report,
+        "snapshot": snapshot_report,
         "production_source": source_report,
         "checks": log.checks,
     }
@@ -445,6 +548,12 @@ def main() -> int:
         "Tasks: "
         f"{task_report['owner_complete_nodes']} completion nodes -> "
         f"{task_report['final_selectable']} selectable + {task_report['final_event_only']} event-only"
+    )
+    print(
+        "Raw universe: "
+        f"{snapshot_report['raw_unique_answer_ids']} unique answer IDs -> "
+        f"{snapshot_report['navigation_backed_unique_answers']} navigation-backed + "
+        f"{len(snapshot_report['no_interaction_root_unique_answers'])} no-root candidates"
     )
     for warning in log.warnings:
         print("COVERAGE NOTE:", warning)
