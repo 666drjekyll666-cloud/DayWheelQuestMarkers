@@ -514,3 +514,23 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Coverage result for the accepted six weekday-NPC graph universe: **224 unique answer IDs = 210 navigation-backed + 14 explicitly classified event-invoked non-reminders; UNKNOWN = 0**.
 - No further player runtime capture is required for this research question. The temporary 0.1.3 DLL can be removed.
 - Production Day Wheel Quest Markers remains accepted **1.1.6** and is unchanged.
+
+
+### Research companion — Runtime Watchdog 0.1.0
+
+- Status: **handed for runtime validation**.
+- Purpose: live read-only sentinel for accepted production Day Wheel Quest Markers 1.1.6. Invisible when monitored contracts hold; persistent proven contradiction displays a large red `!` and `DAY WHEEL WATCHDOG FAIL: <code>`.
+- Exact build source: `170cb075ef9618a7b9eb8373de3ebb8c2f6205ff`.
+- Frozen ref: `frozen/runtime-watchdog-0.1.0`.
+- CI: run `35453049579`, job `105923433242`, **success, 0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-RuntimeWatchdog-0.1.0`, artifact ID `10587138300`.
+- Raw DLL: **17,920 bytes**; SHA-256 `c4a901ef1fa8bcd5b8682e46f2952a1f738302c34214ef54ad8070d2acf4c703`.
+- Runtime checks:
+  - production plugin present and exactly 1.1.6;
+  - accepted schema-5 structural counts;
+  - `PersistentRuleManifest.IsRuntimeValid`;
+  - independently read known weekday-NPC set matches production bindings;
+  - desired marker count/style matches active `CalendarMarkers` visuals.
+- False-alarm guard: game-start grace 12 s; binding/visual mismatches require 3 consecutive one-second samples.
+- Requested test: install beside normal Day Wheel Quest Markers 1.1.6, load a developed save, play normally including opening/closing menus and at least one quest-marker state transition. Normal result is **no watchdog UI at all**. If a red `!` appears, return `BepInEx/LogOutput.log` without attempting to interpret it manually.
+- Save/UI mutation: **none**.
