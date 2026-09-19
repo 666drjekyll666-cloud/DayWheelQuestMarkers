@@ -469,3 +469,39 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Release: `v1.1.6`, target exact tested source `e2ad9c7ef2bbf312ae79f2a2fb3d1bfb7f5cc1c7`.
 - Published asset: `Day.Wheel.Quest.Markers.1.1.6.dll`, release asset ID `574894608`, **98,304 bytes**.
 - Published asset digest: `sha256:d17cf1629acb92c9c06a8f983a826a75c40fa8f0b38fff48c45d48314e19a339`, exactly matching the accepted DLL.
+
+
+### Research snapshot — interaction universe 0.1.2
+
+- Status: **completed successfully / evidence captured / superseded by 0.1.3 only for frontier topology**.
+- Purpose: close the historical per-route task/navigation evidence gaps and capture a raw pre-classification interaction inventory for all six weekday NPC graphs.
+- Research branch: `research/interaction-universe-snapshot`.
+- Exact build source: `96f451ffc08385817b9854d29ef411a5d682eeba`.
+- Frozen ref: `frozen/interaction-universe-snapshot-0.1.2`.
+- CI: run `35451084485`, job `105918235883`, success; **0 warnings / 0 errors**.
+- Artifact: `InteractionUniverseTaskSnapshot-0.1.2`, artifact ID `10587060876`.
+- Raw DLL: **66,048 bytes**; SHA-256 `bb257edf217b151e37efc845ef9423dc3e06e0b3432cf269aefc2db8d0813a00`.
+- Requested test: load any developed save once; no quest/dialogue actions required; return `LogOutput.log`.
+- Player result: **passed**. Returned `LogOutput(20260919-152112).log` contains a complete snapshot:
+  - task routes **72 = 70 selectable + 2 event-only/unresolved**;
+  - raw answers **243 occurrences / 224 unique NPC+answer IDs**;
+  - raw task-state transitions **150 = 70 Visible + 80 Complete**;
+  - raw CustomEvent **66**;
+  - AddInteractionEvent **19**;
+  - RemoveInteractionEvent **4**;
+  - navigation **210 answers / 270 paths / 151 predicates / 0 unsupported**, verified contracts True.
+- Strict importer result: the first whitespace-token parser assumption was invalid because internal IDs can contain spaces (for example `@actress_ song_done` and `bishop_aristocrat `). Importer was corrected to field-boundary regex parsing; no new runtime capture is required for that correction.
+- Coverage result: **14 unique raw answer IDs have no normal interaction-root navigation path**. They are explicitly retained as the open coverage frontier and are not silently classified away.
+
+### Research snapshot — coverage frontier 0.1.3
+
+- Status: **built / awaiting one runtime log**.
+- Purpose: inspect only the 14 no-interaction-root answer IDs left by 0.1.2 and record bounded upstream/downstream topology so each can be classified from evidence rather than its name.
+- Exact build source: `1b4cd32db7574cf4a0a27118bec4aa557a61b627`.
+- Frozen ref: `frozen/interaction-universe-snapshot-0.1.3`.
+- Runtime delta from 0.1.2: no save/UI mutation; after the same complete snapshot, emits `FRONTIER_*` evidence for raw answers that have no normal interaction-root path. For each occurrence it records reverse roots and relevant upstream/downstream task/event/blacklist/function/SmartRes signals.
+- CI: run `35451885905`, job `105920375645`, success; **0 warnings / 0 errors**.
+- Artifact: `InteractionUniverseTaskSnapshot-0.1.3`, artifact ID `10587301518`.
+- Raw DLL: **70,656 bytes**; SHA-256 `6b1850370798ac293059b25c24c3c71d36840d86bd29de5638b0145a7fe78eb0`.
+- Requested test: replace research snapshot 0.1.2 with 0.1.3, load the same developed save once, do nothing else, and return `LogOutput.log` after `FRONTIER_SUMMARY` / `TASKSNAP_END`.
+- Production Day Wheel Quest Markers remains accepted 1.1.6 and is unchanged.
