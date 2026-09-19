@@ -10,7 +10,7 @@ namespace CalendarQuestsPins
     {
         public const string PluginGuid = "nikich.gyk.calendarquestspins";
         public const string PluginName = "Day Wheel Quest Markers";
-        public const string PluginVersion = "1.1.3";
+        public const string PluginVersion = "1.1.6";
 
         private const float TickSeconds = 1f;
         private const float StructureCheckSeconds = 30f;
@@ -121,11 +121,11 @@ namespace CalendarQuestsPins
             _loggedReady = false;
 
             if (loaded)
-                Logger.LogInfo("Persistent schema-4 interaction manifest loaded behind loading screen in " +
+                Logger.LogInfo("Persistent schema-5 interaction manifest loaded behind loading screen in " +
                                loadMs.ToString("F2") + " ms; FlowCanvas graph parse skipped.");
             else
             {
-                Logger.LogInfo("Persistent rule manifest schema 4 bootstrapped behind loading screen in " +
+                Logger.LogInfo("Persistent rule manifest schema 5 bootstrapped behind loading screen in " +
                                bootstrapMs.ToString("F2") + " ms; future loads can skip FlowCanvas graph parsing.");
                 if (!string.IsNullOrEmpty(bootstrapNote)) Logger.LogWarning(bootstrapNote);
             }
@@ -223,6 +223,7 @@ namespace CalendarQuestsPins
                     if (!_reachability.IsCrossTaskActionable(target, task, unlocked, blacklisted)) continue;
                     AddMarker(sinTypeValue, GetMarkerStyle(task.TaskId));
                 }
+
             }
 
             if (!HasAnyMarkers())
@@ -255,7 +256,7 @@ namespace CalendarQuestsPins
             _cacheReady = true;
             _runtimeRestoreAttemptedSave = null;
             ApplyKnownNpcState(fingerprint, hasPeriodicNpc, false);
-            Logger.LogInfo("Persistent schema-4 interaction manifest restored in " + loadMs.ToString("F2") +
+            Logger.LogInfo("Persistent schema-5 interaction manifest restored in " + loadMs.ToString("F2") +
                            " ms (" + reason + "); graph parse not required.");
             return true;
         }
@@ -363,7 +364,7 @@ namespace CalendarQuestsPins
             _loggedReady = true;
             if (_waitingForPeriodicNpc)
             {
-                Logger.LogInfo("Ready. Persistent schema-4 interaction manifest active; no weekday NPC is known yet.");
+                Logger.LogInfo("Ready. Persistent schema-5 interaction manifest active; no weekday NPC is known yet.");
                 return;
             }
             LogManifestSummary("Ready");
@@ -376,15 +377,20 @@ namespace CalendarQuestsPins
                            ", cross-owner tasks=" + _rules.CrossTaskCount +
                            ", cross-owner supported=" + _rules.CrossSupportedRuleCount +
                            ", cross-owner unsupported=" + _rules.CrossUnsupportedRuleCount +
-                           ", self-consuming topics=" + _rules.OneShotTopicCount +
-                           ", self-consuming supported=" + _rules.OneShotSupportedRuleCount +
-                           ", self-consuming unsupported=" + _rules.OneShotUnsupportedRuleCount +
+                           ", dialogue-lifecycle topics=" + _rules.OneShotTopicCount +
+                           ", dialogue-lifecycle supported=" + _rules.OneShotSupportedRuleCount +
+                           ", dialogue-lifecycle unsupported=" + _rules.OneShotUnsupportedRuleCount +
                            ", non-@ universe=" + _manifest.NonAtUniqueCount +
                            ", non-@ exact-self=" + _manifest.NonAtExactSelfCount +
                            ", non-@ admitted=" + _manifest.NonAtTopicCount +
                            ", non-@ supported=" + _manifest.NonAtSupportedVariantCount +
                            ", non-@ unsupported=" + _manifest.NonAtUnsupportedVariantCount +
                            ", non-@ completion-excluded=" + _manifest.NonAtCompletionExcludedCount +
+                           ", ancestor-owner candidates=" + _manifest.AncestorOwnerCandidateCount +
+                           ", ancestor task-excluded=" + _manifest.AncestorTaskExcludedCount +
+                           ", ancestor admitted=" + _manifest.AncestorTopicCount +
+                           ", ancestor supported=" + _manifest.AncestorSupportedVariantCount +
+                           ", ancestor unsupported=" + _manifest.AncestorUnsupportedVariantCount +
                            ", reachability answers=" + _manifest.NavigationAnswerCount +
                            ", paths=" + _manifest.NavigationPathCount +
                            ", predicates=" + _manifest.NavigationPredicateCount +
