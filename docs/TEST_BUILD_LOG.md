@@ -395,3 +395,23 @@ Every handed DLL is immutable and tied to exact committed source plus build arti
 - Published asset: `Day.Wheel.Quest.Markers.1.1.3.dll`, asset ID `573652802`, **93,696 bytes**.
 - Published asset digest: `sha256:4cd4c67063deb672de32d1d88bb578fdcf5800dc4012ce397b5ceac13735030a`, exactly matching the accepted/tested DLL and CI artifact.
 - Status: **stable / released**.
+
+
+## 1.1.4 — integrated Snake marker contributor diagnostic
+
+- Status: **research-only diagnostic / not a release candidate / do not merge runtime or release**.
+- Triggering player report: after Ms. Charm activated the counterfeit-coins return conversation with Snake, the player still saw only one Snake weekday marker even though a pre-existing Restoration Tools conversation remained available.
+- Supplied runtime log proves Snake's menu simultaneously renders `@snake_1с` ("Шармэль попросила вернуть это тебе.") and `@snake_instrument` ("Я ищу Реставрационные инструменты."). The player independently confirms the counterfeit-coins conversation is currently executable.
+- Existing accepted static evidence from `docs/NESTED_DIALOGUE_REACHABILITY_AUDIT.md` already proves Ms. Charm's `@actress_2b_1a` branch makes `actress_money` Visible and activates exact Snake topic `@snake_1с`.
+- Basis: accepted stable `main` 1.1.3, runtime source `438558980ae5fbf62cac361b14f9aaaf8d292099`; no production behavior change is intended.
+- Research branch: `research/snake-marker-contributors-integrated-1.1.4`.
+- Exact executable/build source: `415780413add8621b4f510d4dcbda2572b3e528b`.
+- Frozen ref: `frozen/snake-marker-contributors-integrated-1.1.4`.
+- Diagnostic behavior: first normal marker pass logs `SNAKE_MARKER_BEGIN` / `SNAKE_MARKER_END`, exact phrase state for `@snake_1с` and `@snake_instrument`, `npc_actress/actress_money` task state, every visible Snake owner-task decision, every persisted Snake topic with unlocked/blacklisted/navigation/actionable/promoted state, every Snake cross-owner task with visible/actionable state and answer IDs, and the final visual/contributor count.
+- The diagnostic is integrated into the existing production marker pass. It adds no sidecar plugin, Harmony hook, background worker, graph traversal, save mutation, or recurring diagnostic loop; the dump occurs once per loaded save.
+- CI: run `35443230227`, job `105897612483`, success; Release build **0 warnings / 0 errors**.
+- Artifact: `DayWheelQuestMarkers-1.1.4` (`10583934763`), archive digest `sha256:11b41335a94c5e4c3ee611c797918cd70dfc754fb9d64aeb7ee3706a8a2f1e65`.
+- Raw DLL: **96,256 bytes**; SHA-256 `207e82e0c8be1f641e975539bd2a0b60ded1b0dd791269c598ac2dfb0cde6565`. Local extraction/hash matches CI.
+- Build workflow was restored to manual-only immediately after this frozen diagnostic build.
+- Requested test: replace stable 1.1.3 with this single 1.1.4 DLL, keep the existing schema-4 cache, load the save/state where Snake currently offers both the counterfeit-coins return and Restoration Tools conversations, wait for normal gameplay, then return `LogOutput.log` after it contains `SNAKE_MARKER_END`. Do not consume either Snake conversation before collecting the log.
+- Player result: **pending**.
