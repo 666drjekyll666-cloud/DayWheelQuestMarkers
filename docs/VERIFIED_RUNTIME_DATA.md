@@ -162,6 +162,19 @@ Prior research established narrow objective stages that the direct task-completi
 
 Static persisted-topic evidence confirms these reminder-bearing stage topics are exact self-consuming authored topics. Production derives them through the generic one-shot classifier instead of maintaining parallel `VerifiedBridgeReminderRules` / `VerifiedIntermediateReminderRules` manifests.
 
+### Verified Ms. Charm -> Snake counterfeit-coins submenu parent
+
+A 2026-09-19 runtime/state capture plus existing GK 1.407 graph audits establish one additional exact intermediate shape that is intentionally **not** generalized into the exact-self topic compiler:
+
+- Ms. Charm's `@actress_2b_1a` branch makes `npc_actress/actress_money` Visible and unlocks Snake phrase `@snake_1с`;
+- Snake `@snake_1с` is top-level `Flow_MultiAnswer` entry `multi=106 index=2`, with authored price `Item:quest_fake_coins = 1`;
+- the parent is a submenu boundary and does **not** directly blacklist itself;
+- its two authored child answers `snake_1с_4a` and `snake_1с_4b` both blacklist parent `@snake_1с` and unlock `@actress_snake_back`;
+- Ms. Charm `@actress_snake_back` then completes `actress_money` and exposes the next necklace stage;
+- in the captured live state, `actress_money` is Visible, `@snake_1с` is unlocked/not blacklisted, `@snake_instrument` is simultaneously actionable, the game renders both Snake conversations, but accepted 1.1.3 contributes only `@snake_instrument`, producing one marker.
+
+This is a verified **task-linked one-visit submenu parent**. It must not be admitted by a broad "open submenu" heuristic: production handling is allowed only as an exact verified route with the owner task state, exact phrase state, and authored `quest_fake_coins x1` SmartRes gate all satisfied.
+
 ## Authoritative zone-quality mirrors
 
 GK 1.407 graphs can mirror live `WorldZone.GetTotalQuality()` into a player `GameRes` through an authored `Flow_SetPlayerParam <- Flow_GetQualityOfZone` value edge. The Snake `sacrifice_quality` case proved that the stored player parameter may be stale before the real dialogue branch refreshes it.
