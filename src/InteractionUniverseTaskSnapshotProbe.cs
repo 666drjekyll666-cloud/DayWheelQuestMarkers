@@ -13,7 +13,7 @@ namespace CalendarQuestsPins
     {
         public const string PluginGuid = "nikich.gyk.daywheel.interaction-universe-task-snapshot";
         public const string PluginName = "Day Wheel Quest Markers - interaction universe task snapshot";
-        public const string PluginVersion = "0.1.0";
+        public const string PluginVersion = "0.1.1";
 
         private static readonly string[] NpcIds =
         {
