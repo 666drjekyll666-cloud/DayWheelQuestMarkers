@@ -1,249 +1,249 @@
 # Exhaustive accepted live-answer disposition baseline for GK 1.407 weekday NPC graphs.
 # Derived only from accepted raw/lifecycle/task/frontier evidence; no display-text heuristics.
 # Runtime watchdog keys exact authored occurrence by npc + Flow_MultiAnswer node + answer index/id.
-# Counts: EVENT_INVOKED_NON_REMINDER=14, NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER=67, REMINDER_DIALOGUE_OWNER=58, REMINDER_TASK_OWNED=88, SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER=6, SAME_VISIT_DESCENDANT_OF_TASK_OWNER=6, SAME_VISIT_NON_REMINDER=4
 # Invariant: 243/243 raw answer occurrences classified; UNKNOWN=0.
-npc	multi	index	answer	disposition	owner	evidence
-npc_actress	30	0	actress_2a_2	REMINDER_TASK_OWNED	actress_2a_2	lifecycle-census
-npc_actress	30	1	actress_2b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_actress	30	2	@actress_snake_back	REMINDER_TASK_OWNED	@actress_snake_back	lifecycle-census
-npc_actress	30	3	@actress_father	REMINDER_DIALOGUE_OWNER	@actress_father	lifecycle-census
-npc_actress	30	4	@actress_money_back	REMINDER_TASK_OWNED	@actress_money_back	lifecycle-census
-npc_actress	30	5	@actress_parfume_ready	REMINDER_TASK_OWNED	@actress_parfume_ready	lifecycle-census
-npc_actress	30	6	@actress_story_gold	REMINDER_TASK_OWNED	@actress_story_gold	lifecycle-census
-npc_actress	30	7	@actress_lute_done	REMINDER_TASK_OWNED	@actress_lute_done	lifecycle-census
-npc_actress	30	8	@actress_title	REMINDER_TASK_OWNED	@actress_title	lifecycle-census
-npc_actress	30	9	@actress_ song_done	REMINDER_TASK_OWNED	actress_song	task-route-snapshot
-npc_actress	30	10	@actress_marketing	REMINDER_DIALOGUE_OWNER	@actress_marketing	lifecycle-census
-npc_actress	30	11	@actress_ jewelry	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_actress	30	12	@tr_quest_8_singing_charm_1	REMINDER_DIALOGUE_OWNER	@tr_quest_8_singing_charm_1	lifecycle-census
-npc_actress	30	13	@tr_quest_8_singing_charm_8	REMINDER_TASK_OWNED	@tr_quest_8_singing_charm_8	lifecycle-census
-npc_actress	30	14	@actress_trade	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_actress	30	15	@souls_s_s31_ask	REMINDER_TASK_OWNED	@souls_s_s31_ask	lifecycle-census
-npc_actress	30	16	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_actress	67	0	@actress_2b_1a	REMINDER_DIALOGUE_OWNER	@actress_2b_1a	lifecycle-census
-npc_actress	67	1	@actress_2b_1b	REMINDER_DIALOGUE_OWNER	@actress_2b_1b	lifecycle-census
-npc_actress	67	2	actress_no_question	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_actress	968	0	tr_quest_8_singing_charm_7a	REMINDER_TASK_OWNED	dlc_stories_persuade_charm	task-route-snapshot
-npc_actress	968	1	tr_quest_8_singing_charm_7b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_actress	968	2	tr_quest_8_singing_charm_7c	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_astrologer	44	0	astrologer_2a	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_astrologer	44	1	astrologer_2b	REMINDER_TASK_OWNED	astrologer_2b	lifecycle-census
-npc_astrologer	44	2	@astrologer_diary	REMINDER_TASK_OWNED	astrologer_diary	task-route-snapshot
-npc_astrologer	44	3	@astrologer_acid	REMINDER_TASK_OWNED	@astrologer_acid	lifecycle-census
-npc_astrologer	44	4	@astrologer_tools	REMINDER_TASK_OWNED	@astrologer_tools	lifecycle-census
-npc_astrologer	44	5	@astrologer_necronamicon	REMINDER_DIALOGUE_OWNER	@astrologer_necronamicon	lifecycle-census
-npc_astrologer	44	6	@astrologer_charm	REMINDER_TASK_OWNED	@astrologer_charm	lifecycle-census
-npc_astrologer	44	7	@astrologer_charm_no	REMINDER_TASK_OWNED	@astrologer_charm_no	lifecycle-census
-npc_astrologer	44	8	@astrologer_charm_know	REMINDER_TASK_OWNED	@astrologer_charm_know	lifecycle-census
-npc_astrologer	44	9	@astrolog_expedition	REMINDER_DIALOGUE_OWNER	@astrolog_expedition	lifecycle-census
-npc_astrologer	44	10	@astrologer_silver	REMINDER_TASK_OWNED	@astrologer_silver	lifecycle-census
-npc_astrologer	44	11	@astrologer_gold	REMINDER_TASK_OWNED	@astrologer_gold	lifecycle-census
-npc_astrologer	44	12	@astrologer_title	REMINDER_TASK_OWNED	@astrologer_title	lifecycle-census
-npc_astrologer	44	13	@astrologer_fix_mill	REMINDER_DIALOGUE_OWNER	@astrologer_fix_mill	lifecycle-census
-npc_astrologer	44	14	@astrologer_fix	REMINDER_DIALOGUE_OWNER	@astrologer_fix	lifecycle-census
-npc_astrologer	44	15	@astrologer_last_0	REMINDER_DIALOGUE_OWNER	@astrologer_last_0	lifecycle-census
-npc_astrologer	44	16	@astrologer_items	REMINDER_DIALOGUE_OWNER	@astrologer_items	lifecycle-census
-npc_astrologer	44	17	@tr_quest_13_research_1	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_astrologer	44	18	@refugees_s_ev_7_1_1	REMINDER_TASK_OWNED	@refugees_s_ev_7_1_1	lifecycle-census
-npc_astrologer	44	19	@astrologer_trade	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_astrologer	44	20	@souls_s_s30_ask	REMINDER_TASK_OWNED	@souls_s_s30_ask	lifecycle-census
-npc_astrologer	44	21	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_astrologer	67	0	@astrologer_2a_1a_1	REMINDER_DIALOGUE_OWNER	@astrologer_2a_1a_1	lifecycle-census
-npc_astrologer	67	1	@astrologer_2a_1b_1	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_astrologer	67	2	Back	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_astrologer	104	0	astrologer_2a_1b_6a	REMINDER_DIALOGUE_OWNER	astrologer_2a_1b_6a	lifecycle-census
-npc_astrologer	104	1	astrologer_2a_1b_6b	REMINDER_DIALOGUE_OWNER	astrologer_2a_1b_6b	lifecycle-census
-npc_astrologer	104	2	astrologer_2a_1b_6c	REMINDER_DIALOGUE_OWNER	astrologer_2a_1b_6c	lifecycle-census
-npc_astrologer	104	3	Back	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_astrologer	219	0	astrologer_diary_9a	SAME_VISIT_NON_REMINDER	astrologer_diary_9a	lifecycle-census
-npc_astrologer	219	1	astrologer_diary_9b	SAME_VISIT_NON_REMINDER	astrologer_diary_9b	lifecycle-census
-npc_astrologer	507	0	@astrologer_about_acid	SAME_VISIT_NON_REMINDER	@astrologer_about_acid	lifecycle-census
-npc_astrologer	507	1	@astrologer_about_tools	SAME_VISIT_NON_REMINDER	@astrologer_about_tools	lifecycle-census
-npc_astrologer	1384	0	tr_quest_13_research_2	SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER	@tr_quest_13_research_1	lifecycle-census
-npc_astrologer	1384	1	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_bishop	75	0	bishop_2_1a	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_bishop	75	1	bishop_2_1b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_bishop	75	2	bishop_2_1c	REMINDER_TASK_OWNED	bishop_2_1c	lifecycle-census
-npc_bishop	75	3	bishop_2_1e	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_bishop	75	4	@bishop_4_0	REMINDER_DIALOGUE_OWNER	@bishop_4_0	lifecycle-census
-npc_bishop	75	5	@bishop_5_1	REMINDER_TASK_OWNED	bishop_bowls	task-route-snapshot
-npc_bishop	75	6	@bishop_trade	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_bishop	75	7	@bishop_6a	REMINDER_TASK_OWNED	@bishop_6a	lifecycle-census
-npc_bishop	75	8	@souls_s_s15_ask	REMINDER_TASK_OWNED	@souls_s_s15_ask	lifecycle-census
-npc_bishop	75	9	bishop_2_1d	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_bishop	132	0	bishop_2_1a_6a	SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER	bishop_2_1a	lifecycle-census
-npc_bishop	132	1	bishop_2_1a_6b	SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER	bishop_2_1a	lifecycle-census
-npc_bishop	161	0	bishop_2_1e_4a	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_bishop	161	1	bishop_2_1e_4b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_bishop	161	2	bishop_2_1e_4c	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_bishop	679	0	@bishop_6b	REMINDER_TASK_OWNED	@bishop_6b	lifecycle-census
-npc_bishop	679	1	@bishop_6c	REMINDER_TASK_OWNED	@bishop_6c	lifecycle-census
-npc_bishop	679	2	@bishop_6d	REMINDER_DIALOGUE_OWNER	@bishop_6d	lifecycle-census
-npc_bishop	679	3	@bishop_6a	REMINDER_TASK_OWNED	@bishop_6a	lifecycle-census
-npc_bishop	679	4	@bishop_trade	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_bishop	679	5	@souls_s_s15_ask	REMINDER_TASK_OWNED	@souls_s_s15_ask	lifecycle-census
-npc_bishop	679	6	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_bishop	1030	0	about_cathedral	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_bishop	1030	1	@bishop_cathidral_cross	REMINDER_TASK_OWNED	@bishop_cathidral_cross	lifecycle-census
-npc_bishop	1030	2	@bishop_cathidral_skull	REMINDER_TASK_OWNED	@bishop_cathidral_skull	lifecycle-census
-npc_bishop	1030	3	@bishop_cathidral_80	REMINDER_DIALOGUE_OWNER	@bishop_cathidral_80	lifecycle-census
-npc_bishop	1030	4	@bishop_aristocrat	REMINDER_TASK_OWNED	@bishop_aristocrat	lifecycle-census
-npc_bishop	1030	5	@bishop_invitation	REMINDER_TASK_OWNED	@bishop_invitation	lifecycle-census
-npc_bishop	1030	6	@bishop_magic_item	REMINDER_DIALOGUE_OWNER	@bishop_magic_item	lifecycle-census
-npc_bishop	1030	7	@bishop_final_ceremony	REMINDER_DIALOGUE_OWNER	@bishop_final_ceremony	lifecycle-census
-npc_bishop	1030	8	@bishop_magic_100	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_bishop	1030	9	@souls_s_s15_ask	REMINDER_TASK_OWNED	@souls_s_s15_ask	lifecycle-census
-npc_bishop	1030	10	Trade	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_bishop	1030	11	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_bishop	1068	0	@bishop_get_citezen	REMINDER_TASK_OWNED	@bishop_get_citezen	lifecycle-census
-npc_bishop	1068	1	@bishop_cathidral	REMINDER_DIALOGUE_OWNER	@bishop_cathidral	lifecycle-census
-npc_bishop	1068	2	@bishop_town_cathidral	REMINDER_DIALOGUE_OWNER	@bishop_town_cathidral	lifecycle-census
-npc_bishop	1068	3	@bishop_statue_ready	REMINDER_TASK_OWNED	@bishop_statue_ready	lifecycle-census
-npc_bishop	1068	4	Back	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_cultist	106	0	snake_1a	REMINDER_DIALOGUE_OWNER	snake_1a	lifecycle-census
-npc_cultist	106	1	snake_1b	REMINDER_DIALOGUE_OWNER	snake_1b	lifecycle-census
-npc_cultist	106	2	@snake_1с	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_cultist	106	3	@snake_give_key	REMINDER_TASK_OWNED	@snake_give_key	lifecycle-census
-npc_cultist	106	4	@give_blod_bucket	REMINDER_TASK_OWNED	@give_blod_bucket	lifecycle-census
-npc_cultist	106	5	@give_blod_nails	REMINDER_TASK_OWNED	@give_blod_nails	lifecycle-census
-npc_cultist	106	6	@snake_buisnes	REMINDER_DIALOGUE_OWNER	@snake_buisnes	lifecycle-census
-npc_cultist	106	7	@snake_meat_1	REMINDER_DIALOGUE_OWNER	@snake_meat_1	lifecycle-census
-npc_cultist	106	8	@snake_pass_1	REMINDER_DIALOGUE_OWNER	@snake_pass_1	lifecycle-census
-npc_cultist	106	9	@snake_instrument	REMINDER_DIALOGUE_OWNER	@snake_instrument	lifecycle-census
-npc_cultist	106	10	@snake_instrument_ready	REMINDER_DIALOGUE_OWNER	@snake_instrument_ready	lifecycle-census
-npc_cultist	106	11	@snake_about_nacklase	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_cultist	106	12	@snake_ritual_help	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_cultist	106	13	@snake_sword	REMINDER_TASK_OWNED	@snake_sword	lifecycle-census
-npc_cultist	106	14	@snake_necronomicon	REMINDER_TASK_OWNED	@snake_necronomicon	lifecycle-census
-npc_cultist	106	15	@snake_aple	REMINDER_DIALOGUE_OWNER	@snake_aple	lifecycle-census
-npc_cultist	106	16	@snake_aple_get	REMINDER_TASK_OWNED	@snake_aple_get	lifecycle-census
-npc_cultist	106	17	@snake_final_ritual	REMINDER_DIALOGUE_OWNER	@snake_final_ritual	lifecycle-census
-npc_cultist	106	18	@snake_magic_item	REMINDER_DIALOGUE_OWNER	@snake_magic_item	lifecycle-census
-npc_cultist	106	19	@snake_10th	REMINDER_DIALOGUE_OWNER	@snake_10th	lifecycle-census
-npc_cultist	106	20	@snake_items	REMINDER_TASK_OWNED	@snake_items	lifecycle-census
-npc_cultist	106	21	@snake_items_give	REMINDER_DIALOGUE_OWNER	@snake_items_give	lifecycle-census
-npc_cultist	106	22	@snake_magic_100	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_cultist	106	23	@tr_quest_7_snake_booze_1	REMINDER_DIALOGUE_OWNER	@tr_quest_7_snake_booze_1	lifecycle-census
-npc_cultist	106	24	@tr_quest_7_booze_after_week_1	REMINDER_TASK_OWNED	@tr_quest_7_booze_after_week_1	lifecycle-census
-npc_cultist	106	25	@tr_quest_7_about_booze_again_1	REMINDER_DIALOGUE_OWNER	@tr_quest_7_about_booze_again_1	lifecycle-census
-npc_cultist	106	26	@tr_quest_12_snake_asking_1	REMINDER_TASK_OWNED	@tr_quest_12_snake_asking_1	lifecycle-census
-npc_cultist	106	27	@tr_quest_12_snake_asking_1_alias	REMINDER_DIALOGUE_OWNER	@tr_quest_12_snake_asking_1_alias	lifecycle-census
-npc_cultist	106	28	@tr_quest_12_after_first_rat_race_1	REMINDER_TASK_OWNED	@tr_quest_12_after_first_rat_race_1	lifecycle-census
-npc_cultist	106	29	@souls_s_s33_ask	REMINDER_TASK_OWNED	@souls_s_s33_ask	lifecycle-census
-npc_cultist	106	30	@souls_s_s43_ask	REMINDER_TASK_OWNED	@souls_s_s43_ask	lifecycle-census
-npc_cultist	106	31	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_cultist	359	0	snake_back_12a	EVENT_INVOKED_NON_REMINDER		frontier-0.1.3
-npc_cultist	359	1	snake_back_12b	EVENT_INVOKED_NON_REMINDER		frontier-0.1.3
-npc_cultist	624	0	snake_1с_4a	SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER	@snake_1с	lifecycle-census
-npc_cultist	624	1	snake_1с_4b	SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER	@snake_1с	lifecycle-census
-npc_cultist	763	0	@snake_nacklase_0	REMINDER_DIALOGUE_OWNER	@snake_nacklase_0	lifecycle-census
-npc_cultist	763	1	@snake_nacklase_again	REMINDER_DIALOGUE_OWNER	@snake_nacklase_again	lifecycle-census
-npc_cultist	763	2	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_cultist	825	0	@snake_nacklase_again_10a	REMINDER_DIALOGUE_OWNER	@snake_nacklase_again_10a	lifecycle-census
-npc_cultist	825	1	@snake_nacklase_again_10b	REMINDER_DIALOGUE_OWNER	@snake_nacklase_again_10b	lifecycle-census
-npc_cultist	825	2	@snake_nacklase_again_10c	REMINDER_DIALOGUE_OWNER	@snake_nacklase_again_10c	lifecycle-census
-npc_cultist	985	0	@snake_help	REMINDER_DIALOGUE_OWNER	@snake_help	lifecycle-census
-npc_cultist	985	1	@snake_help_done	REMINDER_TASK_OWNED	@snake_help_done	lifecycle-census
-npc_cultist	985	2	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_cultist	1520	0	snake_stone_ready	REMINDER_TASK_OWNED	snake_trap	task-route-snapshot
-npc_cultist	1520	1	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_cultist	1759	0	snake_aple_get_3a	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_cultist	1759	1	snake_aple_get_4b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_inquisitor	157	0	inquisitor_1_7a	EVENT_INVOKED_NON_REMINDER		frontier-0.1.3
-npc_inquisitor	157	1	inquisitor_1_7b	EVENT_INVOKED_NON_REMINDER		frontier-0.1.3
-npc_inquisitor	174	0	inquisitor_1_9a	EVENT_INVOKED_NON_REMINDER		frontier-0.1.3
-npc_inquisitor	174	1	inquisitor_1_9b	EVENT_INVOKED_NON_REMINDER		frontier-0.1.3
-npc_inquisitor	199	0	inquisitor_1_11a	EVENT_INVOKED_NON_REMINDER		frontier-0.1.3
-npc_inquisitor	199	1	inquisitor_1_11b	EVENT_INVOKED_NON_REMINDER		frontier-0.1.3
-npc_inquisitor	199	2	inquisitor_1_11c	EVENT_INVOKED_NON_REMINDER		frontier-0.1.3
-npc_inquisitor	448	0	inquisitor_2_9a	EVENT_INVOKED_NON_REMINDER		frontier-0.1.3
-npc_inquisitor	448	1	inquisitor_2_9b	EVENT_INVOKED_NON_REMINDER		frontier-0.1.3
-npc_inquisitor	704	0	inquisitor_burn_3a_1a	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_inquisitor	704	1	inquisitor_burn_3a_1b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_inquisitor	736	0	@inquisitor_grave_1_1	REMINDER_DIALOGUE_OWNER	@inquisitor_grave_1_1	lifecycle-census
-npc_inquisitor	736	1	@inquisitor_grave_2_1	REMINDER_TASK_OWNED	@inquisitor_grave_2_1	lifecycle-census
-npc_inquisitor	736	2	@inquisitor_grave_2a	REMINDER_TASK_OWNED	@inquisitor_grave_2a	lifecycle-census
-npc_inquisitor	736	3	@inquisitor_firewood_1	REMINDER_TASK_OWNED	@inquisitor_firewood_1	lifecycle-census
-npc_inquisitor	736	4	@inquisitor_flyer	REMINDER_TASK_OWNED	@inquisitor_flyer	lifecycle-census
-npc_inquisitor	736	5	@inquisitor_firewood_1_buy	REMINDER_TASK_OWNED	@inquisitor_firewood_1_buy	lifecycle-census
-npc_inquisitor	736	6	@inquisitor_flyer_buy	REMINDER_TASK_OWNED	@inquisitor_flyer_buy	lifecycle-census
-npc_inquisitor	736	7	@inquisitor_portal_guard	REMINDER_DIALOGUE_OWNER	@inquisitor_portal_guard	lifecycle-census
-npc_inquisitor	736	8	@refugees_s15_1_2	REMINDER_TASK_OWNED	@refugees_s15_1_2	lifecycle-census
-npc_inquisitor	736	9	@souls_s_s22_ask	REMINDER_TASK_OWNED	@souls_s_s22_ask	lifecycle-census
-npc_inquisitor	736	10	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_inquisitor	843	0	@inquisitor_grave_1_1	REMINDER_DIALOGUE_OWNER	@inquisitor_grave_1_1	lifecycle-census
-npc_inquisitor	843	1	@inquisitor_grave_2_1	REMINDER_TASK_OWNED	@inquisitor_grave_2_1	lifecycle-census
-npc_inquisitor	843	2	@inquisitor_grave_2a	REMINDER_TASK_OWNED	@inquisitor_grave_2a	lifecycle-census
-npc_inquisitor	843	3	@inquisitor_wine_ready	REMINDER_TASK_OWNED	@inquisitor_wine_ready	lifecycle-census
-npc_inquisitor	843	4	@inquisitor_tent	REMINDER_DIALOGUE_OWNER	@inquisitor_tent	lifecycle-census
-npc_inquisitor	843	5	@inquisitor_tent_ready	REMINDER_TASK_OWNED	@inquisitor_tent_ready	lifecycle-census
-npc_inquisitor	843	6	@inquisitor_portal_guard	REMINDER_DIALOGUE_OWNER	@inquisitor_portal_guard	lifecycle-census
-npc_inquisitor	843	7	@inquisitor_portal_done	REMINDER_TASK_OWNED	@inquisitor_portal_done	lifecycle-census
-npc_inquisitor	843	8	@inquisitor_burn_again	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_inquisitor	843	9	@inquisitor_ceremony	REMINDER_TASK_OWNED	@inquisitor_ceremony	lifecycle-census
-npc_inquisitor	843	10	@inquisitor_dark	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_inquisitor	843	11	@inquisitor_magic_item	REMINDER_DIALOGUE_OWNER	@inquisitor_magic_item	lifecycle-census
-npc_inquisitor	843	12	@inquisitor_magic_100	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_inquisitor	843	13	@inquisitor_gypsy	REMINDER_TASK_OWNED	@inquisitor_gypsy	lifecycle-census
-npc_inquisitor	843	14	@refugees_s15_1_2	REMINDER_TASK_OWNED	@refugees_s15_1_2	lifecycle-census
-npc_inquisitor	843	15	@souls_s_s22_ask	REMINDER_TASK_OWNED	@souls_s_s22_ask	lifecycle-census
-npc_inquisitor	843	16	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_inquisitor	1556	0	inquisitor_dark_hart	REMINDER_TASK_OWNED	inquisitor_dark_hart	lifecycle-census
-npc_inquisitor	1556	1	inquisitor_dark_brain	REMINDER_TASK_OWNED	inquisitor_dark_brain	lifecycle-census
-npc_inquisitor	1556	2	inquisitor_dark_intestine	REMINDER_TASK_OWNED	inquisitor_dark_intestine	lifecycle-census
-npc_inquisitor	1556	3	Back	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_inquisitor	1738	0	inquisitor_gerry	EVENT_INVOKED_NON_REMINDER		frontier-0.1.3
-npc_inquisitor	1738	1	inquisitor_cultists	EVENT_INVOKED_NON_REMINDER		frontier-0.1.3
-npc_inquisitor	1738	2	inquisitor_nothing	EVENT_INVOKED_NON_REMINDER		frontier-0.1.3
-npc_merchant	38	0	merchant_2a	REMINDER_DIALOGUE_OWNER	merchant_2a	lifecycle-census
-npc_merchant	38	1	@merchant_2b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	38	2	@merchant_2e	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	38	3	@merchant_forgive	REMINDER_DIALOGUE_OWNER	@merchant_forgive	lifecycle-census
-npc_merchant	38	4	@merchant_forgive_pay	REMINDER_TASK_OWNED	@merchant_forgive_pay	lifecycle-census
-npc_merchant	38	5	@merchant_favore	REMINDER_DIALOGUE_OWNER	@merchant_favore	lifecycle-census
-npc_merchant	38	6	@merchant_favore_done	REMINDER_TASK_OWNED	@merchant_favore_done	lifecycle-census
-npc_merchant	38	7	@merchant_on_cure	REMINDER_TASK_OWNED	@merchant_on_cure	lifecycle-census
-npc_merchant	38	8	@merchant_dinner	REMINDER_TASK_OWNED	@merchant_dinner	lifecycle-census
-npc_merchant	38	9	@merchant_traide_license	REMINDER_TASK_OWNED	@merchant_traide_license	lifecycle-census
-npc_merchant	38	10	@merchant_strategy	REMINDER_TASK_OWNED	@merchant_strategy	lifecycle-census
-npc_merchant	38	11	@merchant_business	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	38	12	@merchant_70	REMINDER_DIALOGUE_OWNER	@merchant_70	lifecycle-census
-npc_merchant	38	13	@merchant_ceremony	REMINDER_TASK_OWNED	@merchant_ceremony	lifecycle-census
-npc_merchant	38	14	@merchant_actress	REMINDER_TASK_OWNED	@merchant_actress	lifecycle-census
-npc_merchant	38	15	@merchant_magic_item	REMINDER_DIALOGUE_OWNER	@merchant_magic_item	lifecycle-census
-npc_merchant	38	16	@merchant_magic_100	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	38	17	@tr_quest_15_merchant_vase_1	REMINDER_TASK_OWNED	@tr_quest_15_merchant_vase_1	lifecycle-census
-npc_merchant	38	18	merchant_2c	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	38	19	@merchant_new_trade	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	38	20	@souls_s_s24_ask	REMINDER_TASK_OWNED	@souls_s_s24_ask	lifecycle-census
-npc_merchant	38	21	merchant_2d	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	75	0	merchant_2b_5a	SAME_VISIT_DESCENDANT_OF_TASK_OWNER	@merchant_2b	lifecycle-census
-npc_merchant	75	1	merchant_2b_5b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	98	0	merchant_2b_5b_2a	SAME_VISIT_DESCENDANT_OF_TASK_OWNER	@merchant_2b	lifecycle-census
-npc_merchant	98	1	merchant_2b_5b_2b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	127	0	merchant_2b_5b_2b_4a	SAME_VISIT_DESCENDANT_OF_TASK_OWNER	@merchant_2b	lifecycle-census
-npc_merchant	127	1	merchant_2b_5b_2b_4b	SAME_VISIT_DESCENDANT_OF_TASK_OWNER	@merchant_2b	lifecycle-census
-npc_merchant	190	0	merchant_2e_1a	REMINDER_TASK_OWNED	merchant_2e_1a	lifecycle-census
-npc_merchant	190	1	merchant_2e_1b	REMINDER_TASK_OWNED	merchant_2e_1b	lifecycle-census
-npc_merchant	190	2	merchant_2e_1c	REMINDER_TASK_OWNED	merchant_2e_1c	lifecycle-census
-npc_merchant	190	3	merchant_2e_1d	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	190	4	@merchant_2e_1e	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	190	5	@merchant_2e_1f	REMINDER_TASK_OWNED	@merchant_2e_1f	lifecycle-census
-npc_merchant	190	6	merchant_2e_1g	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	231	0	merchant_2e_1d_4a	SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER	@merchant_2e_1e	lifecycle-census
-npc_merchant	231	1	merchant_2e_1d_4b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	402	0	merchant_favore_done_12a	SAME_VISIT_DESCENDANT_OF_TASK_OWNER	@merchant_favore_done	lifecycle-census
-npc_merchant	402	1	merchant_favore_done_12b	SAME_VISIT_DESCENDANT_OF_TASK_OWNER	@merchant_favore_done	lifecycle-census
-npc_merchant	537	0	@merchant_on_deal_done_4a	REMINDER_DIALOGUE_OWNER	@merchant_on_deal_done_4a	lifecycle-census
-npc_merchant	537	1	merchant_on_deal_done_4b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	938	0	@merchant_on_deal_done_4a	REMINDER_DIALOGUE_OWNER	@merchant_on_deal_done_4a	lifecycle-census
-npc_merchant	938	1	@merchant_marketing	REMINDER_DIALOGUE_OWNER	@merchant_marketing	lifecycle-census
-npc_merchant	938	2	@merchant_marketing_done	REMINDER_TASK_OWNED	@merchant_marketing_done	lifecycle-census
-npc_merchant	938	3	@merchant_sales_done	REMINDER_TASK_OWNED	@merchant_sales_done	lifecycle-census
-npc_merchant	938	4	@merchant_crate_1	REMINDER_DIALOGUE_OWNER	@merchant_crate_1	lifecycle-census
-npc_merchant	938	5	merchant_business_back	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	1121	0	merchant_70_7a	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	1121	1	merchant_70_7b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	1126	0	merchant_70_7a	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
-npc_merchant	1126	1	merchant_70_7b_2b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER		no-task-completion-no-persistent-lifecycle
+# Counts: EVENT_INVOKED_NON_REMINDER=14, NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER=67, REMINDER_DIALOGUE_OWNER=58, REMINDER_TASK_OWNED=88, SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER=6, SAME_VISIT_DESCENDANT_OF_TASK_OWNER=6, SAME_VISIT_NON_REMINDER=4
+npc	multi	index	answer	disposition	owner	tasks	evidence
+npc_actress	30	0	actress_2a_2	REMINDER_TASK_OWNED	actress_2a_2	actress_faith	lifecycle-census
+npc_actress	30	1	actress_2b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_actress	30	2	@actress_snake_back	REMINDER_TASK_OWNED	@actress_snake_back	actress_money	lifecycle-census
+npc_actress	30	3	@actress_father	REMINDER_DIALOGUE_OWNER	@actress_father		lifecycle-census
+npc_actress	30	4	@actress_money_back	REMINDER_TASK_OWNED	@actress_money_back	actress_necklace	lifecycle-census
+npc_actress	30	5	@actress_parfume_ready	REMINDER_TASK_OWNED	@actress_parfume_ready	actress_parfume	lifecycle-census
+npc_actress	30	6	@actress_story_gold	REMINDER_TASK_OWNED	@actress_story_gold	actress_story	lifecycle-census
+npc_actress	30	7	@actress_lute_done	REMINDER_TASK_OWNED	@actress_lute_done	actress_alisa	lifecycle-census
+npc_actress	30	8	@actress_title	REMINDER_TASK_OWNED	@actress_title	actress_aristocrat	lifecycle-census
+npc_actress	30	9	@actress_ song_done	REMINDER_TASK_OWNED	actress_song	actress_song	task-route-snapshot
+npc_actress	30	10	@actress_marketing	REMINDER_DIALOGUE_OWNER	@actress_marketing		lifecycle-census
+npc_actress	30	11	@actress_ jewelry	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_actress	30	12	@tr_quest_8_singing_charm_1	REMINDER_DIALOGUE_OWNER	@tr_quest_8_singing_charm_1		lifecycle-census
+npc_actress	30	13	@tr_quest_8_singing_charm_8	REMINDER_TASK_OWNED	@tr_quest_8_singing_charm_8		lifecycle-census
+npc_actress	30	14	@actress_trade	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_actress	30	15	@souls_s_s31_ask	REMINDER_TASK_OWNED	@souls_s_s31_ask	dlc_souls_s29_2	lifecycle-census
+npc_actress	30	16	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_actress	67	0	@actress_2b_1a	REMINDER_DIALOGUE_OWNER	@actress_2b_1a		lifecycle-census
+npc_actress	67	1	@actress_2b_1b	REMINDER_DIALOGUE_OWNER	@actress_2b_1b		lifecycle-census
+npc_actress	67	2	actress_no_question	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_actress	968	0	tr_quest_8_singing_charm_7a	REMINDER_TASK_OWNED	dlc_stories_persuade_charm	dlc_stories_persuade_charm	task-route-snapshot
+npc_actress	968	1	tr_quest_8_singing_charm_7b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_actress	968	2	tr_quest_8_singing_charm_7c	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_astrologer	44	0	astrologer_2a	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_astrologer	44	1	astrologer_2b	REMINDER_TASK_OWNED	astrologer_2b	astrologer_skull	lifecycle-census
+npc_astrologer	44	2	@astrologer_diary	REMINDER_TASK_OWNED	astrologer_diary	astrologer_diary	task-route-snapshot
+npc_astrologer	44	3	@astrologer_acid	REMINDER_TASK_OWNED	@astrologer_acid	astrologer_acid	lifecycle-census
+npc_astrologer	44	4	@astrologer_tools	REMINDER_TASK_OWNED	@astrologer_tools	astrologer_tools	lifecycle-census
+npc_astrologer	44	5	@astrologer_necronamicon	REMINDER_DIALOGUE_OWNER	@astrologer_necronamicon		lifecycle-census
+npc_astrologer	44	6	@astrologer_charm	REMINDER_TASK_OWNED	@astrologer_charm	astrologer_baron	lifecycle-census
+npc_astrologer	44	7	@astrologer_charm_no	REMINDER_TASK_OWNED	@astrologer_charm_no	astrologer_daghter	lifecycle-census
+npc_astrologer	44	8	@astrologer_charm_know	REMINDER_TASK_OWNED	@astrologer_charm_know	astrologer_find_help,astrologer_help	lifecycle-census
+npc_astrologer	44	9	@astrolog_expedition	REMINDER_DIALOGUE_OWNER	@astrolog_expedition		lifecycle-census
+npc_astrologer	44	10	@astrologer_silver	REMINDER_TASK_OWNED	@astrologer_silver	astrologer_sbook	lifecycle-census
+npc_astrologer	44	11	@astrologer_gold	REMINDER_TASK_OWNED	@astrologer_gold	astrologer_gbook	lifecycle-census
+npc_astrologer	44	12	@astrologer_title	REMINDER_TASK_OWNED	@astrologer_title	astrologer_aristocrat	lifecycle-census
+npc_astrologer	44	13	@astrologer_fix_mill	REMINDER_DIALOGUE_OWNER	@astrologer_fix_mill		lifecycle-census
+npc_astrologer	44	14	@astrologer_fix	REMINDER_DIALOGUE_OWNER	@astrologer_fix		lifecycle-census
+npc_astrologer	44	15	@astrologer_last_0	REMINDER_DIALOGUE_OWNER	@astrologer_last_0		lifecycle-census
+npc_astrologer	44	16	@astrologer_items	REMINDER_DIALOGUE_OWNER	@astrologer_items		lifecycle-census
+npc_astrologer	44	17	@tr_quest_13_research_1	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_astrologer	44	18	@refugees_s_ev_7_1_1	REMINDER_TASK_OWNED	@refugees_s_ev_7_1_1	s_ev_7_1_astrologer	lifecycle-census
+npc_astrologer	44	19	@astrologer_trade	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_astrologer	44	20	@souls_s_s30_ask	REMINDER_TASK_OWNED	@souls_s_s30_ask	dlc_souls_s29_1	lifecycle-census
+npc_astrologer	44	21	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_astrologer	67	0	@astrologer_2a_1a_1	REMINDER_DIALOGUE_OWNER	@astrologer_2a_1a_1		lifecycle-census
+npc_astrologer	67	1	@astrologer_2a_1b_1	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_astrologer	67	2	Back	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_astrologer	104	0	astrologer_2a_1b_6a	REMINDER_DIALOGUE_OWNER	astrologer_2a_1b_6a		lifecycle-census
+npc_astrologer	104	1	astrologer_2a_1b_6b	REMINDER_DIALOGUE_OWNER	astrologer_2a_1b_6b		lifecycle-census
+npc_astrologer	104	2	astrologer_2a_1b_6c	REMINDER_DIALOGUE_OWNER	astrologer_2a_1b_6c		lifecycle-census
+npc_astrologer	104	3	Back	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_astrologer	219	0	astrologer_diary_9a	SAME_VISIT_NON_REMINDER	astrologer_diary_9a		lifecycle-census
+npc_astrologer	219	1	astrologer_diary_9b	SAME_VISIT_NON_REMINDER	astrologer_diary_9b		lifecycle-census
+npc_astrologer	507	0	@astrologer_about_acid	SAME_VISIT_NON_REMINDER	@astrologer_about_acid		lifecycle-census
+npc_astrologer	507	1	@astrologer_about_tools	SAME_VISIT_NON_REMINDER	@astrologer_about_tools		lifecycle-census
+npc_astrologer	1384	0	tr_quest_13_research_2	SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER	@tr_quest_13_research_1	astrologer_sbook	lifecycle-census
+npc_astrologer	1384	1	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_bishop	75	0	bishop_2_1a	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_bishop	75	1	bishop_2_1b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_bishop	75	2	bishop_2_1c	REMINDER_TASK_OWNED	bishop_2_1c	bishop_5_qual	lifecycle-census
+npc_bishop	75	3	bishop_2_1e	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_bishop	75	4	@bishop_4_0	REMINDER_DIALOGUE_OWNER	@bishop_4_0		lifecycle-census
+npc_bishop	75	5	@bishop_5_1	REMINDER_TASK_OWNED	bishop_bowls	bishop_bowls	task-route-snapshot
+npc_bishop	75	6	@bishop_trade	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_bishop	75	7	@bishop_6a	REMINDER_TASK_OWNED	@bishop_6a	bishop_fish	lifecycle-census
+npc_bishop	75	8	@souls_s_s15_ask	REMINDER_TASK_OWNED	@souls_s_s15_ask	dlc_souls_s12_1	lifecycle-census
+npc_bishop	75	9	bishop_2_1d	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_bishop	132	0	bishop_2_1a_6a	SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER	bishop_2_1a		lifecycle-census
+npc_bishop	132	1	bishop_2_1a_6b	SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER	bishop_2_1a		lifecycle-census
+npc_bishop	161	0	bishop_2_1e_4a	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_bishop	161	1	bishop_2_1e_4b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_bishop	161	2	bishop_2_1e_4c	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_bishop	679	0	@bishop_6b	REMINDER_TASK_OWNED	@bishop_6b	bishop_30_qual	lifecycle-census
+npc_bishop	679	1	@bishop_6c	REMINDER_TASK_OWNED	@bishop_6c	bishop_20_qual	lifecycle-census
+npc_bishop	679	2	@bishop_6d	REMINDER_DIALOGUE_OWNER	@bishop_6d		lifecycle-census
+npc_bishop	679	3	@bishop_6a	REMINDER_TASK_OWNED	@bishop_6a	bishop_fish	lifecycle-census
+npc_bishop	679	4	@bishop_trade	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_bishop	679	5	@souls_s_s15_ask	REMINDER_TASK_OWNED	@souls_s_s15_ask		lifecycle-census
+npc_bishop	679	6	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_bishop	1030	0	about_cathedral	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_bishop	1030	1	@bishop_cathidral_cross	REMINDER_TASK_OWNED	@bishop_cathidral_cross	bishop_last_cross	lifecycle-census
+npc_bishop	1030	2	@bishop_cathidral_skull	REMINDER_TASK_OWNED	@bishop_cathidral_skull	bishop_last_skull	lifecycle-census
+npc_bishop	1030	3	@bishop_cathidral_80	REMINDER_DIALOGUE_OWNER	@bishop_cathidral_80		lifecycle-census
+npc_bishop	1030	4	@bishop_aristocrat	REMINDER_TASK_OWNED	@bishop_aristocrat	bishop_aristocrat 	lifecycle-census
+npc_bishop	1030	5	@bishop_invitation	REMINDER_TASK_OWNED	@bishop_invitation	bishop_invitation_2	lifecycle-census
+npc_bishop	1030	6	@bishop_magic_item	REMINDER_DIALOGUE_OWNER	@bishop_magic_item		lifecycle-census
+npc_bishop	1030	7	@bishop_final_ceremony	REMINDER_DIALOGUE_OWNER	@bishop_final_ceremony		lifecycle-census
+npc_bishop	1030	8	@bishop_magic_100	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_bishop	1030	9	@souls_s_s15_ask	REMINDER_TASK_OWNED	@souls_s_s15_ask		lifecycle-census
+npc_bishop	1030	10	Trade	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_bishop	1030	11	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_bishop	1068	0	@bishop_get_citezen	REMINDER_TASK_OWNED	@bishop_get_citezen	bishop_rcitezen	lifecycle-census
+npc_bishop	1068	1	@bishop_cathidral	REMINDER_DIALOGUE_OWNER	@bishop_cathidral		lifecycle-census
+npc_bishop	1068	2	@bishop_town_cathidral	REMINDER_DIALOGUE_OWNER	@bishop_town_cathidral		lifecycle-census
+npc_bishop	1068	3	@bishop_statue_ready	REMINDER_TASK_OWNED	@bishop_statue_ready	bishop_statue	lifecycle-census
+npc_bishop	1068	4	Back	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_cultist	106	0	snake_1a	REMINDER_DIALOGUE_OWNER	snake_1a		lifecycle-census
+npc_cultist	106	1	snake_1b	REMINDER_DIALOGUE_OWNER	snake_1b		lifecycle-census
+npc_cultist	106	2	@snake_1с	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_cultist	106	3	@snake_give_key	REMINDER_TASK_OWNED	@snake_give_key	snake_key	lifecycle-census
+npc_cultist	106	4	@give_blod_bucket	REMINDER_TASK_OWNED	@give_blod_bucket	snake_blood	lifecycle-census
+npc_cultist	106	5	@give_blod_nails	REMINDER_TASK_OWNED	@give_blod_nails		lifecycle-census
+npc_cultist	106	6	@snake_buisnes	REMINDER_DIALOGUE_OWNER	@snake_buisnes		lifecycle-census
+npc_cultist	106	7	@snake_meat_1	REMINDER_DIALOGUE_OWNER	@snake_meat_1		lifecycle-census
+npc_cultist	106	8	@snake_pass_1	REMINDER_DIALOGUE_OWNER	@snake_pass_1		lifecycle-census
+npc_cultist	106	9	@snake_instrument	REMINDER_DIALOGUE_OWNER	@snake_instrument		lifecycle-census
+npc_cultist	106	10	@snake_instrument_ready	REMINDER_DIALOGUE_OWNER	@snake_instrument_ready		lifecycle-census
+npc_cultist	106	11	@snake_about_nacklase	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_cultist	106	12	@snake_ritual_help	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_cultist	106	13	@snake_sword	REMINDER_TASK_OWNED	@snake_sword	snake_sword	lifecycle-census
+npc_cultist	106	14	@snake_necronomicon	REMINDER_TASK_OWNED	@snake_necronomicon	snake_necronomicon	lifecycle-census
+npc_cultist	106	15	@snake_aple	REMINDER_DIALOGUE_OWNER	@snake_aple		lifecycle-census
+npc_cultist	106	16	@snake_aple_get	REMINDER_TASK_OWNED	@snake_aple_get	snake_aple	lifecycle-census
+npc_cultist	106	17	@snake_final_ritual	REMINDER_DIALOGUE_OWNER	@snake_final_ritual		lifecycle-census
+npc_cultist	106	18	@snake_magic_item	REMINDER_DIALOGUE_OWNER	@snake_magic_item		lifecycle-census
+npc_cultist	106	19	@snake_10th	REMINDER_DIALOGUE_OWNER	@snake_10th		lifecycle-census
+npc_cultist	106	20	@snake_items	REMINDER_TASK_OWNED	@snake_items		lifecycle-census
+npc_cultist	106	21	@snake_items_give	REMINDER_DIALOGUE_OWNER	@snake_items_give		lifecycle-census
+npc_cultist	106	22	@snake_magic_100	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_cultist	106	23	@tr_quest_7_snake_booze_1	REMINDER_DIALOGUE_OWNER	@tr_quest_7_snake_booze_1		lifecycle-census
+npc_cultist	106	24	@tr_quest_7_booze_after_week_1	REMINDER_TASK_OWNED	@tr_quest_7_booze_after_week_1	dlc_stories_booze_after_week	lifecycle-census
+npc_cultist	106	25	@tr_quest_7_about_booze_again_1	REMINDER_DIALOGUE_OWNER	@tr_quest_7_about_booze_again_1		lifecycle-census
+npc_cultist	106	26	@tr_quest_12_snake_asking_1	REMINDER_TASK_OWNED	@tr_quest_12_snake_asking_1	dlc_stories_steal_amulet	lifecycle-census
+npc_cultist	106	27	@tr_quest_12_snake_asking_1_alias	REMINDER_DIALOGUE_OWNER	@tr_quest_12_snake_asking_1_alias		lifecycle-census
+npc_cultist	106	28	@tr_quest_12_after_first_rat_race_1	REMINDER_TASK_OWNED	@tr_quest_12_after_first_rat_race_1	dlc_stories_return_cultist	lifecycle-census
+npc_cultist	106	29	@souls_s_s33_ask	REMINDER_TASK_OWNED	@souls_s_s33_ask	dlc_souls_s29_3	lifecycle-census
+npc_cultist	106	30	@souls_s_s43_ask	REMINDER_TASK_OWNED	@souls_s_s43_ask		lifecycle-census
+npc_cultist	106	31	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_cultist	359	0	snake_back_12a	EVENT_INVOKED_NON_REMINDER			frontier-0.1.3
+npc_cultist	359	1	snake_back_12b	EVENT_INVOKED_NON_REMINDER			frontier-0.1.3
+npc_cultist	624	0	snake_1с_4a	SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER	@snake_1с		lifecycle-census
+npc_cultist	624	1	snake_1с_4b	SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER	@snake_1с		lifecycle-census
+npc_cultist	763	0	@snake_nacklase_0	REMINDER_DIALOGUE_OWNER	@snake_nacklase_0		lifecycle-census
+npc_cultist	763	1	@snake_nacklase_again	REMINDER_DIALOGUE_OWNER	@snake_nacklase_again		lifecycle-census
+npc_cultist	763	2	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_cultist	825	0	@snake_nacklase_again_10a	REMINDER_DIALOGUE_OWNER	@snake_nacklase_again_10a		lifecycle-census
+npc_cultist	825	1	@snake_nacklase_again_10b	REMINDER_DIALOGUE_OWNER	@snake_nacklase_again_10b		lifecycle-census
+npc_cultist	825	2	@snake_nacklase_again_10c	REMINDER_DIALOGUE_OWNER	@snake_nacklase_again_10c		lifecycle-census
+npc_cultist	985	0	@snake_help	REMINDER_DIALOGUE_OWNER	@snake_help		lifecycle-census
+npc_cultist	985	1	@snake_help_done	REMINDER_TASK_OWNED	@snake_help_done	snake_stars	lifecycle-census
+npc_cultist	985	2	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_cultist	1520	0	snake_stone_ready	REMINDER_TASK_OWNED	snake_trap	snake_trap	task-route-snapshot
+npc_cultist	1520	1	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_cultist	1759	0	snake_aple_get_3a	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_cultist	1759	1	snake_aple_get_4b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_inquisitor	157	0	inquisitor_1_7a	EVENT_INVOKED_NON_REMINDER			frontier-0.1.3
+npc_inquisitor	157	1	inquisitor_1_7b	EVENT_INVOKED_NON_REMINDER			frontier-0.1.3
+npc_inquisitor	174	0	inquisitor_1_9a	EVENT_INVOKED_NON_REMINDER			frontier-0.1.3
+npc_inquisitor	174	1	inquisitor_1_9b	EVENT_INVOKED_NON_REMINDER			frontier-0.1.3
+npc_inquisitor	199	0	inquisitor_1_11a	EVENT_INVOKED_NON_REMINDER			frontier-0.1.3
+npc_inquisitor	199	1	inquisitor_1_11b	EVENT_INVOKED_NON_REMINDER			frontier-0.1.3
+npc_inquisitor	199	2	inquisitor_1_11c	EVENT_INVOKED_NON_REMINDER			frontier-0.1.3
+npc_inquisitor	448	0	inquisitor_2_9a	EVENT_INVOKED_NON_REMINDER			frontier-0.1.3
+npc_inquisitor	448	1	inquisitor_2_9b	EVENT_INVOKED_NON_REMINDER			frontier-0.1.3
+npc_inquisitor	704	0	inquisitor_burn_3a_1a	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_inquisitor	704	1	inquisitor_burn_3a_1b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_inquisitor	736	0	@inquisitor_grave_1_1	REMINDER_DIALOGUE_OWNER	@inquisitor_grave_1_1		lifecycle-census
+npc_inquisitor	736	1	@inquisitor_grave_2_1	REMINDER_TASK_OWNED	@inquisitor_grave_2_1		lifecycle-census
+npc_inquisitor	736	2	@inquisitor_grave_2a	REMINDER_TASK_OWNED	@inquisitor_grave_2a	inq_get_perm	lifecycle-census
+npc_inquisitor	736	3	@inquisitor_firewood_1	REMINDER_TASK_OWNED	@inquisitor_firewood_1		lifecycle-census
+npc_inquisitor	736	4	@inquisitor_flyer	REMINDER_TASK_OWNED	@inquisitor_flyer	inquisitor_burn	lifecycle-census
+npc_inquisitor	736	5	@inquisitor_firewood_1_buy	REMINDER_TASK_OWNED	@inquisitor_firewood_1_buy		lifecycle-census
+npc_inquisitor	736	6	@inquisitor_flyer_buy	REMINDER_TASK_OWNED	@inquisitor_flyer_buy		lifecycle-census
+npc_inquisitor	736	7	@inquisitor_portal_guard	REMINDER_DIALOGUE_OWNER	@inquisitor_portal_guard		lifecycle-census
+npc_inquisitor	736	8	@refugees_s15_1_2	REMINDER_TASK_OWNED	@refugees_s15_1_2	s_ev_15_1_inq_beatrice	lifecycle-census
+npc_inquisitor	736	9	@souls_s_s22_ask	REMINDER_TASK_OWNED	@souls_s_s22_ask	dlc_souls_s21_2	lifecycle-census
+npc_inquisitor	736	10	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_inquisitor	843	0	@inquisitor_grave_1_1	REMINDER_DIALOGUE_OWNER	@inquisitor_grave_1_1		lifecycle-census
+npc_inquisitor	843	1	@inquisitor_grave_2_1	REMINDER_TASK_OWNED	@inquisitor_grave_2_1		lifecycle-census
+npc_inquisitor	843	2	@inquisitor_grave_2a	REMINDER_TASK_OWNED	@inquisitor_grave_2a		lifecycle-census
+npc_inquisitor	843	3	@inquisitor_wine_ready	REMINDER_TASK_OWNED	@inquisitor_wine_ready	inquisitor_wine	lifecycle-census
+npc_inquisitor	843	4	@inquisitor_tent	REMINDER_DIALOGUE_OWNER	@inquisitor_tent		lifecycle-census
+npc_inquisitor	843	5	@inquisitor_tent_ready	REMINDER_TASK_OWNED	@inquisitor_tent_ready	inquisitor_tent	lifecycle-census
+npc_inquisitor	843	6	@inquisitor_portal_guard	REMINDER_DIALOGUE_OWNER	@inquisitor_portal_guard		lifecycle-census
+npc_inquisitor	843	7	@inquisitor_portal_done	REMINDER_TASK_OWNED	@inquisitor_portal_done	inquisitor_guards	lifecycle-census
+npc_inquisitor	843	8	@inquisitor_burn_again	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_inquisitor	843	9	@inquisitor_ceremony	REMINDER_TASK_OWNED	@inquisitor_ceremony		lifecycle-census
+npc_inquisitor	843	10	@inquisitor_dark	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_inquisitor	843	11	@inquisitor_magic_item	REMINDER_DIALOGUE_OWNER	@inquisitor_magic_item		lifecycle-census
+npc_inquisitor	843	12	@inquisitor_magic_100	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_inquisitor	843	13	@inquisitor_gypsy	REMINDER_TASK_OWNED	@inquisitor_gypsy		lifecycle-census
+npc_inquisitor	843	14	@refugees_s15_1_2	REMINDER_TASK_OWNED	@refugees_s15_1_2		lifecycle-census
+npc_inquisitor	843	15	@souls_s_s22_ask	REMINDER_TASK_OWNED	@souls_s_s22_ask		lifecycle-census
+npc_inquisitor	843	16	Leave	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_inquisitor	1556	0	inquisitor_dark_hart	REMINDER_TASK_OWNED	inquisitor_dark_hart	inquisitor_evidence	lifecycle-census
+npc_inquisitor	1556	1	inquisitor_dark_brain	REMINDER_TASK_OWNED	inquisitor_dark_brain		lifecycle-census
+npc_inquisitor	1556	2	inquisitor_dark_intestine	REMINDER_TASK_OWNED	inquisitor_dark_intestine		lifecycle-census
+npc_inquisitor	1556	3	Back	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_inquisitor	1738	0	inquisitor_gerry	EVENT_INVOKED_NON_REMINDER			frontier-0.1.3
+npc_inquisitor	1738	1	inquisitor_cultists	EVENT_INVOKED_NON_REMINDER			frontier-0.1.3
+npc_inquisitor	1738	2	inquisitor_nothing	EVENT_INVOKED_NON_REMINDER			frontier-0.1.3
+npc_merchant	38	0	merchant_2a	REMINDER_DIALOGUE_OWNER	merchant_2a		lifecycle-census
+npc_merchant	38	1	@merchant_2b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	38	2	@merchant_2e	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	38	3	@merchant_forgive	REMINDER_DIALOGUE_OWNER	@merchant_forgive		lifecycle-census
+npc_merchant	38	4	@merchant_forgive_pay	REMINDER_TASK_OWNED	@merchant_forgive_pay	merchant_get_along	lifecycle-census
+npc_merchant	38	5	@merchant_favore	REMINDER_DIALOGUE_OWNER	@merchant_favore		lifecycle-census
+npc_merchant	38	6	@merchant_favore_done	REMINDER_TASK_OWNED	@merchant_favore_done	merchant_grass	lifecycle-census
+npc_merchant	38	7	@merchant_on_cure	REMINDER_TASK_OWNED	@merchant_on_cure	merchant_curse	lifecycle-census
+npc_merchant	38	8	@merchant_dinner	REMINDER_TASK_OWNED	@merchant_dinner	merchant_dinner	lifecycle-census
+npc_merchant	38	9	@merchant_traide_license	REMINDER_TASK_OWNED	@merchant_traide_license	merchant_trade	lifecycle-census
+npc_merchant	38	10	@merchant_strategy	REMINDER_TASK_OWNED	@merchant_strategy	merchant_strategy	lifecycle-census
+npc_merchant	38	11	@merchant_business	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	38	12	@merchant_70	REMINDER_DIALOGUE_OWNER	@merchant_70		lifecycle-census
+npc_merchant	38	13	@merchant_ceremony	REMINDER_TASK_OWNED	@merchant_ceremony	merchant_show	lifecycle-census
+npc_merchant	38	14	@merchant_actress	REMINDER_TASK_OWNED	@merchant_actress	merchant_support	lifecycle-census
+npc_merchant	38	15	@merchant_magic_item	REMINDER_DIALOGUE_OWNER	@merchant_magic_item		lifecycle-census
+npc_merchant	38	16	@merchant_magic_100	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	38	17	@tr_quest_15_merchant_vase_1	REMINDER_TASK_OWNED	@tr_quest_15_merchant_vase_1	dlc_stories_buy_vase_from_m	lifecycle-census
+npc_merchant	38	18	merchant_2c	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	38	19	@merchant_new_trade	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	38	20	@souls_s_s24_ask	REMINDER_TASK_OWNED	@souls_s_s24_ask	dlc_souls_s23_2	lifecycle-census
+npc_merchant	38	21	merchant_2d	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	75	0	merchant_2b_5a	SAME_VISIT_DESCENDANT_OF_TASK_OWNER	@merchant_2b		lifecycle-census
+npc_merchant	75	1	merchant_2b_5b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	98	0	merchant_2b_5b_2a	SAME_VISIT_DESCENDANT_OF_TASK_OWNER	@merchant_2b		lifecycle-census
+npc_merchant	98	1	merchant_2b_5b_2b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	127	0	merchant_2b_5b_2b_4a	SAME_VISIT_DESCENDANT_OF_TASK_OWNER	@merchant_2b		lifecycle-census
+npc_merchant	127	1	merchant_2b_5b_2b_4b	SAME_VISIT_DESCENDANT_OF_TASK_OWNER	@merchant_2b		lifecycle-census
+npc_merchant	190	0	merchant_2e_1a	REMINDER_TASK_OWNED	merchant_2e_1a	merchant_garden	lifecycle-census
+npc_merchant	190	1	merchant_2e_1b	REMINDER_TASK_OWNED	merchant_2e_1b		lifecycle-census
+npc_merchant	190	2	merchant_2e_1c	REMINDER_TASK_OWNED	merchant_2e_1c		lifecycle-census
+npc_merchant	190	3	merchant_2e_1d	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	190	4	@merchant_2e_1e	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	190	5	@merchant_2e_1f	REMINDER_TASK_OWNED	@merchant_2e_1f	merchant_debt	lifecycle-census
+npc_merchant	190	6	merchant_2e_1g	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	231	0	merchant_2e_1d_4a	SAME_VISIT_DESCENDANT_OF_DIALOGUE_OWNER	@merchant_2e_1e		lifecycle-census
+npc_merchant	231	1	merchant_2e_1d_4b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	402	0	merchant_favore_done_12a	SAME_VISIT_DESCENDANT_OF_TASK_OWNER	@merchant_favore_done		lifecycle-census
+npc_merchant	402	1	merchant_favore_done_12b	SAME_VISIT_DESCENDANT_OF_TASK_OWNER	@merchant_favore_done		lifecycle-census
+npc_merchant	537	0	@merchant_on_deal_done_4a	REMINDER_DIALOGUE_OWNER	@merchant_on_deal_done_4a		lifecycle-census
+npc_merchant	537	1	merchant_on_deal_done_4b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	938	0	@merchant_on_deal_done_4a	REMINDER_DIALOGUE_OWNER	@merchant_on_deal_done_4a		lifecycle-census
+npc_merchant	938	1	@merchant_marketing	REMINDER_DIALOGUE_OWNER	@merchant_marketing		lifecycle-census
+npc_merchant	938	2	@merchant_marketing_done	REMINDER_TASK_OWNED	@merchant_marketing_done	merchant_marketing	lifecycle-census
+npc_merchant	938	3	@merchant_sales_done	REMINDER_TASK_OWNED	@merchant_sales_done	merchant_sales	lifecycle-census
+npc_merchant	938	4	@merchant_crate_1	REMINDER_DIALOGUE_OWNER	@merchant_crate_1		lifecycle-census
+npc_merchant	938	5	merchant_business_back	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	1121	0	merchant_70_7a	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	1121	1	merchant_70_7b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	1126	0	merchant_70_7a	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
+npc_merchant	1126	1	merchant_70_7b_2b	NAVIGATION_UTILITY_REPEATABLE_NON_REMINDER			no-task-completion-no-persistent-lifecycle
