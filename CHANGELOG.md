@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.6
+
+- Generalizes one-time dialogue reminders from exact-self consumption to **nearest persistent lifecycle ownership**: when a progressing child persistently consumes its selectable parent on the same authored path, that parent can now represent the reminder interaction.
+- Removes the 1.1.5 Snake counterfeit-coins special case; `@snake_1с` is now derived by the common dialogue-lifecycle compiler.
+- Complete six-weekday-NPC census found six ancestor lifecycle owners: four independent interactions and two task-owned duplicates that are suppressed.
+- Keeps exact-self interactions, task-owned/same-visit deduplication, authored SmartRes/navigation gates, and fail-closed handling under one schema-5 manifest.
+- Upgrades the persistent cache to schema 5. Verified bootstrap completed behind loading in 1005.16 ms; a subsequent persisted reload completed in 3.89 ms with FlowCanvas parsing skipped.
+- Verified in-game on Snake's counterfeit-coins + Restoration Tools state: the wheel correctly transitioned **2 -> 1 -> 0** as the two independent interactions were consumed.
+
 ## 1.1.3
 
 - Consolidates the previously separate non-`@` exact-self-consuming dialogue supplement into the same persistent interaction manifest used by the rest of the reminder system.
